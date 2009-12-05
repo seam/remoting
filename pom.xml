@@ -1,0 +1,85 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   
+   <parent>
+      <artifactId>seam-parent</artifactId>
+      <groupId>org.jboss.seam</groupId>
+      <version>3.0.0-SNAPSHOT</version>
+   </parent>
+
+   <artifactId>seam-remoting</artifactId>
+   <packaging>jar</packaging>
+   <version>3.0.0-SNAPSHOT</version>
+   <name>Seam Remoting</name>
+
+   <dependencies>
+
+      <dependency>
+         <groupId>javax.el</groupId>
+         <artifactId>el-api</artifactId>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>javax.validation</groupId>
+         <artifactId>validation-api</artifactId>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate</artifactId>
+         <scope>provided</scope>
+      </dependency>
+
+      <!--dependency>
+         <groupId>${seam.groupId}</groupId>
+         <artifactId>seam-el</artifactId>
+         <scope>provided</scope>
+      </dependency-->
+
+      <!--dependency>
+         <groupId>${seam.groupId}</groupId>
+         <artifactId>seam-international</artifactId>
+      </dependency-->
+
+      <dependency>
+         <groupId>javax.enterprise</groupId>
+         <artifactId>cdi-api</artifactId>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>javax.ejb</groupId>
+         <artifactId>ejb-api</artifactId>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>javax.jms</groupId>
+         <artifactId>jms</artifactId>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>dom4j</groupId>
+         <artifactId>dom4j</artifactId>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>javax.servlet</groupId>
+         <artifactId>servlet-api</artifactId>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+         <scope>provided</scope>
+      </dependency>
+   </dependencies>
+
+</project>

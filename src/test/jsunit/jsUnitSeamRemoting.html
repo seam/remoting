@@ -1,0 +1,224 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Seam Remoting JsUnit Tests</title>
+<link rel="stylesheet" type="text/css" href="../css/jsUnitStyle.css">
+<script language="JavaScript" type="text/javascript" src="../../../extras/jsUnit/app/jsUnitCore.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../remoting/org/jboss/seam/remoting/remote.js"></script>
+<script language="JavaScript" type="text/javascript">
+
+/** Confirm that the URL encoding/decoding function we are using works **/
+
+function testURLEncodeDecode() {
+  var val = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890!@#$%^&*()_-;',./:\"<>?~`\|[]{}+= ";
+  assertEquals(val, decodeURIComponent(encodeURIComponent(val)));  
+}
+
+/** Seam.Remoting.Map tests **/
+
+function testMapGet() {
+  var map = new Seam.Remoting.Map();
+  var key = new Object();
+  var val = new Object();
+  map.put(key, val);
+  map.put(new Object(), new Object());
+  assertEquals(val, map.get(key));
+}
+
+function testMapPut() {
+  var map = new Seam.Remoting.Map(); 
+  var key = new Object();
+  var val = new Object();
+  map.put(key, val);
+  assertEquals(key, map.keySet()[0]);
+  assertEquals(val, map.values()[0]);
+}
+
+function testMapSize() {
+  var map = new Seam.Remoting.Map();
+  map.put("a", new Object());
+  assertEquals("Map size should be 1", 1, map.size()); 
+}
+
+function testMapIsEmpty() {
+  var map = new Seam.Remoting.Map();
+  assertTrue("Map should be empty", map.isEmpty());
+  map.put("a", new Object());
+  assertFalse("Map should not be empty", map.isEmpty());
+}
+
+function testMapKeySet() {
+  var map = new Seam.Remoting.Map();
+  assertEquals("Keyset size should be 0", 0, map.keySet().length);
+  var key = new Object();
+  map.put(key, null);
+  assertEquals(map.keySet()[0], key); 
+  assertEquals("Keyset size should be 1", 1, map.keySet().length);
+  map.put(new Object(), null);
+  assertEquals("Keyset size should be 2", 2, map.keySet().length);
+}
+
+function testMapValues() {
+  var map = new Seam.Remoting.Map();
+  assertEquals("Values sizes should be 0", 0, map.keySet().length);
+  var val = new Object();
+  map.put(new Object(), val);
+  assertEquals(val, map.values()[0]); 
+}
+
+function testMapRemove() {
+  var map = new Seam.Remoting.Map();
+  var key = new Object();
+  map.put(key, null);
+  assertEquals(1, map.values().length);
+  map.remove(key);
+  assertEquals(0, map.values().length); 
+}
+function testMapContains() {
+  var map = new Seam.Remoting.Map();
+  var key = new Object();
+  assertFalse(map.contains(key));
+  map.put(key, null);
+  assertTrue(map.contains(key)); 
+}
+
+/** Seam.Remoting.Serialize tests **/
+
+function testSerializeBool() {
+  assertEquals("<bool>true</bool>", Seam.Remoting.serializeValue(true, "bool"));
+  assertEquals("<bool>false</bool>", Seam.Remoting.serializeValue(false, "bool"));
+  assertEquals("<bool>true</bool>", Seam.Remoting.serializeValue(true));
+  assertEquals("<bool>false</bool>", Seam.Remoting.serializeValue(false));
+}
+
+function testSerializeNumber() {
+  assertEquals("<number>123</number>", Seam.Remoting.serializeValue(123, "number"));
+  assertEquals("<number>123</number>", Seam.Remoting.serializeValue(123)); 
+  assertEquals("<number>123.45</number>", Seam.Remoting.serializeValue(123.45));
+}
+
+function testSerializeDate() {
+  var dte = new Date(2005, 0, 1);
+  assertEquals("<date>20050101000000000</date>", Seam.Remoting.serializeValue(dte, "date"));
+  assertEquals("<date>20050101000000000</date>", Seam.Remoting.serializeValue(dte));
+  dte = new Date(2005, 10, 15, 12, 30, 9, 150);
+  assertEquals("<date>20051115123009150</date>", Seam.Remoting.serializeValue(dte, "date"));
+  assertEquals("<date>20051115123009150</date>", Seam.Remoting.serializeValue(dte));
+}
+
+function testSerializeString() {
+  var val = "abc";
+  assertEquals("<str>abc</str>", Seam.Remoting.serializeValue(val, "str"));
+  assertEquals("<str>abc</str>", Seam.Remoting.serializeValue(val));  
+}
+
+function testSerializeBag() {
+  var bag = new Array();
+  bag.push(1);
+  assertEquals("<bag><element><number>1</number></element></bag>", Seam.Remoting.serializeBag(bag, "bag"));
+  assertEquals("<bag><element><number>1</number></element></bag>", Seam.Remoting.serializeBag(bag));
+  bag.push("zzz");
+  assertEquals("<bag><element><number>1</number></element><element><str>zzz</str></element></bag>", 
+               Seam.Remoting.serializeBag(bag, "bag"));
+  assertEquals("<bag><element><number>1</number></element><element><str>zzz</str></element></bag>", 
+               Seam.Remoting.serializeBag(bag));               
+}
+
+function testSerializeMap() {
+  var map = new Seam.Remoting.Map();
+  map.put("1", "zzzz");
+  assertEquals("<map><element><k><str>1</str></k><v><str>zzzz</str></v></element></map>",
+               Seam.Remoting.serializeMap(map, "map"));
+  assertEquals("<map><element><k><str>1</str></k><v><str>zzzz</str></v></element></map>",
+               Seam.Remoting.serializeMap(map));
+                
+}
+
+function testSerializeNull() {
+  assertEquals("<null/>", Seam.Remoting.serializeValue(null)); 
+}
+
+function testComponent() {
+  var comp = function() { };
+  comp.__name = "testComponent";
+  
+  assertFalse(Seam.Component.isRegistered("testComponent"));
+  Seam.Component.register(comp);
+  assertTrue(Seam.Component.isRegistered("testComponent"));
+  
+  var instance = Seam.Component.getInstance("testComponent");
+  assertEquals(instance, Seam.Component.getInstance("testComponent"));
+  assertNotEquals(instance, Seam.Component.newInstance("testComponent"));
+  assertEquals("testComponent", Seam.Component.getComponentName(instance));
+  assertEquals(comp, Seam.Component.getComponentType(instance));
+}
+
+function testTypes() {
+  var t = function() { };
+  t.__name = "testType";
+  
+  Seam.Remoting.registerType(t);
+  
+  var instance = Seam.Remoting.createType("testType");
+  assertEquals("testType", Seam.Remoting.getTypeName(instance));
+  assertEquals(t, Seam.Remoting.getType(instance));
+}
+
+function testExtractEncodedSessionId() {
+  assertEquals('abcdefg', Seam.Remoting.extractEncodedSessionId('http://localhost:8080/contextPath/page.seam;jsessionid=abcdefg?foo=bar'));
+  assertEquals('abcdefg', Seam.Remoting.extractEncodedSessionId('http://localhost:8080/contextPath/page.seam;jsessionid=abcdefg'));
+  assertEquals(null, Seam.Remoting.extractEncodedSessionId('http://localhost:8080/contextPath/page.seam'));
+}
+
+function testEncodeAjaxRequest() {
+  var restoreXMLHttpRequest = window.XMLHttpRequest;
+  window.XMLHttpRequest = dummyXMLHttpRequest;
+  Seam.Remoting.resourcePath = "/resourcePath";
+  Seam.Remoting.encodedSessionId = 'abcdefg';
+  var req = Seam.Remoting.sendAjaxRequest(null, "/execute", null, true); 
+  assertEquals("POST", req.method);
+  assertEquals("/resourcePath/execute;jsessionid=abcdefg", req.path);
+  assertEquals(true, req.async);
+  window.XMLHttpRequest = restoreXMLHttpRequest;
+}
+
+function testNoEncodeAjaxRequest() {
+  var restoreXMLHttpRequest = window.XMLHttpRequest;
+  window.XMLHttpRequest = dummyXMLHttpRequest;
+  Seam.Remoting.resourcePath = "/resourcePath";
+  Seam.Remoting.encodedSessionId = null;
+  var req = Seam.Remoting.sendAjaxRequest(null, "/execute", null, true); 
+  assertEquals("POST", req.method);
+  assertEquals("/resourcePath/execute", req.path);
+  assertEquals(true, req.async);
+  window.XMLHttpRequest = restoreXMLHttpRequest;
+}
+
+function dummyXMLHttpRequest() {
+  this.method = null;
+  this.path = null;
+  this.async = null;
+}
+
+dummyXMLHttpRequest.prototype = {
+  open: function(method, path, async) {
+    this.method = method;
+    this.path = path;
+    this.async = async;
+  },
+
+  send: function(envelope) {}
+}
+
+</script>
+</head>
+
+<body>
+<h1>Seam Remoting JsUnit Tests</h1>
+
+<p>This page contains tests for the Seam Remoting Javascript source.</p>
+</body>
+</html>
