@@ -9,7 +9,7 @@ Seam.Remoting.instance = function(name) {
       var v = new b[i];
       if (arguments.length > 1) {
         v.__qualifiers = new Array();
-        for (var j = 1; j < arguments.length; j++) { 
+        for (var j = 1; j < arguments.length; j++) {
           v.__qualifiers.push(arguments[j]);
         }
       }
@@ -64,7 +64,7 @@ Seam.Remoting.extractEncodedSessionId = function(url) {
 	var sid = null;
   if (url.indexOf(';jsessionid=') >= 0) {
     var qpos = url.indexOf('?');
-    sid = url.substring(url.indexOf(';jsessionid=') + 12, qpos >= 0 ? qpos : url.length); 
+    sid = url.substring(url.indexOf(';jsessionid=') + 12, qpos >= 0 ? qpos : url.length);
   }
 	return sid;
 }
@@ -77,7 +77,7 @@ Seam.Remoting.PATH_POLL = "/poll";
 Seam.Remoting.encodedSessionId = Seam.Remoting.extractEncodedSessionId(window.location.href);
 
 Seam.Remoting.type = new Object(); // namespace
-Seam.Remoting.types = new Array(); 
+Seam.Remoting.types = new Array();
 
 Seam.Remoting.debug = false;
 Seam.Remoting.debugWindow = null;
@@ -108,7 +108,7 @@ Seam.Remoting.log = function(msg) {
 Seam.Remoting.createNamespace = function(namespace) {
   var p = namespace.split(".");
   var b = Seam.Remoting.type;
-  
+
   for(var i = 0; i < p.length; i++) {
     if (typeof b[p[i]] == "undefined") b[p[i]] = new Object();
     b = b[p[i]];
@@ -354,18 +354,18 @@ Seam.Remoting.createCall = function(component, methodName, params, callback, exc
   var callId = "" + Seam.Remoting.__callId++;
   if (!callback) callback = component.__callback[methodName];
 
-  var d = "<call id=\"" + callId + "\">\n";   
+  var d = "<call id=\"" + callId + "\">\n";
   d += "<target>" + Seam.Remoting.getBeanType(component).__name + "</target>";
-  
+
   if (component.__qualifiers != null) {
-    d += "<qualifiers>";    
+    d += "<qualifiers>";
     for (var i = 0; i < component.__qualifiers.length; i++) {
       d += component.__qualifiers[i];
       if (i < component.__qualifiers.length - 1) data += ",";
     }
     d += "</qualifiers>";
   }
-  
+
   d += "<method>" + methodName + "</method>";
   d += "<params>";
 
@@ -467,7 +467,7 @@ Seam.Remoting.execute = function(component, methodName, params, callback, except
 Seam.Remoting.sendAjaxRequest = function(envelope, path, callback, silent)
 {
   Seam.Remoting.log("Request packet:\n" + envelope);
-  if (!silent) Seam.Remoting.displayLoadingMessage();    
+  if (!silent) Seam.Remoting.displayLoadingMessage();
   var r;
   if (window.XMLHttpRequest) {
     r = new XMLHttpRequest();
@@ -479,21 +479,21 @@ Seam.Remoting.sendAjaxRequest = function(envelope, path, callback, silent)
 
   r.onreadystatechange = function() {
     if (r.readyState == 4) {
-      var inScope = typeof(Seam) == "undefined" ? false : true;      
+      var inScope = typeof(Seam) == "undefined" ? false : true;
       if (inScope) Seam.Remoting.hideLoadingMessage();
-        
+
       if (r.status == 200) {
         // We do this to avoid a memory leak
         window.setTimeout(function() {
           r.onreadystatechange = function() {};
-        }, 0);      
-      
+        }, 0);
+
         if (inScope) Seam.Remoting.log("Response packet:\n" + r.responseText);
-  
+
         if (callback) {
           // The following code deals with a Firefox security issue.  It reparses the XML
           // response if accessing the documentElement throws an exception
-          try {         
+          try {
             r.responseXML.documentElement;
             callback(r.responseXML);
           }
@@ -508,27 +508,27 @@ Seam.Remoting.sendAjaxRequest = function(envelope, path, callback, silent)
              catch (e) {
                // If that fails, use standards
                var parser = new DOMParser();
-               callback(parser.parseFromString(r.responseText, "text/xml")); 
+               callback(parser.parseFromString(r.responseText, "text/xml"));
              }
-          } 
+          }
         }
       }
       else {
         Seam.Remoting.displayError(r.status);
       }
-    }    
+    }
   }
 
   if (Seam.Remoting.encodedSessionId) {
     path += ';jsessionid=' + Seam.Remoting.encodedSessionId;
   }
-    
+
   r.open("POST", Seam.Remoting.resourcePath + path, true);
   r.send(envelope);
 }
 
 Seam.Remoting.displayError = function(code) {
-  alert("There was an error processing your request.  Error code: " + code);  
+  alert("There was an error processing your request.  Error code: " + code);
 }
 
 Seam.Remoting.setCallback = function(component, methodName, callback) {
@@ -539,8 +539,8 @@ Seam.Remoting.processResponse = function(doc) {
   var headerNode;
   var bodyNode;
   var inScope = typeof(Seam) == "undefined" ? false : true;
-  if (!inScope) return;    
-  
+  if (!inScope) return;
+
   var context = new Seam.Remoting.__Context;
 
   if (doc.documentElement) {
@@ -604,12 +604,12 @@ Seam.Remoting.processResult = function(result, context) {
       for (var i = 0; i < c.length; i++) {
         var tag = c.item(i).tagName;
         if (tag == "message")
-          msgNode = c.item(i); 
+          msgNode = c.item(i);
       }
-      
+
       var msg = Seam.Remoting.unmarshalValue(msgNode.firstChild);
       var ex = new Seam.Remoting.Exception(msg);
-      call.exceptionHandler(ex); 
+      call.exceptionHandler(ex);
     }
     else {
       var refs = new Array();
@@ -764,27 +764,27 @@ Seam.Remoting.Action = function() {
 	this.method = null;
 	this.params = new Array();
 	this.expression = null;
-		
+
 	Seam.Remoting.Action.prototype.setBeanType = function(beanType) {
 		this.beanType = beanType;
 		return this;
   }
-  
+
   Seam.Remoting.Action.prototype.setQualifiers = function(qualifiers) {
   	this.qualifiers = qualifiers;
   	return this;
   }
-  
-  Seam.Remoting.Action.prototype.setMethod = function(method) { 
+
+  Seam.Remoting.Action.prototype.setMethod = function(method) {
   	this.method = method;
   	return this;
   }
-  
+
   Seam.Remoting.Action.prototype.addParam = function(param) {
   	this.params.push(param);
   	return this;
   }
-  
+
   Seam.Remoting.Action.prototype.setExpression = function(expr) {
   	this.expression = expr;
     return this;
@@ -794,34 +794,34 @@ Seam.Remoting.Action = function() {
 Seam.Remoting.Model = function() {
   this.expressions = new Array();
   this.beans = new Array();
-	
+
 	Seam.Remoting.Model.prototype.addExpression = function(alias, expr) {
 		this.expressions.push({alias: alias, expr: expr});
   }
-  
+
   Seam.Remoting.Model.prototype.addBean = function(alias, bean, property) {
     var q = null;
     if (arguments.length > 3) {
 	    q = new Array();
-	    for (var i = 3; i < arguments.length; i++) { 
+	    for (var i = 3; i < arguments.length; i++) {
 	      q.push(arguments[i]);
 	    }
 	  }
 	  this.beans.push({alias: alias, bean: bean, property: property, qualifiers: q});
   }
-  
+
   Seam.Remoting.Model.prototype.fetch = function(action) {
   	var r = this.createFetchRequest(action);
     var env = Seam.Remoting.createEnvelope(Seam.Remoting.createHeader(), r.data);
     Seam.Remoting.pendingCalls.put(r.id, r);
-    Seam.Remoting.sendAjaxRequest(env, Seam.Remoting.PATH_MODEL, this.processFetchResponse, false);  	
+    Seam.Remoting.sendAjaxRequest(env, Seam.Remoting.PATH_MODEL, this.processFetchResponse, false);
   }
-  
+
   Seam.Remoting.Model.prototype.createFetchRequest = function(a) { // a = action
     var callId = "" + Seam.Remoting.__callId++;
     var d = "<model operation=\"fetch\" callId=\"" + callId + ">";
     var refs = new Array();
-    
+
     if (a) {
       d += "<action>";
       if (a.beanType) {
@@ -834,13 +834,22 @@ Seam.Remoting.Model = function() {
             d += "<param>" + Seam.Remoting.serializeValue(a.params[i], null, refs) + "</param>";
           }
           d += "</params>";
-        }       
+        }
+        if (refs.length > 0) {
+          d += "<refs>";
+          for (var i = 0; i < refs.length; i++) {
+            d += "<ref id=\"" + i + "\">";
+            d += Seam.Remoting.serializeType(refs[i], refs);
+            d += "</ref>";
+          }
+          d += "</refs>";
+        }
       }
       else if (a.expression) {
         d += "<target>" + a.expression + "</target>";
       }
       d += "</action>";
-    }    
+    }
     if (this.beans.length > 0) {
       for (var i = 0; i < this.beans.length; i++) {
         var b = this.beans[i];
@@ -849,41 +858,32 @@ Seam.Remoting.Model = function() {
           d += "<qualifiers>";
           for (var j = 0; j < b.qualifiers.length; j++) {
              d += (j > 0 ? "," : "") + b.qualifiers[j];
-          } 
+          }
           d += "</qualifiers>";
         }
-        d += "<property>" + b.property + "</property></bean>";        
+        d += "<property>" + b.property + "</property></bean>";
       }
-    }    
+    }
     if (this.expressions.length > 0) {
       for (var i = 0; i < this.expressions.length; i++) {
         var e = this.expressions[i];
         d += "<expression alias=\"" + e.alias + "\">" + e.expr + "</expression>";
-      } 
-    }
-    if (refs.length > 0) {
-      d += "<refs>";
-      for (var i = 0; i < refs.length; i++) {
-        d += "<ref id=\"" + i + "\">";
-        d += Seam.Remoting.serializeType(refs[i], refs);
-        d += "</ref>";
       }
-      d += "</refs>";
     }
-    d += "</model>";    
-    
+    d += "</model>";
+
     return {data: d, id: callId};
   }
-    
+
   Seam.Remoting.Model.prototype.processFetchResponse = function(doc) {
-    
-  }  
-  
+
+  }
+
   Seam.Remoting.Model.prototype.applyUpdates = function(action) {
-  	
-  } 
-  
-   
+
+  }
+
+
 }
 
 /* Messaging API */
