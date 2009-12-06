@@ -120,7 +120,7 @@ public class ExecutionHandler implements RequestHandler
 
             // First reconstruct all the references
             Element refsNode = e.element("refs");
-
+            
             Iterator iter = refsNode.elementIterator("ref");
             while (iter.hasNext())
             {
