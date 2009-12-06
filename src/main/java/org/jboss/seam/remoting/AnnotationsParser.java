@@ -71,6 +71,7 @@ public class AnnotationsParser extends DepthFirstVisitor
       }
    }
    
+   @SuppressWarnings("all")
    private class AnyQualifier extends AnnotationLiteral<Any> implements Any {};
 
    private Class<?> beanType;

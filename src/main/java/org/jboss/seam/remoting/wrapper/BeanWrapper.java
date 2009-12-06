@@ -314,7 +314,7 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
       out.write(BEAN_CLOSE_TAG);
    }
 
-   public ConversionScore conversionScore(Class cls)
+   public ConversionScore conversionScore(Class<?> cls)
    {
       if (cls.equals(value.getClass()))
          return ConversionScore.exact;

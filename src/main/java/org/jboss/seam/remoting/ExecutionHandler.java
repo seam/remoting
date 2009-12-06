@@ -42,10 +42,8 @@ public class ExecutionHandler implements RequestHandler
    private static final byte[] CONTEXT_TAG_OPEN = "<context>".getBytes();
    private static final byte[] CONTEXT_TAG_CLOSE = "</context>".getBytes();
 
-   @Inject
-   BeanManager beanManager;
-   @Inject
-   Conversation conversation;
+   @Inject BeanManager beanManager;
+   @Inject Conversation conversation;
 
    /**
     * The entry point for handling a request.
@@ -81,6 +79,12 @@ public class ExecutionHandler implements RequestHandler
       Document doc = xmlReader.read(new StringReader(requestData));
       final Element env = doc.getRootElement();
       final RequestContext ctx = unmarshalContext(env);
+      
+      if (!ctx.getConversationId().isEmpty())
+      { 
+         // TODO restore the conversation if there is a conversation ID in the context
+         //conversation.
+      }
 
       // Extract the calls from the request
       List<Call> calls = unmarshalCalls(env);

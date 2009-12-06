@@ -94,7 +94,7 @@ public class NumberWrapper extends BaseWrapper implements Wrapper
     *           Class
     * @return ConversionScore
     */
-   public ConversionScore conversionScore(Class cls)
+   public ConversionScore conversionScore(Class<?> cls)
    {
       if (cls.equals(Integer.class) || cls.equals(Integer.TYPE)
             || cls.equals(Long.class) || cls.equals(Long.TYPE)

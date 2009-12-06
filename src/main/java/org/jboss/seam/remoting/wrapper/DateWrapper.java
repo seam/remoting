@@ -86,7 +86,7 @@ public class DateWrapper extends BaseWrapper implements Wrapper
       return value;
    }
 
-   public ConversionScore conversionScore(Class cls)
+   public ConversionScore conversionScore(Class<?> cls)
    {
       if (Date.class.isAssignableFrom(cls)
             || Calendar.class.isAssignableFrom(cls))

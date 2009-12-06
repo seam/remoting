@@ -36,6 +36,7 @@ public class BagWrapper extends BaseWrapper implements Wrapper
    private static final byte[] ELEMENT_TAG_OPEN = "<element>".getBytes();
    private static final byte[] ELEMENT_TAG_CLOSE = "</element>".getBytes();
 
+   @SuppressWarnings("unchecked")
    public void marshal(OutputStream out) throws IOException
    {
       out.write(BAG_TAG_OPEN);
@@ -50,12 +51,12 @@ public class BagWrapper extends BaseWrapper implements Wrapper
          }
       }
 
-      Collection vals = null;
+      Collection<Object> vals = null;
 
       // If the value is an array, convert it to a Collection
       if (value.getClass().isArray())
       {
-         vals = new ArrayList();
+         vals = new ArrayList<Object>();
          for (int i = 0; i < Array.getLength(value); i++)
             vals.add(Array.get(value, i));
       } else if (Collection.class.isAssignableFrom(value.getClass()))
@@ -133,7 +134,7 @@ public class BagWrapper extends BaseWrapper implements Wrapper
       return value;
    }
 
-   private Class getConcreteClass(Class c)
+   private Class<?> getConcreteClass(Class<?> c)
    {
       if (c.isInterface())
       {
@@ -154,7 +155,7 @@ public class BagWrapper extends BaseWrapper implements Wrapper
     *           Class
     * @return ConversionScore
     */
-   public ConversionScore conversionScore(Class cls)
+   public ConversionScore conversionScore(Class<?> cls)
    {
       // There's no such thing as an exact match for a bag, so we'll just look
       // for

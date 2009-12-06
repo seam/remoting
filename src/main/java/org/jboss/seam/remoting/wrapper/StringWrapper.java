@@ -217,12 +217,13 @@ public class StringWrapper extends BaseWrapper implements Wrapper
       }
    }
 
-   public ConversionScore conversionScore(Class cls)
+   @SuppressWarnings("unchecked")
+   public ConversionScore conversionScore(Class<?> cls)
    {
       if (cls.equals(String.class) || StringBuffer.class.isAssignableFrom(cls))
          return ConversionScore.exact;
 
-      for (Class c : COMPATIBLE_CLASSES)
+      for (Class<?> c : COMPATIBLE_CLASSES)
       {
          if (cls.equals(c))
             return ConversionScore.compatible;
@@ -234,7 +235,7 @@ public class StringWrapper extends BaseWrapper implements Wrapper
          {
             String elementValue = URLDecoder.decode(element.getStringValue(),
                   DEFAULT_ENCODING);
-            Enum.valueOf(cls, elementValue);
+            Enum.valueOf((Class<? extends Enum>) cls, elementValue);
             return ConversionScore.compatible;
          } catch (IllegalArgumentException ex)
          {

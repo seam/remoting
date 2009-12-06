@@ -71,6 +71,7 @@ Seam.Remoting.extractEncodedSessionId = function(url) {
 
 Seam.Remoting.PATH_EXECUTE = "/execute";
 Seam.Remoting.PATH_SUBSCRIPTION = "/subscription";
+Seam.Remoting.PATH_MODEL = "/model";
 Seam.Remoting.PATH_POLL = "/poll";
 
 Seam.Remoting.encodedSessionId = Seam.Remoting.extractEncodedSessionId(window.location.href);
@@ -757,6 +758,39 @@ Seam.Remoting.hideLoadingMessage = function() {
 
 /* Remote Model API */
 
+Seam.Remoting.Action = function() {
+	this.beanType = null;
+	this.qualifiers = null;
+	this.method = null;
+	this.params = new Array();
+	this.expression = null;
+		
+	Seam.Remoting.Action.prototype.setBeanType = function(beanType) {
+		this.beanType = beanType;
+		return this;
+  }
+  
+  Seam.Remoting.Action.prototype.setQualifiers = function(qualifiers) {
+  	this.qualifiers = qualifiers;
+  	return this;
+  }
+  
+  Seam.Remoting.Action.prototype.setMethod = function(method) { 
+  	this.method = method;
+  	return this;
+  }
+  
+  Seam.Remoting.Action.prototype.addParam = function(param) {
+  	this.params.push(param);
+  	return this;
+  }
+  
+  Seam.Remoting.Action.prototype.setExpression = function(expr) {
+  	this.expression = expr;
+    return this;
+  }
+}
+
 Seam.Remoting.Model = function() {
   this.expressions = new Array();
   this.beans = new Array();
@@ -765,20 +799,85 @@ Seam.Remoting.Model = function() {
 		this.expressions.push({alias: alias, expr: expr});
   }
   
-  Seam.Remoting.Model.prototype.addBean = function(alias, bean) {
+  Seam.Remoting.Model.prototype.addBean = function(alias, bean, property) {
     var q = null;
-    if (arguments.length > 2) {
+    if (arguments.length > 3) {
 	    q = new Array();
-	    for (var i = 1; i < arguments.length; i++) { 
+	    for (var i = 3; i < arguments.length; i++) { 
 	      q.push(arguments[i]);
 	    }
 	  }
-	  this.beans.push({alias: alias, bean: bean; qualifiers: q});
+	  this.beans.push({alias: alias, bean: bean, property: property, qualifiers: q});
   }
-
+  
   Seam.Remoting.Model.prototype.fetch = function(action) {
-  	
+  	var r = this.createFetchRequest(action);
+    var env = Seam.Remoting.createEnvelope(Seam.Remoting.createHeader(), r.data);
+    Seam.Remoting.pendingCalls.put(r.id, r);
+    Seam.Remoting.sendAjaxRequest(env, Seam.Remoting.PATH_MODEL, this.processFetchResponse, false);  	
   }
+  
+  Seam.Remoting.Model.prototype.createFetchRequest = function(a) { // a = action
+    var callId = "" + Seam.Remoting.__callId++;
+    var d = "<model operation=\"fetch\" callId=\"" + callId + ">";
+    var refs = new Array();
+    
+    if (a) {
+      d += "<action>";
+      if (a.beanType) {
+        d += "<target>" + a.beanType + "</target>";
+        if (a.qualifiers) d += "<qualifiers>" + a.qualifiers + "</qualifiers>";
+        if (a.method) d += "<method>" + a.method + "</method>";
+        if (a.params.length > 0) {
+          d += "<params>";
+          for (var i = 0; i < a.params.length; i++) {
+            d += "<param>" + Seam.Remoting.serializeValue(a.params[i], null, refs) + "</param>";
+          }
+          d += "</params>";
+        }       
+      }
+      else if (a.expression) {
+        d += "<target>" + a.expression + "</target>";
+      }
+      d += "</action>";
+    }    
+    if (this.beans.length > 0) {
+      for (var i = 0; i < this.beans.length; i++) {
+        var b = this.beans[i];
+        d += "<bean alias=\"" + b.alias + "\"><name>" + b.name + "</name>";
+        if (b.qualifiers && b.qualifiers.length > 0) {
+          d += "<qualifiers>";
+          for (var j = 0; j < b.qualifiers.length; j++) {
+             d += (j > 0 ? "," : "") + b.qualifiers[j];
+          } 
+          d += "</qualifiers>";
+        }
+        d += "<property>" + b.property + "</property></bean>";        
+      }
+    }    
+    if (this.expressions.length > 0) {
+      for (var i = 0; i < this.expressions.length; i++) {
+        var e = this.expressions[i];
+        d += "<expression alias=\"" + e.alias + "\">" + e.expr + "</expression>";
+      } 
+    }
+    if (refs.length > 0) {
+      d += "<refs>";
+      for (var i = 0; i < refs.length; i++) {
+        d += "<ref id=\"" + i + "\">";
+        d += Seam.Remoting.serializeType(refs[i], refs);
+        d += "</ref>";
+      }
+      d += "</refs>";
+    }
+    d += "</model>";    
+    
+    return {data: d, id: callId};
+  }
+    
+  Seam.Remoting.Model.prototype.processFetchResponse = function(doc) {
+    
+  }  
   
   Seam.Remoting.Model.prototype.applyUpdates = function(action) {
   	

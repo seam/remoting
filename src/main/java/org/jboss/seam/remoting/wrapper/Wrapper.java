@@ -67,5 +67,5 @@ public interface Wrapper
    * 2 - Param is this exact type
    *
    */
-  public ConversionScore conversionScore(Class cls);
+  public ConversionScore conversionScore(Class<?> cls);
 }
