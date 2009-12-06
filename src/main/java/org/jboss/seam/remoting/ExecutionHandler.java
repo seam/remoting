@@ -18,6 +18,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jboss.seam.remoting.wrapper.Wrapper;
+import org.jboss.weld.conversation.ConversationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,29 +30,17 @@ import org.slf4j.LoggerFactory;
  */
 public class ExecutionHandler implements RequestHandler
 {
-   private static final Logger log = LoggerFactory
-         .getLogger(ExecutionHandler.class);
-
-   private static final byte[] HEADER_OPEN = "<header>".getBytes();
-   private static final byte[] HEADER_CLOSE = "</header>".getBytes();
-   private static final byte[] CONVERSATION_ID_TAG_OPEN = "<conversationId>"
-         .getBytes();
-   private static final byte[] CONVERSATION_ID_TAG_CLOSE = "</conversationId>"
-         .getBytes();
-
-   private static final byte[] CONTEXT_TAG_OPEN = "<context>".getBytes();
-   private static final byte[] CONTEXT_TAG_CLOSE = "</context>".getBytes();
+   private static final Logger log = LoggerFactory.getLogger(ExecutionHandler.class);
 
    @Inject BeanManager beanManager;
+   @Inject ConversationManager conversationManager;
    @Inject Conversation conversation;
 
    /**
     * The entry point for handling a request.
     * 
-    * @param request
-    *           HttpServletRequest
-    * @param response
-    *           HttpServletResponse
+    * @param request HttpServletRequest
+    * @param response HttpServletResponse
     * @throws Exception
     */
    public void handle(HttpServletRequest request,
@@ -78,12 +67,12 @@ public class ExecutionHandler implements RequestHandler
       SAXReader xmlReader = new SAXReader();
       Document doc = xmlReader.read(new StringReader(requestData));
       final Element env = doc.getRootElement();
-      final RequestContext ctx = unmarshalContext(env);
+      final RequestContext ctx = new RequestContext(env.element("header"));
       
       if (!ctx.getConversationId().isEmpty())
       { 
-         // TODO restore the conversation if there is a conversation ID in the context
-         //conversation.
+         // this is non portable ;/
+         conversationManager.beginOrRestoreConversation(ctx.getConversationId());
       }
 
       // Extract the calls from the request
@@ -100,35 +89,6 @@ public class ExecutionHandler implements RequestHandler
 
       // Package up the response
       marshalResponse(calls, ctx, response.getOutputStream());
-   }
-
-   /**
-    * Unmarshals the context from the request envelope header.
-    * 
-    * @param env
-    *           Element
-    * @return RequestContext
-    */
-   private RequestContext unmarshalContext(Element env)
-   {
-      RequestContext ctx = new RequestContext();
-
-      Element header = env.element("header");
-      if (header != null)
-      {
-         Element context = header.element("context");
-         if (context != null)
-         {
-
-            Element convId = context.element("conversationId");
-            if (convId != null)
-            {
-               ctx.setConversationId(convId.getText());
-            }
-         }
-      }
-
-      return ctx;
    }
 
    /**

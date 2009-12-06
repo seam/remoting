@@ -33,9 +33,11 @@ public class Remoting extends HttpServlet
    //private static final String REQUEST_PATH_SUBSCRIPTION = "/subscription";
    //private static final String REQUEST_PATH_POLL = "/poll";
    private static final String REQUEST_PATH_INTERFACE = "/interface.js";   
+   private static final String REQUEST_PATH_MODEL = "/model";
    
    @Inject Instance<ExecutionHandler> executionHandlerInstance;
    @Inject Instance<InterfaceGenerator> interfaceHandlerInstance;
+   @Inject Instance<ModelHandler> modelHandlerInstance;
    
    public static final int DEFAULT_POLL_TIMEOUT = 10; // 10 seconds
    public static final int DEFAULT_POLL_INTERVAL = 1; // 1 second
@@ -213,6 +215,10 @@ public class Remoting extends HttpServlet
          else if (REQUEST_PATH_INTERFACE.equals(pathInfo))
          {
             interfaceHandlerInstance.get().handle(request, response);
+         }
+         else if (REQUEST_PATH_MODEL.equals(pathInfo))
+         {
+            modelHandlerInstance.get().handle(request, response);
          }
          else
          {
