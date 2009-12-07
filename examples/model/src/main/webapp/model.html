@@ -18,10 +18,25 @@
   <script type="text/javascript">    
     //<![CDATA[
     
+      function loadCustomer() {
+        var customerId = document.getElementById("customerId").value;
+        
+        var callback = function(result) { alert("got result: " + result); };
+        var model = new Seam.Remoting.Model();
+        
+        model.addBean("customer", "org.jboss.seam.remoting.examples.model.CustomerAction", "customer");
+        model.fetch(new Seam.Remoting.Action()
+          .setBeanType("org.jboss.seam.remoting.examples.model.CustomerAction")
+          .setMethod("editCustomer")
+          .addParam(customerId));
+      }
 
       // ]]>
-    }
-  </script>  
+  </script> 
+  
+  <label for="customerId">Customer ID</label><input type="text" id="customerId" value="1"/>
+  
+  <button onclick="javascript:loadCustomer()">Load customer</button> 
 
 
 </body>
