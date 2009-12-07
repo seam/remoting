@@ -791,6 +791,50 @@ Seam.Remoting.Action = function() {
   }
 }
 
+Seam.Remoting.processModelResponse = function(doc) {
+  var headerNode;
+  var bodyNode;
+  var inScope = typeof(Seam) == "undefined" ? false : true;
+  if (!inScope) return;
+
+  var context = new Seam.Remoting.__Context;
+
+  if (doc.documentElement) {
+    for (var i = 0; i < doc.documentElement.childNodes.length; i++) {
+      var node = doc.documentElement.childNodes.item(i);
+      if (node.tagName == "header")
+        headerNode = node;
+      else if (node.tagName == "body")
+        bodyNode = node;
+    }
+  }
+  if (headerNode) {
+    var contextNode;
+    for (var i = 0; i < headerNode.childNodes.length; i++) {
+      var node = headerNode.childNodes.item(i);
+      if (node.tagName == "context") {
+        contextNode = node;
+        break;
+      }
+    }
+    if (contextNode && context) {
+      Seam.Remoting.unmarshalContext(contextNode, context);
+      if (context.getConversationId() && Seam.Remoting.getContext().getConversationId() == null)
+        Seam.Remoting.getContext().setConversationId(context.getConversationId());
+    }
+  }
+  if (bodyNode) {
+    for (var i = 0; i < bodyNode.childNodes.length; i++) {
+      var n = bodyNode.childNodes.item(i);
+      if (n.tagName == "model") Seam.Remoting.processModel(n, context);
+    }
+  }
+}
+
+Seam.Remoting.processModel = function(n, ctx) {
+  
+}
+
 Seam.Remoting.Model = function() {
   this.expressions = new Array();
   this.beans = new Array();
@@ -814,7 +858,7 @@ Seam.Remoting.Model = function() {
   	var r = this.createFetchRequest(action);
     var env = Seam.Remoting.createEnvelope(Seam.Remoting.createHeader(), r.data);
     Seam.Remoting.pendingCalls.put(r.id, r);
-    Seam.Remoting.sendAjaxRequest(env, Seam.Remoting.PATH_MODEL, this.processFetchResponse, false);
+    Seam.Remoting.sendAjaxRequest(env, Seam.Remoting.PATH_MODEL, Seam.Remoting.processModelResponse, false);
   }
 
   Seam.Remoting.Model.prototype.createFetchRequest = function(a) { // a = action
