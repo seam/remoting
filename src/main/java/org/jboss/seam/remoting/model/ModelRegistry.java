@@ -4,11 +4,11 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.enterprise.context.ConversationScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 
-@ConversationScoped
+@SessionScoped
 public class ModelRegistry implements Serializable
 {
    private static final long serialVersionUID = -2952670948046596460L;

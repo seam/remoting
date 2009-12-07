@@ -80,6 +80,14 @@
          <artifactId>slf4j-api</artifactId>
          <scope>provided</scope>
       </dependency>
+
+      <!-- non portable dependency -->
+      <dependency>
+         <groupId>org.jboss.weld</groupId>
+         <artifactId>weld-core</artifactId>
+         <version>1.0.0</version>
+         <scope>provided</scope>
+      </dependency>
    </dependencies>
 
 </project>

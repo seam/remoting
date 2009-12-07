@@ -63,7 +63,7 @@ public class ModelHandler implements RequestHandler
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
       
-      if (!ctx.getConversationId().isEmpty())
+      if (ctx.getConversationId() != null && !ctx.getConversationId().isEmpty())
       { 
          conversationManager.beginOrRestoreConversation(ctx.getConversationId());
       }
@@ -73,7 +73,7 @@ public class ModelHandler implements RequestHandler
       for (Element modelElement : (List<Element>) env.element("body").elements("model"))
       {     
          String operation = modelElement.attributeValue("operation");
-         String id = modelElement.attributeValue("id");
+         String callId = modelElement.attributeValue("callId");
          
          if ("fetch".equals(operation))
          {
@@ -89,23 +89,30 @@ public class ModelHandler implements RequestHandler
                Element paramsElement = actionElement.element("params");
                Element refsElement = actionElement.element("refs");
                
-               action = new Call(beanManager, id, targetElement.getTextTrim(), 
-                    qualifiersElement.getTextTrim(), methodElement.getTextTrim());                        
+               action = new Call(beanManager, callId, targetElement.getTextTrim(), 
+                    qualifiersElement != null ? qualifiersElement.getTextTrim() : null, 
+                    methodElement != null ? methodElement.getTextTrim() : null);                        
    
-               for (Element refElement : (List<Element>) refsElement.elements("ref"))
+               if (refsElement != null)
                {
-                  action.getContext().createWrapperFromElement(refElement);
+                  for (Element refElement : (List<Element>) refsElement.elements("ref"))
+                  {
+                     action.getContext().createWrapperFromElement(refElement);
+                  }
+      
+                  for (Wrapper w : action.getContext().getInRefs().values())
+                  {
+                     w.unmarshal();
+                  }
                }
    
-               for (Wrapper w : action.getContext().getInRefs().values())
+               if (paramsElement != null)
                {
-                  w.unmarshal();
-               }
-   
-               for (Element paramElement : (List<Element>) paramsElement.elements("param"))
-               {
-                  action.addParameter(action.getContext().createWrapperFromElement(
-                        paramElement));
+                  for (Element paramElement : (List<Element>) paramsElement.elements("param"))
+                  {
+                     action.addParameter(action.getContext().createWrapperFromElement(
+                           (Element) paramElement.elements().get(0)));
+                  }
                }
             }
             
@@ -117,8 +124,8 @@ public class ModelHandler implements RequestHandler
                
                model.addBean(beanElement.attributeValue("alias"),
                      beanNameElement.getTextTrim(), 
-                     beanQualifierElement.getTextTrim(), 
-                     beanPropertyElement.getTextTrim());
+                     beanQualifierElement != null ? beanQualifierElement.getTextTrim() : null, 
+                     beanPropertyElement != null ? beanPropertyElement.getTextTrim() : null);
             }
             
             // TODO Unmarshal expressions - don't support this until security implications investigated

@@ -863,7 +863,7 @@ Seam.Remoting.Model = function() {
 
   Seam.Remoting.Model.prototype.createFetchRequest = function(a) { // a = action
     var callId = "" + Seam.Remoting.__callId++;
-    var d = "<model operation=\"fetch\" callId=\"" + callId + ">";
+    var d = "<model operation=\"fetch\" callId=\"" + callId + "\">";
     var refs = new Array();
 
     if (a) {
@@ -897,7 +897,7 @@ Seam.Remoting.Model = function() {
     if (this.beans.length > 0) {
       for (var i = 0; i < this.beans.length; i++) {
         var b = this.beans[i];
-        d += "<bean alias=\"" + b.alias + "\"><name>" + b.name + "</name>";
+        d += "<bean alias=\"" + b.alias + "\"><name>" + b.bean + "</name>";
         if (b.qualifiers && b.qualifiers.length > 0) {
           d += "<qualifiers>";
           for (var j = 0; j < b.qualifiers.length; j++) {

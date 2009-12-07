@@ -69,7 +69,7 @@ public class ExecutionHandler implements RequestHandler
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
       
-      if (!ctx.getConversationId().isEmpty())
+      if (ctx.getConversationId() != null && !ctx.getConversationId().isEmpty())
       { 
          // this is non portable ;/
          conversationManager.beginOrRestoreConversation(ctx.getConversationId());
