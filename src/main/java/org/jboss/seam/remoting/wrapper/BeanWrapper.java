@@ -49,12 +49,14 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
       if (bean != null)
       {
          value = bean.create(beanManager.createCreationalContext(bean));
-      } else
+      }
+      else
       {
          try
          {
             value = Class.forName(beanType).newInstance();
-         } catch (Exception ex)
+         }
+         catch (Exception ex)
          {
             throw new RuntimeException("Could not unmarshal bean element: "
                   + element.getText(), ex);
@@ -62,12 +64,13 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
       }
    }
 
+   @SuppressWarnings("unchecked")
    @Override
    public void unmarshal()
    {
-      List members = element.elements("member");
+      List<Element> members = element.elements("member");
 
-      for (Element member : (List<Element>) members)
+      for (Element member : members)
       {
          String name = member.attributeValue("name");
 
@@ -108,7 +111,8 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
                {
                   // First check the declared fields
                   field = cls.getDeclaredField(name);
-               } catch (NoSuchFieldException ex)
+               }
+               catch (NoSuchFieldException ex)
                {
                   // Couldn't find the field.. try the superclass
                   cls = cls.getSuperclass();
@@ -131,7 +135,8 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
          {
             fieldValue = w.convert(method != null ? method
                   .getGenericParameterTypes()[0] : field.getGenericType());
-         } catch (ConversionException ex)
+         }
+         catch (ConversionException ex)
          {
             throw new RuntimeException(
                   "Could not convert value while unmarshaling", ex);
@@ -143,12 +148,14 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
             try
             {
                method.invoke(value, fieldValue);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                throw new RuntimeException(String.format(
                      "Could not invoke setter method [%s]", method.getName()));
             }
-         } else
+         }
+         else
          {
             // Otherwise try to set the field value directly
             boolean accessible = field.isAccessible();
@@ -157,10 +164,12 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
                if (!accessible)
                   field.setAccessible(true);
                field.set(value, fieldValue);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                throw new RuntimeException("Could not set field value.", ex);
-            } finally
+            }
+            finally
             {
                field.setAccessible(accessible);
             }
@@ -170,12 +179,16 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
 
    public Object convert(Type type) throws ConversionException
    {
-      if (type instanceof Class
-            && ((Class) type).isAssignableFrom(value.getClass()))
+      if (type instanceof Class<?>
+            && ((Class<?>) type).isAssignableFrom(value.getClass()))
+      {
          return value;
+      }
       else
+      {
          throw new ConversionException(String.format(
                "Value [%s] cannot be converted to type [%s].", value, type));
+      }
    }
 
    public void marshal(OutputStream out) throws IOException
@@ -200,7 +213,7 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
    {
       out.write(BEAN_START_TAG_OPEN);
 
-      Class cls = value.getClass();
+      Class<?> cls = value.getClass();
 
       /**
        * @todo This is a hack to get the "real" class - find out if there is an
@@ -217,13 +230,17 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
       }
 
       // TODO fix this, bean might not have a name
-      Bean bean = beanManager.getBeans(cls).iterator().next();      
+      Bean<?> bean = beanManager.getBeans(cls).iterator().next();
       String componentName = bean.getName();
 
       if (componentName != null)
+      {
          out.write(componentName.getBytes());
+      }
       else
+      {
          out.write(cls.getName().getBytes());
+      }
 
       out.write(BEAN_START_TAG_CLOSE);
 
@@ -251,7 +268,8 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
             try
             {
                f = cls.getField(propertyName);
-            } catch (NoSuchFieldException ex)
+            }
+            catch (NoSuchFieldException ex)
             {
             }
 
@@ -265,7 +283,8 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
                   f.setAccessible(true);
                   context.createWrapperFromObject(f.get(value), fieldPath)
                         .marshal(out);
-               } else
+               }
+               else
                {
                   Method accessor = null;
                   try
@@ -273,14 +292,16 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
                      accessor = cls.getMethod(String.format("get%s%s",
                            Character.toUpperCase(propertyName.charAt(0)),
                            propertyName.substring(1)));
-                  } catch (NoSuchMethodException ex)
+                  }
+                  catch (NoSuchMethodException ex)
                   {
                      try
                      {
                         accessor = cls.getMethod(String.format("is%s%s",
                               Character.toUpperCase(propertyName.charAt(0)),
                               propertyName.substring(1)));
-                     } catch (NoSuchMethodException ex2)
+                     }
+                     catch (NoSuchMethodException ex2)
                      {
                         // uh oh... continue with the next one
                         continue;
@@ -291,17 +312,20 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
                   {
                      context.createWrapperFromObject(accessor.invoke(value),
                            fieldPath).marshal(out);
-                  } catch (InvocationTargetException ex)
+                  }
+                  catch (InvocationTargetException ex)
                   {
                      throw new RuntimeException(String.format(
                            "Failed to read property [%s] for object [%s]",
                            propertyName, value));
                   }
                }
-            } catch (IllegalAccessException ex)
+            }
+            catch (IllegalAccessException ex)
             {
                throw new RuntimeException("Error reading value from field.");
-            } finally
+            }
+            finally
             {
                if (f != null)
                   f.setAccessible(accessible);
@@ -317,11 +341,17 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
    public ConversionScore conversionScore(Class<?> cls)
    {
       if (cls.equals(value.getClass()))
+      {
          return ConversionScore.exact;
+      }
       else if (cls.isAssignableFrom(value.getClass())
             || cls.equals(Object.class))
+      {
          return ConversionScore.compatible;
+      }
       else
+      {
          return ConversionScore.nomatch;
+      }
    }
 }

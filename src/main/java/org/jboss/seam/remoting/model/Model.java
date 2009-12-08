@@ -2,11 +2,14 @@ package org.jboss.seam.remoting.model;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 
@@ -14,6 +17,11 @@ import org.jboss.seam.remoting.AnnotationsParser;
 import org.jboss.seam.remoting.Call;
 import org.jboss.seam.remoting.CallContext;
 
+/**
+ * Manages a model request
+ *  
+ * @author Shane Bryzak
+ */
 public class Model implements Serializable
 {
    private static final long serialVersionUID = 8318288750036758325L;
@@ -22,16 +30,79 @@ public class Model implements Serializable
    private String id;
    private CallContext callContext;
    
-   private class BeanProperty 
+   public class BeanProperty 
    {
-      public Bean<?> bean;
-      public String propertyName;
+      private Bean<?> bean;
+      private String propertyName;
+      private Object value;      
       
       public BeanProperty(Bean<?> bean, String propertyName)
       {
          this.bean = bean;
          this.propertyName = propertyName;
       }      
+      
+      public Bean<?> getBean()
+      {
+         return bean;
+      }
+      
+      @SuppressWarnings("unchecked")
+      public void evaluate(CreationalContext ctx)
+      {
+         Object instance = bean.create(ctx);
+         
+         if (propertyName != null)
+         {
+            try
+            {
+               Field f = bean.getBeanClass().getField(propertyName);
+               boolean accessible = f.isAccessible();
+               try
+               {
+                  f.setAccessible(true);
+                  value = f.get(instance);
+               }
+               catch (Exception e)
+               {
+                  throw new RuntimeException(
+                        "Exception reading model property " + propertyName +
+                        " from bean [" + bean + "]");
+               }
+               finally
+               {
+                  f.setAccessible(accessible);
+               }
+            }
+            catch (NoSuchFieldException ex)
+            {
+               // Try the getter method
+               String methodName = "get" + propertyName.substring(0, 1).toUpperCase() +
+                  propertyName.substring(1);
+               
+               try
+               {
+                  Method m = bean.getBeanClass().getMethod(methodName);
+                  value = m.invoke(instance);
+               }
+               catch (Exception e)
+               {
+                  throw new RuntimeException(
+                        "Exception reading model property " + propertyName +
+                        " from bean [" + bean + "]");
+               }
+            }
+         }
+         else
+         {
+            this.value = instance;
+         }
+      }
+      
+      public Object getValue()
+      {
+         return value;
+      }
    }
    
    private Map<String, BeanProperty> beanProperties;
@@ -42,6 +113,25 @@ public class Model implements Serializable
       id = UUID.randomUUID().toString();
       callContext = new CallContext(beanManager);
       beanProperties = new HashMap<String, BeanProperty>();
+   }
+   
+   /**
+    * Evaluate each of the model's bean properties, expressions, etc and
+    * store the values in the BeanProperty map.
+    */
+   public void evaluate()
+   {
+      
+      for (String alias : beanProperties.keySet())
+      {         
+         BeanProperty property = beanProperties.get(alias);
+         property.evaluate(beanManager.createCreationalContext(property.getBean()));         
+      }
+   }
+   
+   public Map<String,BeanProperty> getBeanProperties()
+   {
+      return beanProperties;
    }
    
    public String getId()

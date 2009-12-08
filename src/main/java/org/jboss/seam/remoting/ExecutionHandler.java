@@ -187,7 +187,7 @@ public class ExecutionHandler implements RequestHandler
 
       for (Call call : calls)
       {
-         MarshalUtils.marshalResult(call, out);
+         MarshalUtils.marshalCallResult(call, out);
       }
 
       out.write(BODY_TAG_CLOSE);

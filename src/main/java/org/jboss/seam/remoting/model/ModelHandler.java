@@ -18,6 +18,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jboss.seam.remoting.Call;
+import org.jboss.seam.remoting.MarshalUtils;
 import org.jboss.seam.remoting.RequestContext;
 import org.jboss.seam.remoting.RequestHandler;
 import org.jboss.seam.remoting.wrapper.Wrapper;
@@ -69,6 +70,7 @@ public class ModelHandler implements RequestHandler
       }
       
       Set<Model> models = new HashSet<Model>();
+      Call action = null;      
       
       for (Element modelElement : (List<Element>) env.element("body").elements("model"))
       {     
@@ -78,8 +80,8 @@ public class ModelHandler implements RequestHandler
          if ("fetch".equals(operation))
          {
             Model model = registry.createModel();
+            models.add(model);
             
-            Call action = null;
             if (modelElement.elements("action").size() > 0)
             {
                Element actionElement = modelElement.element("action");
@@ -136,13 +138,25 @@ public class ModelHandler implements RequestHandler
             
             if (action != null)
             {
-               action.execute();
+               action.execute();                              
             }            
          }
       }
 
-      ctx.setConversationId(conversation.getId());      
-      marshalResponse(models, ctx, response.getOutputStream());
+      if (action != null && action.getException() != null)
+      {
+         out.write(ENVELOPE_TAG_OPEN);
+         out.write(BODY_TAG_OPEN);         
+         MarshalUtils.marshalException(action.getException(), action.getContext(), out);
+         out.write(BODY_TAG_CLOSE);
+         out.write(ENVELOPE_TAG_CLOSE);
+         out.flush();
+      }      
+      else
+      {      
+         ctx.setConversationId(conversation.getId());      
+         marshalResponse(models, ctx, response.getOutputStream());
+      }
    }
    
    private void marshalResponse(Set<Model> models, RequestContext ctx, 
@@ -165,7 +179,7 @@ public class ModelHandler implements RequestHandler
 
       for (Model model : models)
       {
-         //MarshalUtils.marshalResult(call, out);
+         MarshalUtils.marshalModel(model, out);
       }
 
       out.write(BODY_TAG_CLOSE);
