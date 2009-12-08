@@ -4,8 +4,12 @@ import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  * Customer entity bean.  This class exposes a variety of property types for the
@@ -18,15 +22,21 @@ public class Customer implements Serializable
 {
    private static final long serialVersionUID = 4289723352398788625L;
 
-   public enum Gender { male, female }
-   
-   private Integer customerId;
-   private String firstName;
-   private String lastName;
-   private Date dateOfBirth;
-   private Gender gender;
+   public static enum Gender { male, female }
    
    @Id @GeneratedValue
+   private Integer customerId;
+   
+   private String firstName;
+   private String lastName;
+   
+   @Temporal(TemporalType.DATE)
+   private Date dateOfBirth;
+   
+   @Enumerated(EnumType.STRING)
+   private Gender gender;
+   
+   
    public Integer getCustomerId()
    {
       return customerId;
