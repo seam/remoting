@@ -174,8 +174,8 @@ public class Call
    {
       CreationalContext ctx = beanManager.createCreationalContext(targetBean);
       
-      // Create an instance of the component
-      Object instance = targetBean.create(ctx); 
+      // Get an instance of the component
+      Object instance = beanManager.getReference(targetBean, targetBean.getBeanClass(), ctx);;      
 
       if (instance == null)
       {

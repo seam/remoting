@@ -1,5 +1,7 @@
 package org.jboss.seam.remoting.model;
 
+import static org.jboss.weld.jsf.JsfHelper.getHttpSession;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -13,6 +15,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -22,7 +25,11 @@ import org.jboss.seam.remoting.MarshalUtils;
 import org.jboss.seam.remoting.RequestContext;
 import org.jboss.seam.remoting.RequestHandler;
 import org.jboss.seam.remoting.wrapper.Wrapper;
+import org.jboss.weld.Container;
+import org.jboss.weld.context.ContextLifecycle;
+import org.jboss.weld.context.ConversationContext;
 import org.jboss.weld.conversation.ConversationManager;
+import org.jboss.weld.servlet.ConversationBeanStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,10 +70,19 @@ public class ModelHandler implements RequestHandler
       Document doc = xmlReader.read(new StringReader(requestData));
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
+            
+      // Initialize the conversation context
+      ConversationContext conversationContext = Container.instance().deploymentServices().get(ContextLifecycle.class).getConversationContext();
+      conversationContext.setBeanStore(new ConversationBeanStore(request.getSession(), ctx.getConversationId()));
+      conversationContext.setActive(true);
       
       if (ctx.getConversationId() != null && !ctx.getConversationId().isEmpty())
       { 
          conversationManager.beginOrRestoreConversation(ctx.getConversationId());
+      }
+      else
+      {
+         conversationManager.beginOrRestoreConversation(null);
       }
       
       Set<Model> models = new HashSet<Model>();
@@ -154,6 +170,11 @@ public class ModelHandler implements RequestHandler
       }      
       else
       {      
+         for (Model model : models)
+         {
+            model.evaluate();
+         }
+         
          ctx.setConversationId(conversation.getId());      
          marshalResponse(models, ctx, response.getOutputStream());
       }

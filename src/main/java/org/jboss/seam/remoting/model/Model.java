@@ -49,8 +49,8 @@ public class Model implements Serializable
       
       @SuppressWarnings("unchecked")
       public void evaluate(CreationalContext ctx)
-      {
-         Object instance = bean.create(ctx);
+      {         
+         Object instance = beanManager.getReference(bean, bean.getBeanClass(), ctx);
          
          if (propertyName != null)
          {
@@ -120,8 +120,7 @@ public class Model implements Serializable
     * store the values in the BeanProperty map.
     */
    public void evaluate()
-   {
-      
+   {      
       for (String alias : beanProperties.keySet())
       {         
          BeanProperty property = beanProperties.get(alias);

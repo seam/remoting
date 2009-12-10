@@ -26,6 +26,10 @@ public class MarshalUtils
 
    private static final byte[] VALUE_TAG_OPEN = "<value>".getBytes();
    private static final byte[] VALUE_TAG_CLOSE = "</value>".getBytes();
+   
+   private static final byte[] ALIASED_VALUE_TAG_OPEN_START = "<value alias=\"".getBytes();
+   private static final byte[] ALIASED_VALUE_TAG_OPEN_END = "\">".getBytes();
+   private static final byte[] ALIASED_VALUE_TAG_CLOSE = "</value>".getBytes();
 
    private static final byte[] EXCEPTION_TAG_OPEN = "<exception>".getBytes();
    private static final byte[] EXCEPTION_TAG_CLOSE = "</exception>".getBytes();
@@ -87,10 +91,12 @@ public class MarshalUtils
       {
          Model.BeanProperty property = model.getBeanProperties().get(alias);
          
-         out.write(VALUE_TAG_OPEN);
+         out.write(ALIASED_VALUE_TAG_OPEN_START);
+         out.write(alias.getBytes());
+         out.write(ALIASED_VALUE_TAG_OPEN_END);
          model.getCallContext().createWrapperFromObject(property.getValue(), "")
             .marshal(out);
-         out.write(VALUE_TAG_CLOSE);         
+         out.write(ALIASED_VALUE_TAG_CLOSE);         
       }      
 
       out.write(RequestHandler.REFS_TAG_OPEN);
