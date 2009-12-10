@@ -5,6 +5,7 @@
    version="1.0">
    <persistence-unit name="model">
       <provider>org.hibernate.ejb.HibernatePersistence</provider>
+      <class>org.jboss.seam.remoting.examples.model.Customer</class>
       <jta-data-source>modelDatasource</jta-data-source>
       <properties>
          <property name="hibernate.hbm2ddl.auto" value="create-drop"/>

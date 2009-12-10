@@ -1,3 +1,3 @@
-insert into customer (customerid, firstname, lastname, dateofbirth, gender) values (1, 'Shane', 'Bryzak', '19010101', 1);
+insert into customer (customerid, firstname, lastname, dateofbirth) values (1, 'Shane', 'Bryzak', '1901-01-01');
 
 

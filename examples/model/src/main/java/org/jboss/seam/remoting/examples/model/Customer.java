@@ -4,10 +4,11 @@ import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+//import javax.persistence.EnumType;
+//import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -18,25 +19,26 @@ import javax.persistence.TemporalType;
  * @author Shane Bryzak
  */
 @Entity
+@Table(name = "customer")
 public class Customer implements Serializable
 {
    private static final long serialVersionUID = 4289723352398788625L;
 
-   public static enum Gender { male, female }
+//   public static enum Gender { male, female }
    
-   @Id @GeneratedValue
+   
    private Integer customerId;
    
    private String firstName;
    private String lastName;
    
-   @Temporal(TemporalType.DATE)
+   
    private Date dateOfBirth;
    
-   @Enumerated(EnumType.STRING)
-   private Gender gender;
+   //@Enumerated(EnumType.STRING)
+   //private Gender gender;
    
-   
+   @Id @GeneratedValue
    public Integer getCustomerId()
    {
       return customerId;
@@ -46,7 +48,7 @@ public class Customer implements Serializable
    {
       this.customerId = customerId;
    }
-   
+      
    public String getFirstName()
    {
       return firstName;
@@ -67,6 +69,7 @@ public class Customer implements Serializable
       this.lastName = lastName;
    }
    
+   @Temporal(TemporalType.DATE)
    public Date getDateOfBirth()
    {
       return dateOfBirth;
@@ -77,7 +80,7 @@ public class Customer implements Serializable
       this.dateOfBirth = dateOfBirth;
    }
    
-   public Gender getGender()
+/*   public Gender getGender()
    {
       return gender;
    }
@@ -85,5 +88,5 @@ public class Customer implements Serializable
    public void setGender(Gender gender)
    {
       this.gender = gender;
-   }
+   }*/
 }
