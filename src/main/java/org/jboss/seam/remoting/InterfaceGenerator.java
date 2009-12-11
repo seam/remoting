@@ -327,13 +327,13 @@ public class InterfaceGenerator implements RequestHandler
       String beanName = name != null ? name : beanClass.getName();
       if (beanName.contains("."))
       {
-         componentSrc.append("Seam.Remoting.createNamespace('");
+         componentSrc.append("Seam.createNamespace('");
          componentSrc.append(beanName.substring(0, beanName.lastIndexOf('.')));
          componentSrc.append("');\n");
 
       }
 
-      componentSrc.append("Seam.Remoting.type.");
+      componentSrc.append("Seam.type.");
       componentSrc.append(beanName);
       componentSrc.append(" = function() {\n");
       componentSrc.append("  this.__callback = new Object();\n");
@@ -356,7 +356,7 @@ public class InterfaceGenerator implements RequestHandler
                // Append the return type to the source block
                appendTypeSource(out, m.getGenericReturnType(), types);
 
-               componentSrc.append("  Seam.Remoting.type.");
+               componentSrc.append("  Seam.type.");
                componentSrc.append(beanName);
                componentSrc.append(".prototype.");
                componentSrc.append(m.getName());
@@ -379,7 +379,7 @@ public class InterfaceGenerator implements RequestHandler
                   componentSrc.append(", ");
 
                componentSrc.append("callback, exceptionHandler) {\n");
-               componentSrc.append("    return Seam.Remoting.execute(this, \"");
+               componentSrc.append("    return Seam.execute(this, \"");
                componentSrc.append(m.getName());
                componentSrc.append("\", [");
 
@@ -398,14 +398,14 @@ public class InterfaceGenerator implements RequestHandler
          componentSrc.append("}\n");
 
          // Set the component name
-         componentSrc.append("Seam.Remoting.type.");
+         componentSrc.append("Seam.type.");
          componentSrc.append(beanName);
          componentSrc.append(".__name = \"");
          componentSrc.append(beanName);
          componentSrc.append("\";\n\n");
 
          // Register the component
-         componentSrc.append("Seam.Remoting.registerBean(Seam.Remoting.type.");
+         componentSrc.append("Seam.registerBean(Seam.type.");
          componentSrc.append(beanName);
          componentSrc.append(");\n\n");
 
@@ -489,7 +489,7 @@ public class InterfaceGenerator implements RequestHandler
 
       String typeName = componentName.replace('.', '$');
 
-      typeSource.append("Seam.Remoting.type.");
+      typeSource.append("Seam.type.");
       typeSource.append(typeName);
       typeSource.append(" = function() {\n");
 
@@ -613,7 +613,7 @@ public class InterfaceGenerator implements RequestHandler
 
             if (getMethodName != null)
             {
-               accessors.append("  Seam.Remoting.type.");
+               accessors.append("  Seam.type.");
                accessors.append(typeName);
                accessors.append(".prototype.");
                accessors.append(getMethodName);
@@ -624,7 +624,7 @@ public class InterfaceGenerator implements RequestHandler
 
             if (setMethodName != null)
             {
-               mutators.append("  Seam.Remoting.type.");
+               mutators.append("  Seam.type.");
                mutators.append(typeName);
                mutators.append(".prototype.");
                mutators.append(setMethodName);
@@ -646,14 +646,14 @@ public class InterfaceGenerator implements RequestHandler
       typeSource.append("}\n\n");
 
       // Append the type name
-      typeSource.append("Seam.Remoting.type.");
+      typeSource.append("Seam.type.");
       typeSource.append(typeName);
       typeSource.append(".__name = \"");
       typeSource.append(componentName);
       typeSource.append("\";\n");
 
       // Append the metadata
-      typeSource.append("Seam.Remoting.type.");
+      typeSource.append("Seam.type.");
       typeSource.append(typeName);
       typeSource.append(".__metadata = [\n");
 
@@ -674,20 +674,7 @@ public class InterfaceGenerator implements RequestHandler
       }
 
       typeSource.append("];\n\n");
-
-      // Register the type under Seam.Component if it is a component, otherwise
-      // register it under Seam.Remoting
-
-      // TODO fix this - a bean might not be named
-      if (classType.isAnnotationPresent(Named.class))
-      {
-         typeSource.append("Seam.Remoting.registerBean(Seam.Remoting.type.");
-      }
-      else
-      {
-         typeSource.append("Seam.Remoting.registerType(Seam.Remoting.type.");
-      }
-
+      typeSource.append("Seam.registerBean(Seam.type.");
       typeSource.append(typeName);
       typeSource.append(");\n\n");
 

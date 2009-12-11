@@ -69,20 +69,20 @@ public class Remoting extends HttpServlet
       if (!cachedConfig.containsKey(contextPath))
       {
          StringBuilder sb = new StringBuilder();
-         sb.append("\nSeam.Remoting.resourcePath = \"");
+         sb.append("\nSeam.resourcePath = \"");
          sb.append(contextPath);
          sb.append(request.getServletPath());
          sb.append(servletConfig.getServletContext().getContextPath());
          sb.append("\";");
-         sb.append("\nSeam.Remoting.debug = ");
+         sb.append("\nSeam.debug = ");
          sb.append(getDebug() ? "true" : "false");
          sb.append(";");
-         sb.append("\nSeam.Remoting.pollInterval = ");
+         /*sb.append("\nSeam.pollInterval = ");
          sb.append(getPollInterval());
          sb.append(";");
-         sb.append("\nSeam.Remoting.pollTimeout = ");
+         sb.append("\nSeam.pollTimeout = ");
          sb.append(getPollTimeout());
-         sb.append(";");
+         sb.append(";");*/
 
          cachedConfig.put(contextPath, sb.toString().getBytes());
       }

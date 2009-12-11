@@ -68,7 +68,7 @@
       var callback = function(result) { alert(result); };
       
       // Get a reference to the HelloAction bean and invoke the sayHello() method
-      Seam.Remoting.instance("org.jboss.seam.remoting.examples.helloworld.HelloAction", qualifiers).sayHello(name, callback);
+      Seam.createBean("org.jboss.seam.remoting.examples.helloworld.HelloAction", qualifiers).sayHello(name, callback);
       
       // ]]>
     }
