@@ -1,8 +1,13 @@
-var Seam = new Object();
-Seam.type = new Object();
-Seam.beans = new Array();
-Seam.debug = false;
-Seam.debugWindow = null;
+var Seam = {
+  type: new Object(),
+  beans: new Array(),
+  debug: false,
+  debugWindow: null,
+  PATH_EXECUTE: "/execute",
+  PATH_SUBSCRIPTION: "/subscription",
+  PATH_MODEL: "/model",
+  PATH_POLL: "/poll", 
+}
 
 Seam.createBean = function(name) {
   var b = Seam.beans;
@@ -59,6 +64,21 @@ Seam.getBeanMetadata = function(obj) {
   return b ? b.__metadata : undefined;
 }
 
+Seam.Xml = {
+  childNode: function(e, tag) {
+    for (var i=0; i<e.childNodes.length; i++) {
+      if (e.childNodes.item(i).tagName == tag) return e.childNodes.item(i);
+    }
+  },
+  childNodes: function(e, tag) {
+    var n = new Array();
+    for (var i=0; i<e.childNodes.length;i++) {
+      if (e.childNodes.item(i).tagName == tag) n.push(e.childNodes.item(i));
+    }
+    return n;    
+  }   
+}
+
 Seam.extractEncodedSessionId = function(url) {
   if (url.indexOf(';jsessionid=') >= 0) {
     var qpos = url.indexOf('?');
@@ -66,11 +86,6 @@ Seam.extractEncodedSessionId = function(url) {
   }
   return null;
 }
-
-Seam.PATH_EXECUTE = "/execute";
-Seam.PATH_SUBSCRIPTION = "/subscription";
-Seam.PATH_MODEL = "/model";
-Seam.PATH_POLL = "/poll";
 
 Seam.encodedSessionId = Seam.extractEncodedSessionId(window.location.href);
 
@@ -434,43 +449,23 @@ Seam.setCallback = function(component, methodName, callback) {
   component.__callback[methodName] = callback;
 }
 
-Seam.processResponse = function(doc) {
-  var headerNode;
-  var bodyNode;
-  var inScope = typeof(Seam) == "undefined" ? false : true;
-  if (!inScope) return;
+Seam.processResponse = function(doc) {  
+  if (typeof(Seam) == "undefined") return;
+  if (!doc.documentElement) return;
   var context = new Seam.Context;
-  if (doc.documentElement) {
-    for (var i=0; i<doc.documentElement.childNodes.length; i++) {
-      var node = doc.documentElement.childNodes.item(i);
-      if (node.tagName == "header")
-        headerNode = node;
-      else if (node.tagName == "body")
-        bodyNode = node;
-    }
-  }
-
+  var headerNode = Seam.Xml.childNode(doc.documentElement, "header");
+  var bodyNode = Seam.Xml.childNode(doc.documentElement, "body");
   if (headerNode) {
-    var contextNode;
-    for (var i=0; i<headerNode.childNodes.length; i++) {
-      var node = headerNode.childNodes.item(i);
-      if (node.tagName == "context") {
-        contextNode = node;
-        break;
-      }
-    }
+    var contextNode = Seam.Xml.childNode(headerNode, "context");
     if (contextNode && context) {
       Seam.unmarshalContext(contextNode, context);
       if (context.getConversationId() && Seam.context.getConversationId() == null)
         Seam.context.setConversationId(context.getConversationId());
     }
   }
-
   if (bodyNode) {
-    for (var i=0; i<bodyNode.childNodes.length; i++) {
-      var n = bodyNode.childNodes.item(i);
-      if (n.tagName == "result") Seam.processResult(n, context);
-    }
+    var n = Seam.Xml.childNode(bodyNode, "result");
+    if (n) Seam.processResult(n, context);
   }
 }
 
@@ -479,30 +474,13 @@ Seam.processResult = function(result, context) {
   var call = Seam.pendingCalls.get(callId);
   Seam.pendingCalls.remove(callId);
   if (call && (call.callback || call.exceptionHandler)) {
-    var valueNode = null;
-    var refsNode = null;
-    var exceptionNode = null;
-    var c = result.childNodes;
-    for (var i=0; i<c.length; i++) {
-      var tag = c.item(i).tagName;
-      if (tag == "value")
-        valueNode = c.item(i);
-      else if (tag == "refs")
-        refsNode = c.item(i);
-      else if (tag == "exception")
-        exceptionNode = c.item(i);
-    }
+    var valueNode = Seam.Xml.childNode(result, "value");
+    var refsNode = Seam.Xml.childNode(result, "refs");
+    var exceptionNode = Seam.Xml.childNode(result, "exception");
     if (exceptionNode != null) {
-      var msgNode = null;
-      var c = exceptionNode.childNodes;
-      for (var i=0; i<c.length; i++) {
-        var tag = c.item(i).tagName;
-        if (tag == "message")
-          msgNode = c.item(i);
-      }
+      var msgNode = Seam.Xml.childNode(exceptionNode, "message");
       var msg = Seam.unmarshalValue(msgNode.firstChild);
-      var ex = new Seam.Exception(msg);
-      call.exceptionHandler(ex);
+      call.exceptionHandler(new Seam.Exception(msg));
     }
     else {
       var refs = new Array();
@@ -514,35 +492,31 @@ Seam.processResult = function(result, context) {
 }
 
 Seam.unmarshalContext = function(ctxNode, context) {
-  for (var i=0; i<ctxNode.childNodes.length; i++) {
-    var tag = ctxNode.childNodes.item(i).tagName;
-    if (tag == "conversationId") context.setConversationId(ctxNode.childNodes.item(i).firstChild.nodeValue);
-  }
+  var c = Seam.Xml.childNode(ctxNode, "conversationId");
+  if (c) context.setConversationId(c.firstChild.nodeValue);
 }
 
 Seam.unmarshalRefs = function(refsNode, refs) {
   var objs = new Array();
-  for (var i = 0; i < refsNode.childNodes.length; i++) {
-    if (refsNode.childNodes.item(i).tagName == "ref") {
-      var refNode = refsNode.childNodes.item(i);
-      var refId = parseInt(refNode.getAttribute("id"));
-      var valueNode = refNode.firstChild;
-      if (valueNode.tagName == "bean") {
-        var typeName = valueNode.getAttribute("type");
-        var obj = Seam.isBeanRegistered(typeName) ? Seam.createBean(typeName) : null;
-        if (obj) {
-          refs[refId] = obj;
-          objs[objs.length] = {obj: obj, node: valueNode};
-        }
+  var cn = Seam.Xml.childNodes(refsNode, "ref");
+  for (var i=0; i<cn.length; i++) {
+    var refId = parseInt(cn[i].getAttribute("id"));
+    var valueNode = refNode.firstChild;
+    if (valueNode.tagName == "bean") {
+      var name = valueNode.getAttribute("type");
+      var obj = Seam.isBeanRegistered(name) ? Seam.createBean(name) : null;
+      if (obj) {
+        refs[refId] = obj;
+        objs.push({obj: obj, node: valueNode});
       }
-    }
-  }
+    }     
+  }  
   for (var i=0; i<objs.length; i++) {
-    for (var j=0; j<objs[i].node.childNodes.length; j++) {
-      var child = objs[i].node.childNodes.item(j);
-      if (child.tagName == "member") {
-        var name = child.getAttribute("name");
-        objs[i].obj[name] = Seam.unmarshalValue(child.firstChild, refs);
+    var cn = Seam.Xml.childNodes(objs[i].node, "member");
+    for (var j=0; j<cn.length; j++) {
+      if (cn[j].tagName == "member") {
+        var name = cn[j].getAttribute("name");
+        objs[i].obj[name] = Seam.unmarshalValue(cn[j].firstChild, refs);
       }
     }
   }
@@ -566,26 +540,18 @@ Seam.unmarshalValue = function(element, refs) {
     case "ref": return refs[parseInt(element.getAttribute("id"))];
     case "bag":
       var value = new Array();
-      for (var i=0; i<element.childNodes.length; i++) {
-        if (element.childNodes.item(i).tagName == "element")
-          value[value.length] = Seam.unmarshalValue(element.childNodes.item(i).firstChild, refs);
+      var cn = Seam.Xml.childNodes(element, "element");
+      for (var i=0; i<cn.length; i++) {
+        value.push(Seam.unmarshalValue(cn[i].firstChild, refs)); 
       }
       return value;
     case "map":
       var m = new Seam.Map();
-      for (var i = 0; i < element.childNodes.length; i++) {
-        var childNode = element.childNodes.item(i);
-        if (childNode.tagName == "element") {
-          var key = null
-          var value = null;
-          for (var j = 0; j < childNode.childNodes.length; j++) {
-            if (key == null && childNode.childNodes.item(j).tagName == "k")
-              key = Seam.unmarshalValue(childNode.childNodes.item(j).firstChild, refs);
-            else if (value == null && childNode.childNodes.item(j).tagName == "v")
-              value = Seam.unmarshalValue(childNode.childNodes.item(j).firstChild, refs);
-          }
-          if (key != null) m.put(key, value);
-        }
+      var cn = Seam.Xml.childNodes(element, "element");
+      for (var i=0; i<cn.length; i++) {
+        var k = Seam.unmarshalValue(Seam.Xml.childNode(cn[i], "k").firstChild, refs);
+        var v = Seam.unmarshalValue(Seam.Xml.childNode(cn[i], "v").firstChild, refs);
+        if (k != null) m.put(k, v);
       }
       return m;
     case "date": return Seam.deserializeDate(element.firstChild.nodeValue);
