@@ -1,5 +1,5 @@
 var Seam = {
-  type: new Object(),
+  type: {},
   beans: new Array(),
   debug: false,
   debugWindow: null,
@@ -415,6 +415,7 @@ Seam.sendAjaxRequest = function(env, path, callback, silent) {
           }
           catch (ex) {
              try {
+               Seam.log(ex.message + " : " + ex.stack);
                // Try it the IE way first...
                var doc = new ActiveXObject("Microsoft.XMLDOM");
                doc.async = "false";
@@ -463,9 +464,16 @@ Seam.processResponse = function(doc) {
         Seam.context.setConversationId(context.getConversationId());
     }
   }
-  if (bodyNode) {
+  if (bodyNode) {    
     var n = Seam.Xml.childNode(bodyNode, "result");
     if (n) Seam.processResult(n, context);
+    var cn = Seam.Xml.childNodes(bodyNode, "model");
+    for (var i=0; i<cn.length; i++) {
+      var callId = cn[i].getAttribute("callId");
+      var call = Seam.pendingCalls.get(callId);
+      Seam.pendingCalls.remove(callId);
+      if (call.model) call.model.processFetchResponse(cn[i]);
+    }
   }
 }
 
@@ -501,7 +509,7 @@ Seam.unmarshalRefs = function(refsNode, refs) {
   var cn = Seam.Xml.childNodes(refsNode, "ref");
   for (var i=0; i<cn.length; i++) {
     var refId = parseInt(cn[i].getAttribute("id"));
-    var valueNode = refNode.firstChild;
+    var valueNode = cn[i].firstChild;
     if (valueNode.tagName == "bean") {
       var name = valueNode.getAttribute("type");
       var obj = Seam.isBeanRegistered(name) ? Seam.createBean(name) : null;
@@ -673,7 +681,7 @@ Seam.Model = function() {
     var r = this.createFetchRequest(action);
     var env = Seam.createEnvelope(Seam.createHeader(), r.data);
     Seam.pendingCalls.put(r.id, r);
-    Seam.sendAjaxRequest(env, Seam.PATH_MODEL, this.processFetchResponse, false);
+    Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
   }
 
   Seam.Model.prototype.createFetchRequest = function(a) { // a = action
@@ -727,62 +735,19 @@ Seam.Model = function() {
       }
     }
     d += "</model>";
-    return {data: d, id: callId};
+    return {data:d, id:callId, model:this};
   }
 
-  Seam.Model.prototype.processFetchResponse = function(doc) {
-    var headerNode;
-    var bodyNode;
-    var inScope = typeof(Seam) == "undefined" ? false : true;
-    if (!inScope) return;
-    var context = new Seam.Context; 
-    if (doc.documentElement) {
-      for (var i=0; i<doc.documentElement.childNodes.length; i++) {
-        var node = doc.documentElement.childNodes.item(i);
-        if (node.tagName == "header")
-          headerNode = node;
-        else if (node.tagName == "body")
-          bodyNode = node;
-      }
-    }
-    if (headerNode) {
-      var contextNode;
-      for (var i=0; i<headerNode.childNodes.length; i++) {
-        var node = headerNode.childNodes.item(i);
-        if (node.tagName == "context") {
-          contextNode = node;
-          break;
-        }
-      }
-      if (contextNode && context) {
-        Seam.unmarshalContext(contextNode, context);
-        if (context.getConversationId() && Seam.context.getConversationId() == null)
-          Seam.context.setConversationId(context.getConversationId());
-      }
-    }
-    if (bodyNode) {
-      for (var i=0; i<bodyNode.childNodes.length; i++) {
-        var n = bodyNode.childNodes.item(i);
-        if (n.tagName == "model") {          
-          var valueNodes = new Array();
-          var refsNode = null;
-          for (var j=0; j<n.childNodes.length; j++) {
-            var cn = n.childNodes.item(j);
-            if (cn.tagName == "value")
-              valueNodes.push({node:cn.firstChild,alias:cn.getAttribute("alias")});
-            else if (cn.tagName == "refs")
-              refsNode = n.childNodes.item(j);
-          }
-          var refs = new Array();
-          if (refsNode) Seam.unmarshalRefs(refsNode, refs);
-          for (var j=0; j<valueNodes.length; j++) {
-            var value = Seam.unmarshalValue(valueNodes[j].node, refs);
-            this.values.push({alias:valueNodes[j].alias, value:value}); 
-          }
-        }
-      }
-    }
-    if (this.callback) callback(this);
+  Seam.Model.prototype.processFetchResponse = function(modelNode) {
+    var valueNodes = Seam.Xml.childNodes(modelNode, "value");
+    var refsNode = Seam.Xml.childNode(modelNode, "refs");
+    var refs = new Array();    
+    if (refsNode) Seam.unmarshalRefs(refsNode, refs);
+    for (var i=0; i<valueNodes.length; i++) {
+      var value = Seam.unmarshalValue(valueNodes[i].firstChild,refs);
+      this.values.push({alias:valueNodes[i].getAttribute("alias"),value:value}); 
+    }         
+    if (this.callback) this.callback(this);
   }
 
   Seam.Model.prototype.applyUpdates = function(action) {

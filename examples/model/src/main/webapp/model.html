@@ -21,12 +21,12 @@
     function loadCustomer() {
       var customerId = document.getElementById("customerId").value;
       
-      var model = new Seam.Remoting.Model();
+      var model = new Seam.Model();
 
       var callback = function(model) { alert(model.getValue("customer").getFirstName()); };
               
       model.addBean("customer", "org.jboss.seam.remoting.examples.model.CustomerAction", "customer");
-      model.fetch(new Seam.Remoting.Action()
+      model.fetch(new Seam.Action()
         .setBeanType("org.jboss.seam.remoting.examples.model.CustomerAction")
         .setMethod("editCustomer")
         .addParam(customerId), callback);

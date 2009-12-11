@@ -28,10 +28,13 @@ public class Model implements Serializable
    
    private BeanManager beanManager;
    private String id;
+   private String callId;
    private CallContext callContext;
    
-   public class BeanProperty 
+   public class BeanProperty implements Serializable
    {
+      private static final long serialVersionUID = 540993772239615536L;
+      
       private Bean<?> bean;
       private String propertyName;
       private Object value;      
@@ -113,6 +116,16 @@ public class Model implements Serializable
       id = UUID.randomUUID().toString();
       callContext = new CallContext(beanManager);
       beanProperties = new HashMap<String, BeanProperty>();
+   }
+   
+   public void setCallId(String callId)
+   {
+      this.callId = callId;
+   }
+   
+   public String getCallId()
+   {
+      return callId;
    }
    
    /**

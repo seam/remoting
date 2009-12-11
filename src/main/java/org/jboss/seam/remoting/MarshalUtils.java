@@ -85,6 +85,13 @@ public class MarshalUtils
    {
       out.write(MODEL_TAG_OPEN_START);
       out.write(model.getId().getBytes());
+      
+      if (model.getCallId() != null)
+      {
+         out.write("\" callId=\"".getBytes());
+         out.write(model.getCallId().getBytes());
+      }
+      
       out.write(MODEL_TAG_OPEN_END);
       
       for (String alias : model.getBeanProperties().keySet())

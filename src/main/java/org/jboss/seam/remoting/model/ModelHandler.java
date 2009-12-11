@@ -4,8 +4,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.enterprise.context.Conversation;
@@ -94,6 +96,7 @@ public class ModelHandler implements RequestHandler
          {
             Model model = registry.createModel();
             models.add(model);
+            model.setCallId(callId);           
             
             if (modelElement.elements("action").size() > 0)
             {
