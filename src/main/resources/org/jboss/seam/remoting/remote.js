@@ -649,6 +649,7 @@ Seam.Model = function() {
   this.expressions = new Array();
   this.beans = new Array();
   this.values = new Array();
+  this.originalValues = new Array();
   this.callback = null;
 
   Seam.Model.prototype.addExpression = function(alias, expr) {
