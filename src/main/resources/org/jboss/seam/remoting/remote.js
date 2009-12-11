@@ -6,7 +6,7 @@ var Seam = {
   PATH_EXECUTE: "/execute",
   PATH_SUBSCRIPTION: "/subscription",
   PATH_MODEL: "/model",
-  PATH_POLL: "/poll",
+  PATH_POLL: "/poll"
 }
 
 Seam.createBean = function(name) {
