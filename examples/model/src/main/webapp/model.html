@@ -25,7 +25,7 @@
 
       var callback = function(model) { alert(model.getValue("customer").getFirstName()); };
               
-      model.addBean("customer", "org.jboss.seam.remoting.examples.model.CustomerAction", "customer");
+      model.addBeanProperty("customer", "org.jboss.seam.remoting.examples.model.CustomerAction", "customer");
       model.fetch(new Seam.Action()
         .setBeanType("org.jboss.seam.remoting.examples.model.CustomerAction")
         .setMethod("editCustomer")
