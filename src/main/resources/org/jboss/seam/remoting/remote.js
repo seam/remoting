@@ -514,7 +514,7 @@ Seam.unmarshalRefs = function(refsNode) {
       var obj = Seam.isBeanRegistered(name) ? Seam.createBean(name) : null;
       if (obj) {
         refs[refId] = obj;
-        objs.push({obj: obj, node: valueNode});
+        objs.push({obj:obj, node:valueNode});
       }
     }
   }
@@ -565,6 +565,29 @@ Seam.unmarshalValue = function(element, refs) {
     case "date": return Seam.deserializeDate(element.firstChild.nodeValue);
     default: return null;
   }
+}
+
+Seam.cloneObject = function(obj, refMap) {
+  if (refMap && refMap.contains(obj)) return refMap.get(obj);
+  if (typeof obj == "object") {
+    if (obj == null) return null;    
+    var m = (refMap == null) ? new Seam.Map() : refMap;
+    if (typeof obj.length == "number" && !(obj.propertyIsEnumerable("length") && 
+        typeof obj.splice == "function") {
+      var c = new Array();
+      m.put(obj, c);
+      for (var i=0; i<obj.length; i++) {
+        c[i] = Seam.cloneObject(obj[i], m);
+      }
+      return c; 
+    }    
+    var t = Seam.getBeanType(obj);
+    var c = (t == undefined) ? new Object() : new t();
+    m.put(obj, c);
+    for (var p : obj) c[p] = Seam.cloneObject(obj[p], m); 
+    return c;     
+  }
+  return obj;
 }
 
 Seam.deserializeDate = function(val) {
@@ -649,7 +672,8 @@ Seam.Model = function() {
   this.expressions = new Array();
   this.beans = new Array();
   this.values = new Array();
-  this.originalValues = new Array();
+  this.sourceRefs = new Array();
+  this.workingRefs = new Array();
   this.callback = null;
 
   Seam.Model.prototype.addExpression = function(alias, expr) {
@@ -754,10 +778,11 @@ Seam.Model = function() {
     this.id = modelNode.getAttribute("uid");
     var valueNodes = Seam.Xml.childNodes(modelNode, "value");
     var refsNode = Seam.Xml.childNode(modelNode, "refs");
-    var refs = Seam.unmarshalRefs(refsNode);
+    this.sourceRefs = Seam.unmarshalRefs(refsNode);
+    this.workingRefs = Seam.cloneObject(this.sourceRefs);
     for (var i=0; i<valueNodes.length; i++) {
-      var value = Seam.unmarshalValue(valueNodes[i].firstChild,refs);
-      this.values.push({alias:valueNodes[i].getAttribute("alias"),value:value});
+      var value = Seam.unmarshalValue(valueNodes[i].firstChild,this.workingRefs);
+      this.values.push({alias:valueNodes[i].getAttribute("alias"),value:value, refIndex:i});      
     }
     if (this.callback) this.callback(this);
   }
