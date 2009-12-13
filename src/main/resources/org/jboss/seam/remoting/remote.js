@@ -572,7 +572,7 @@ Seam.cloneObject = function(obj, refMap) {
   if (typeof obj == "object") {
     if (obj == null) return null;    
     var m = (refMap == null) ? new Seam.Map() : refMap;
-    if (typeof obj.length == "number" && !(obj.propertyIsEnumerable("length") && 
+    if (typeof obj.length == "number" && !obj.propertyIsEnumerable("length") && 
         typeof obj.splice == "function") {
       var c = new Array();
       m.put(obj, c);
@@ -584,7 +584,7 @@ Seam.cloneObject = function(obj, refMap) {
     var t = Seam.getBeanType(obj);
     var c = (t == undefined) ? new Object() : new t();
     m.put(obj, c);
-    for (var p : obj) c[p] = Seam.cloneObject(obj[p], m); 
+    for (var p in obj) c[p] = Seam.cloneObject(obj[p], m); 
     return c;     
   }
   return obj;
@@ -630,8 +630,7 @@ Seam.displayLoadingMessage = function() {
 }
 
 Seam.hideLoadingMessage = function() {
-  if (Seam.loadingMsgDiv)
-    Seam.loadingMsgDiv.style.visibility = 'hidden';
+  if (Seam.loadingMsgDiv) Seam.loadingMsgDiv.style.visibility = 'hidden';
 }
 
 Seam.Action = function() {
@@ -719,7 +718,7 @@ Seam.Model = function() {
     Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
   }
 
-  Seam.Model.prototype.createFetchRequest = function(a) { // a = action
+  Seam.Model.prototype.createFetchRequest = function(a) {
     var callId = "" + Seam.__callId++;
     var d = "<model operation=\"fetch\" callId=\"" + callId + "\">";
     var refs = new Array();
