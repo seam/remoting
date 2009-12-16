@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
    <modelVersion>4.0.0</modelVersion>
-   
+
    <parent>
-      <artifactId>seam-version-matrix</artifactId>
+      <artifactId>seam-parent</artifactId>
       <groupId>org.jboss.seam</groupId>
       <version>3.0.0-SNAPSHOT</version>
    </parent>
@@ -13,6 +12,10 @@
    <packaging>jar</packaging>
    <version>3.0.0-SNAPSHOT</version>
    <name>Seam Remoting</name>
+
+   <properties>
+      <seam.version>3.0.0-SNAPSHOT</seam.version>
+   </properties>
 
    <dependencies>
 
@@ -30,20 +33,9 @@
 
       <dependency>
          <groupId>org.hibernate</groupId>
-         <artifactId>hibernate</artifactId>
+         <artifactId>hibernate-core</artifactId>
          <scope>provided</scope>
       </dependency>
-
-      <!--dependency>
-         <groupId>${seam.groupId}</groupId>
-         <artifactId>seam-el</artifactId>
-         <scope>provided</scope>
-      </dependency-->
-
-      <!--dependency>
-         <groupId>${seam.groupId}</groupId>
-         <artifactId>seam-international</artifactId>
-      </dependency-->
 
       <dependency>
          <groupId>javax.enterprise</groupId>
@@ -52,8 +44,8 @@
       </dependency>
 
       <dependency>
-         <groupId>javax.ejb</groupId>
-         <artifactId>ejb-api</artifactId>
+         <groupId>org.jboss.ejb3</groupId>
+         <artifactId>jboss-ejb3-api</artifactId>
          <scope>provided</scope>
       </dependency>
 
@@ -89,5 +81,11 @@
          <scope>provided</scope>
       </dependency>
    </dependencies>
+
+   <scm>
+      <connection>scm:svn:http://anonsvn.jboss.org/repos/seam/modules/remoting/trunk</connection>
+      <developerConnection>scm:svn:https://svn.jboss.org/repos/seam/modules/remoting/trunk</developerConnection>
+      <url>http://fisheye.jboss.org/browse/Seam/modules/remoting/trunk</url>
+   </scm>
 
 </project>
