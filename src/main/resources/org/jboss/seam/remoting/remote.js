@@ -173,12 +173,21 @@ Seam.Map = function() {
     return null;
   }
   
-  // TODO make this work for dates also
   Seam.Map.prototype.put = function(key, value) {
-    for (var i=0; i<this.elements.length; i++) {
-      if (this.elements[i].key == key) {
-        this.elements[i].value = value;
-        return;
+    if (key instanceof Date) {
+      for (var i=0; i<this.elements.length; i++) {
+        if (this.elements[i] instanceof Date && this.elements[i].getTime() == key.getTime()) {
+          this.elements[i].value = value;
+          return;
+        } 
+      } 
+    }
+    else {    
+      for (var i=0; i<this.elements.length; i++) {
+        if (this.elements[i].key == key) {
+          this.elements[i].value = value;
+          return;
+        }
       }
     }
     this.elements.push({key:key,value:value});
@@ -713,24 +722,13 @@ Seam.Delta = function(model) {
         }
         else if (v1 instanceof Seam.Map) {
           if (!(v2 instanceof Seam.Map)) return false;
-          if (v1.elements.length != v2.elements.length) return false;
-          var k1 = v1.keySet();
-          var k2 = v2.keySet();
-          for (var i=0; i<k1.length; i++) {
-            var e = eq(v1.get(k1[i]), v2.get(k1[i]));
-            if (!e && Seam.getBeanType(k1[i])) {
-              e = eq(v1.get(k1[i]), v2.get(this.getSourceObject(k1[i]));
-            }
-            if (!e) {
-              for (var j=0; j<k2.length; j++) {
-                if (eq(k1[i], k2[j])) {
-                  e = eq(v1.get(k1[i]), v2.get(k2[j]));
-                  break;
-                }
-              }
-            }
-            if (!e) return false;
+          if (v1.size() != v2.size()) return false;
+          for (var i=0; i<v1.size(); i++) {
+            var e = v1.elements[i];
+            if (eq(e.value, v2.get(e.key)) && (e.value != null || v2.contains(e.key)) break;
+            return false; 
           }
+          return true;
         }
     }
     return false;
