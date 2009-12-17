@@ -172,6 +172,7 @@ Seam.Map = function() {
     return null;
   }
 
+  // TODO make this work for dates also
   Seam.Map.prototype.put = function(key, value) {
     for (var i=0; i<this.elements.length; i++) {
       if (this.elements[i].key == key) {
@@ -682,23 +683,25 @@ Seam.Changeset = function() {
 
 Seam.Delta = function(model) {
   this.model = model;
-  this.changesets = new Seam.Map();
-  this.refs = new Array();
+  this.refs = new Seam.Map();
   
-  Seam.Delta.prototype.objectsEqual = function(v1, v2) {
+  Seam.Delta.prototype.testEqual = function(v1, v2) {
+    var eq = this.valueChanged;
     if (v1 == null) return v2 == null;
     switch (typeof(v1)) {
       case "number":
         return typeof(v2) == "number" && v1 == v2;
       case "boolean":
         return typeof(v2) == "boolean" && v1 == v2; 
+      case "string":
+        return typeof(v2) == "string" && v1 == v2;        
       case "object":
         if (v1 instanceof Array) {
           if (!(v2 instanceof Array)) return false;
           if (v1.length != v2.length) return false;
           for (var i=0; i<v1.length; i++) {
-            if (!this.objectsEqual(v1[i], v2[i]) return false; 
-          }
+            if (!eq(v1[i], v2[i]) return false; 
+         }
           return true;
         }
         else if (v1 instanceof Date) {
@@ -710,42 +713,94 @@ Seam.Delta = function(model) {
           var k2 = v2.keySet;
           if (!k1.length == k2.length) return false;
           for (var i=0; i<k1.length; i++) {
-            var eq = this.objectsEqual(v1.get(k1[i]), v2.get(k2[i]));
-            if (!eq) {
+            var e = eq(v1.get(k1[i]), v2.get(k2[i]));
+            if (!e) {
               if (Seam.getBeanType(k1[i])) {
-                eq = this.objectsEqual(v1.get(k1[i]), v2.get(this.getSourceObject(k1[i]));
+                e = eq(v1.get(k1[i]), v2.get(this.getSourceObject(k1[i]));
               }
             }
-            if (!eq) {
+            if (!e) {
               for (var j=0; j<k2.length; j++) {
-                if (this.objectsEqual(k1[i], k2[j])) 
-                {
-                  eq = this.objectsEqual(v1.get(k1[i]), v2.get(k2[j]));
+                if (eq(k1[i], k2[j])) {
+                  e = eq(v1.get(k1[i]), v2.get(k2[j]));
                   break;
                 }
               }
             }
-            if (!eq) return false;
+            if (!e) return false;
           }
         }
-        else {
-          var t = Seam.getBeanType(v1);
-          // TODO known type comparison
-        }
-      case "string":
-        return typeof(v2) == "string" && v1 == v2;        
+        else if (Seam.getBeanType(v1) {
+          return this.getSourceObject(v1) == v2;            
+
+       }
     }
+    return false;
   }
   
-  Seam.Delta.prototype.add = function(obj) {
-    
+
+ Seam.Delta.prototype.registerPropertyChange = function(obj, prop, val) {
+    var cs = this.refs.get(obj);
+    if (cs == null) cs = new Seam.Changeset();
+    cs.addProperty(prop, val);
+    this.refs.put(obj, cs);
   }
   
+
+ Seam.Delta.prototype.scanForChanges = function(obj) {    
+
+   if (obj == null || this.refs.contains(obj)) return;
+    this.refs.put(obj);
+    if (Seam.getBeanType(obj)) {
+      var src = this.getSourceObject(obj);
+      var m = Seam.getBeanMetadata(obj);
+      for (var i=0; i<m.length; i++) {
+        var f=m[i].field;         
+
+       if (src) {
+          if (!this.testEqual(obj[f], src[f])) this.registerPropertyChange(obj, f, obj[f]);
+        }
+        if (m.type == "bag" || m.type == "map" || m.type == "bean") this.scanForChanges(obj[f]);
+      }
+    }
+    else if (obj instanceof Array) {
+      var src = this.getSourceObject(obj);
+      if (!this.testEqual(obj, src)) this.refs.put(obj, new Seam.Changeset());
+      for (var i=0; i<obj.length; i++) {
+        if (Seam.getBeanType(obj[i]) || obj[i] instanceof Array || obj[i] instanceof Seam.Map) {
+          this.scanForChanges(obj[i]); 
+
+       }
+      }
+    }
+    else if (obj instanceof Seam.Map) {
+      var src = this.getSourceObject(obj);
+      if (!this.testEqual(obj, src)) this.refs.put(obj, new Seam.Changeset());
+      var ks = obj.keySet();
+      for (var i=0; i<ks.length; i++) {
+        var k = ks[i];
+        var v = obj.get(k);
+        if (Seam.getBeanType(k) || k instanceof Array || k instanceof Seam.Map) {
+          this.scanForChanges(k); 
+
+       } 
+
+       if (Seam.getBeanType(v) || v instanceof Array || v instanceof Seam.Map) {
+          this.scanForChanges(v); 
+
+       }
+      } 
+
+   }
+  }
   
-  Seam.Delta.prototype.getSourceObject = function(obj) {
+
+ Seam.Delta.prototype.getSourceObject = function(obj) {
     for (var i=0;i<this.model.workingRefs; i++) {
       if (obj == this.model.workingRefs[i]) return this.model.sourceRefs[i]; 
-    } 
+
+   }
+    return null;
   }
 }
 
@@ -782,7 +837,8 @@ Seam.Model = function() {
     this.beans.push({alias: alias, bean: bean, qualifiers: q});
   }
   
-  Seam.Model.prototype.addBeanProperty = function(alias, bean, property) {
+
+ Seam.Model.prototype.addBeanProperty = function(alias, bean, property) {
     var q = null;
     if (arguments.length > 3) {
       q = new Array();
@@ -791,7 +847,8 @@ Seam.Model = function() {
       }
     }
     this.beans.push({alias: alias, bean: bean, property: property, qualifiers: q});    
-  }
+
+ }
 
   Seam.Model.prototype.fetch = function(action, callback) {
     this.callback = callback;
@@ -865,18 +922,21 @@ Seam.Model = function() {
     for (var i=0; i<valueNodes.length; i++) {
       var value = Seam.unmarshalValue(valueNodes[i].firstChild,this.workingRefs);
       this.values.push({alias:valueNodes[i].getAttribute("alias"),value:value, refIndex:i});      
-    }
+
+   }
     if (this.callback) this.callback(this);
   }
 
   Seam.Model.prototype.applyUpdates = function(action) {
     var delta = new Seam.Delta(this);
     for (var i=0; i<this.values.length; i++) {
-      delta.add(this.values[i].value);
+      delta.scanForChanges(this.values[i].value);
     }
   }
   
-  Seam.Model.prototype.addDelta = function(obj, delta) {
+
+ Seam.Model.prototype.addDelta = function(obj, delta) {
     
-  }
+
+ }
 }
