@@ -129,10 +129,17 @@ Seam.context = new Seam.Context();
 
 Seam.Exception = function(msg) {
   this.message = msg;
-  
   Seam.Exception.prototype.getMessage = function() {
     return this.message;
   }
+}
+
+Seam.equals = function(v1, v2) {
+  if (v1 == v2) return true;
+  if (v1 instanceof Date && v2 instanceof Date &&
+      v1.getTime() == v2.getTime()) return true;
+  
+  return false; 
 }
 
 Seam.Map = function() {
@@ -165,29 +172,16 @@ Seam.Map = function() {
   Seam.Map.prototype.get = function(key) {
     for (var i=0; i<this.elements.length; i++) {
       var e = this.elements[i];
-      if (e.key == key) 
-        return e.value;
-      else if (key instanceof Date && e.key instanceof Date && key.getTime() == e.key.getTime())
-        return e.value;
+      if (Seam.equals(e.key, key)) return e.value;
     }
     return null;
   }
   
   Seam.Map.prototype.put = function(key, value) {
-    if (key instanceof Date) {
-      for (var i=0; i<this.elements.length; i++) {
-        if (this.elements[i] instanceof Date && this.elements[i].getTime() == key.getTime()) {
-          this.elements[i].value = value;
-          return;
-        } 
-      } 
-    }
-    else {    
-      for (var i=0; i<this.elements.length; i++) {
-        if (this.elements[i].key == key) {
-          this.elements[i].value = value;
-          return;
-        }
+    for (var i=0; i<this.elements.length; i++) {
+      if (Seam.equals(this.elements[i].key, key)) {
+        this.elements[i].value = value;
+        return;
       }
     }
     this.elements.push({key:key,value:value});
@@ -195,14 +189,16 @@ Seam.Map = function() {
   
   Seam.Map.prototype.remove = function(key) {
     for (var i=0; i<this.elements.length; i++) {
-      if (this.elements[i].key == key)
+      if (Seam.equals(this.elements[i].key, key)) {
         this.elements.splice(i, 1);
+        break;
+      }
     }
   }
   
   Seam.Map.prototype.contains = function(key) {
     for (var i=0; i<this.elements.length; i++) {
-      if (this.elements[i].key == key) return true;
+      if (Seam.equals(this.elements[i].key, key)) return true;
     }
     return false;
   }
