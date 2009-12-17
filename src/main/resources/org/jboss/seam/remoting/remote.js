@@ -721,6 +721,7 @@ Seam.Delta = function(model) {
           if (v1.size() != v2.size()) return false;
           for (var i=0; i<v1.size(); i++) {
             var e = v1.elements[i];
+            if (Seam.getBeanType(e.key) && eq(e.value, v2.get(this.getSourceObject(e.key)))) break;
             if (eq(e.value, v2.get(e.key)) && (e.value != null || v2.contains(e.key)) break;
             return false; 
           }
@@ -912,8 +913,4 @@ Seam.Model = function() {
       delta.scanForChanges(this.values[i].value);
     }
   }
-  
-  Seam.Model.prototype.addDelta = function(obj, delta) {
-    
-  } 
 }
