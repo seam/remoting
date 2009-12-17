@@ -697,7 +697,13 @@ Seam.Delta = function(model) {
       case "string":
         return typeof(v2) == "string" && v1 == v2;        
       case "object":
-        if (v1 instanceof Array) {
+        if (v1 instanceof Date) {
+          return (v2 instanceof Date) && v1.getTime() == v2.getTime();
+        }
+        else if (Seam.getBeanType(v1) {
+          return this.getSourceObject(v1) == v2;
+        }              
+        else if (v1 instanceof Array) {
           if (!(v2 instanceof Array)) return false;
           if (v1.length != v2.length) return false;
           for (var i=0; i<v1.length; i++) {
@@ -705,20 +711,15 @@ Seam.Delta = function(model) {
           }
           return true;
         }
-        else if (v1 instanceof Date) {
-          return (v2 instanceof Date) && v1.getTime() == v2.getTime();
-        }
         else if (v1 instanceof Seam.Map) {
           if (!(v2 instanceof Seam.Map)) return false;
-          var k1 = v1.keySet;
-          var k2 = v2.keySet;
-          if (!k1.length == k2.length) return false;
+          if (v1.elements.length != v2.elements.length) return false;
+          var k1 = v1.keySet();
+          var k2 = v2.keySet();
           for (var i=0; i<k1.length; i++) {
-            var e = eq(v1.get(k1[i]), v2.get(k2[i]));
-            if (!e) {
-              if (Seam.getBeanType(k1[i])) {
-                e = eq(v1.get(k1[i]), v2.get(this.getSourceObject(k1[i]));
-              }
+            var e = eq(v1.get(k1[i]), v2.get(k1[i]));
+            if (!e && Seam.getBeanType(k1[i])) {
+              e = eq(v1.get(k1[i]), v2.get(this.getSourceObject(k1[i]));
             }
             if (!e) {
               for (var j=0; j<k2.length; j++) {
@@ -730,9 +731,6 @@ Seam.Delta = function(model) {
             }
             if (!e) return false;
           }
-        }
-        else if (Seam.getBeanType(v1) {
-          return this.getSourceObject(v1) == v2;
         }
     }
     return false;
