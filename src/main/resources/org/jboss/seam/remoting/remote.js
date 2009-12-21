@@ -515,7 +515,7 @@ Seam.unmarshalContext = function(ctxNode, context) {
 
 Seam.unmarshalRefs = function(refsNode) {
   if (!refsNode) return;
-  var refs = {};
+  var refs = new Array();
   var objs = new Array();
   var cn = Seam.Xml.childNodes(refsNode, "ref");
   for (var i=0; i<cn.length; i++) {
@@ -593,7 +593,7 @@ Seam.cloneObject = function(obj, refMap) {
       return c; 
     }
     else if (obj instanceof Date) {
-      new Date(obj.getTime()) 
+      return new Date(obj.getTime()) 
     }
     var t = Seam.getBeanType(obj);
     var c = (t == undefined) ? new Object() : new t();
@@ -705,14 +705,14 @@ Seam.Delta = function(model) {
         if (v1 instanceof Date) {
           return (v2 instanceof Date) && v1.getTime() == v2.getTime();
         }
-        else if (Seam.getBeanType(v1) {
+        else if (Seam.getBeanType(v1)) {
           return this.getSourceObject(v1) == v2;
         }              
         else if (v1 instanceof Array) {
           if (!(v2 instanceof Array)) return false;
           if (v1.length != v2.length) return false;
           for (var i=0; i<v1.length; i++) {
-            if (!eq(v1[i], v2[i]) return false; 
+            if (!eq(v1[i], v2[i])) return false; 
           }
           return true;
         }
@@ -722,7 +722,7 @@ Seam.Delta = function(model) {
           for (var i=0; i<v1.size(); i++) {
             var e = v1.elements[i];
             if (Seam.getBeanType(e.key) && eq(e.value, v2.get(this.getSourceObject(e.key)))) break;
-            if (eq(e.value, v2.get(e.key)) && (e.value != null || v2.contains(e.key)) break;
+            if (eq(e.value, v2.get(e.key)) && (e.value != null || v2.contains(e.key))) break;
             return false; 
           }
           return true;
@@ -779,10 +779,18 @@ Seam.Delta = function(model) {
   }
 
   Seam.Delta.prototype.getSourceObject = function(obj) {
-    for (var i=0;i<this.model.workingRefs; i++) {
+    for (var i=0;i<this.model.workingRefs.length; i++) {
       if (obj == this.model.workingRefs[i]) return this.model.sourceRefs[i]; 
     }
     return null;
+  }
+  
+  Seam.Delta.prototype.buildRefs = function() {    
+    var refs = new Array();    
+    for (var i=0; i<this.refs.elements.length; i++) {
+      refs.push(this.refs.elements[i]);
+    }    
+    return refs; 
   }
 }
 
@@ -907,10 +915,79 @@ Seam.Model = function() {
     if (this.callback) this.callback(this);
   }
 
-  Seam.Model.prototype.applyUpdates = function(action) {
-    var delta = new Seam.Delta(this);
+  Seam.Model.prototype.applyUpdates = function(a) {
+    var d = new Seam.Delta(this);
     for (var i=0; i<this.values.length; i++) {
-      delta.scanForChanges(this.values[i].value);
+      d.scanForChanges(this.values[i].value);
     }
+    var r = this.createApplyRequest(a, d);
+    var env = Seam.createEnvelope(Seam.createHeader(), r.data);
+    Seam.pendingCalls.put(r.id, r);
+    Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
   }
+  
+  Seam.Model.prototype.createApplyRequest = function(a, delta) {
+    var callId = "" + Seam.__callId++;
+    var d = "<model operation=\"apply\" callId=\"" + callId + "\">";
+    var refs = delta.buildRefs();
+    if (a) {
+      d += "<action>";
+      if (a.beanType) {
+        d += "<target>" + a.beanType + "</target>";
+        if (a.qualifiers) d += "<qualifiers>" + a.qualifiers + "</qualifiers>";
+        if (a.method) d += "<method>" + a.method + "</method>";
+        if (a.params.length > 0) {
+          d += "<params>";
+          for (var i=0; i<a.params.length; i++) {
+            d += "<param>" + Seam.serializeValue(a.params[i], null, refs) + "</param>";
+          }
+          d += "</params>";
+        }
+      }
+      else if (a.expression) {
+        d += "<target>" + a.expression + "</target>";
+      }
+      d += "</action>";
+    }
+    d += "<delta>";
+    for (var i=0; i<delta.refs.elements.length; i++) {
+      var k = delta.refs.elements[i].key;
+      var v = delta.refs.elements[i].value;
+      var refId = this.getRefId(k);
+      if (v) {
+        d += "<changeset refid=\"" + refId + "\">";
+        if (v instanceof Seam.Changeset) {
+          for (var j=0; j<v.propertyChange.elements.length; j++) {
+            d += "<member name=\"" + v.propertyChange.elements[j].key + "\">";
+            d += Seam.serializeValue(v.propertyChange.elements[j].value, null, refs);
+            d += "</member>";
+          } 
+        }
+        else {
+          d += Seam.serializeValue(k, null, refs); 
+        }
+        d += "</changeset>";
+      }
+    }
+    d += "</delta>";
+    if (refs.length > 0) {
+      d += "<refs>";      
+      var idx = this.workingRefs.length;
+      for (var i=0; i<refs.length; i++) {
+        if (this.getRefId(refs[i]) != -1) {
+          d += "<ref id=\"" + ++idx + "\">" + Seam.serializeType(refs[i], refs) + "</ref>";
+        }
+      }
+      d += "</refs>";
+    }
+    d += "</model>";
+    return {data:d, id:callId, model:this};
+  }
+  
+  Seam.Model.prototype.getRefId = function(v) {
+    for (var i=0; i<this.workingRefs.length; i++) {
+      if (this.workingRefs[i] == v) return i; 
+    }
+    return -1;
+  }  
 }
