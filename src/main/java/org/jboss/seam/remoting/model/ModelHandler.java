@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.enterprise.context.Conversation;
-import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -24,7 +23,6 @@ import org.jboss.seam.remoting.MarshalUtils;
 import org.jboss.seam.remoting.RequestContext;
 import org.jboss.seam.remoting.RequestHandler;
 import org.jboss.seam.remoting.wrapper.Wrapper;
-import org.jboss.seam.remoting.wrapper.WrapperFactory;
 import org.jboss.weld.Container;
 import org.jboss.weld.context.ContextLifecycle;
 import org.jboss.weld.context.ConversationContext;
@@ -45,7 +43,7 @@ public class ModelHandler implements RequestHandler
    @Inject BeanManager beanManager;
    @Inject ConversationManager conversationManager;
    @Inject ModelRegistry registry;
-   @Inject Instance<Conversation> conversationInstance;
+   @Inject Conversation conversation;
    
    @SuppressWarnings("unchecked")
    public void handle(HttpServletRequest request, HttpServletResponse response)
@@ -73,19 +71,21 @@ public class ModelHandler implements RequestHandler
             
       ConversationContext conversationContext = null;
       try
-      {
+      {         
          // Initialize the conversation context
          conversationContext = Container.instance().deploymentServices().get(ContextLifecycle.class).getConversationContext();
-         conversationContext.setBeanStore(new ConversationBeanStore(request.getSession(), ctx.getConversationId()));
-         conversationContext.setActive(true);  
          
          if (ctx.getConversationId() != null && !ctx.getConversationId().isEmpty())
          { 
+            conversationContext.setBeanStore(new ConversationBeanStore(request.getSession(), ctx.getConversationId()));
+            conversationContext.setActive(true);  
             conversationManager.beginOrRestoreConversation(ctx.getConversationId());
          }
          else
          {
-            conversationManager.beginOrRestoreConversation(null);
+            conversationContext.setBeanStore(new ConversationBeanStore(request.getSession(), 
+                  ((org.jboss.weld.conversation.ConversationImpl) conversation).getUnderlyingId()));
+            conversationContext.setActive(true);
          }
          
          Set<Model> models = new HashSet<Model>(); 
@@ -109,13 +109,13 @@ public class ModelHandler implements RequestHandler
          {
             if (model.getAction() != null && model.getAction().getException() != null)
             {
-               out.write(ENVELOPE_TAG_OPEN);
-               out.write(BODY_TAG_OPEN);         
+               response.getOutputStream().write(ENVELOPE_TAG_OPEN);
+               response.getOutputStream().write(BODY_TAG_OPEN);         
                MarshalUtils.marshalException(model.getAction().getException(), 
-                     model.getAction().getContext(), out);
-               out.write(BODY_TAG_CLOSE);
-               out.write(ENVELOPE_TAG_CLOSE);
-               out.flush();
+                     model.getAction().getContext(), response.getOutputStream());
+               response.getOutputStream().write(BODY_TAG_CLOSE);
+               response.getOutputStream().write(ENVELOPE_TAG_CLOSE);
+               response.getOutputStream().flush();
                return;
             }
          }
@@ -125,12 +125,12 @@ public class ModelHandler implements RequestHandler
             model.evaluate();
          }
          
-         Conversation conversation = conversationInstance.get();
-         ctx.setConversationId(conversation.getId());      
+         ctx.setConversationId(conversation.isTransient() ? null : conversation.getId());
          marshalResponse(models, ctx, response.getOutputStream());
       }
       finally
       {
+         conversationManager.cleanupConversation();
          if (conversationContext != null)
          {
             conversationContext.setBeanStore(null);
@@ -217,6 +217,7 @@ public class ModelHandler implements RequestHandler
       throws Exception
    {
       Model model = registry.getModel(modelElement.attributeValue("uid"));
+      models.add(model);
       model.setCallId(callId); 
       model.setAction(null);
       

@@ -472,10 +472,9 @@ Seam.processResponse = function(doc) {
     var contextNode = cn(headerNode, "context");
     if (contextNode) {
       Seam.unmarshalContext(contextNode, ctx);
-      if (ctx.getConversationId() && Seam.context.getConversationId() == null)
-        Seam.context.setConversationId(ctx.getConversationId());
     }
   }
+  Seam.context.setConversationId(ctx.getConversationId() ? ctx.getConversationId() : null);  
   if (bodyNode) {
     var n = cn(bodyNode, "result");
     if (n) {
