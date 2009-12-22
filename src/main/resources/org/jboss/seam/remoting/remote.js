@@ -928,7 +928,7 @@ Seam.Model = function() {
   
   Seam.Model.prototype.createApplyRequest = function(a, delta) {
     var callId = "" + Seam.__callId++;
-    var d = "<model operation=\"apply\" callId=\"" + callId + "\">";
+    var d = "<model uid=\"" + this.id + "\" operation=\"apply\" callId=\"" + callId + "\">";
     var refs = delta.buildRefs();
     if (a) {
       d += "<action>";

@@ -38,8 +38,13 @@
       model.getValue("customer").setFirstName("bob");
     }
     
-    function applyModel() {
-      model.applyUpdates(); 
+    function applyUpdates() {
+      var callback = function(model) { alert("updates applied"); };
+      
+      model.applyUpdates(new Seam.Action()
+        .setBeanType("org.jboss.seam.remoting.examples.model.CustomerAction")
+        .setMethod("saveCustomer"),
+        callback);
     }
 
     // ]]>
@@ -49,7 +54,7 @@
   
   <button onclick="javascript:loadCustomer()">Load customer</button> 
   <button onclick="javascript:modifyCustomer()">Modify customer</button>
-  <button onclick="javascript:applyModel()">Apply changes</button>
+  <button onclick="javascript:applyUpdates()">Apply updates</button>
 
 
 </body>

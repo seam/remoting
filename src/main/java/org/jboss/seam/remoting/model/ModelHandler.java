@@ -4,13 +4,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.enterprise.context.Conversation;
+import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -20,10 +19,12 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jboss.seam.remoting.Call;
+import org.jboss.seam.remoting.CallContext;
 import org.jboss.seam.remoting.MarshalUtils;
 import org.jboss.seam.remoting.RequestContext;
 import org.jboss.seam.remoting.RequestHandler;
 import org.jboss.seam.remoting.wrapper.Wrapper;
+import org.jboss.seam.remoting.wrapper.WrapperFactory;
 import org.jboss.weld.Container;
 import org.jboss.weld.context.ContextLifecycle;
 import org.jboss.weld.context.ConversationContext;
@@ -43,8 +44,8 @@ public class ModelHandler implements RequestHandler
    
    @Inject BeanManager beanManager;
    @Inject ConversationManager conversationManager;
-   @Inject Conversation conversation;
    @Inject ModelRegistry registry;
+   @Inject Instance<Conversation> conversationInstance;
    
    @SuppressWarnings("unchecked")
    public void handle(HttpServletRequest request, HttpServletResponse response)
@@ -70,114 +71,194 @@ public class ModelHandler implements RequestHandler
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
             
-      // Initialize the conversation context
-      ConversationContext conversationContext = Container.instance().deploymentServices().get(ContextLifecycle.class).getConversationContext();
-      conversationContext.setBeanStore(new ConversationBeanStore(request.getSession(), ctx.getConversationId()));
-      conversationContext.setActive(true);
-      
-      if (ctx.getConversationId() != null && !ctx.getConversationId().isEmpty())
-      { 
-         conversationManager.beginOrRestoreConversation(ctx.getConversationId());
-      }
-      else
+      ConversationContext conversationContext = null;
+      try
       {
-         conversationManager.beginOrRestoreConversation(null);
-      }
-      
-      Set<Model> models = new HashSet<Model>();
-      Call action = null;      
-      
-      for (Element modelElement : (List<Element>) env.element("body").elements("model"))
-      {     
-         String operation = modelElement.attributeValue("operation");
-         String callId = modelElement.attributeValue("callId");
+         // Initialize the conversation context
+         conversationContext = Container.instance().deploymentServices().get(ContextLifecycle.class).getConversationContext();
+         conversationContext.setBeanStore(new ConversationBeanStore(request.getSession(), ctx.getConversationId()));
+         conversationContext.setActive(true);  
          
-         if ("fetch".equals(operation))
-         {
-            Model model = registry.createModel();
-            models.add(model);
-            model.setCallId(callId);           
-            
-            if (modelElement.elements("action").size() > 0)
-            {
-               Element actionElement = modelElement.element("action");
-               Element targetElement = actionElement.element("target");
-               Element qualifiersElement = actionElement.element("qualifiers");
-               Element methodElement = actionElement.element("method");
-               Element paramsElement = actionElement.element("params");
-               Element refsElement = actionElement.element("refs");
-               
-               action = new Call(beanManager, callId, targetElement.getTextTrim(), 
-                    qualifiersElement != null ? qualifiersElement.getTextTrim() : null, 
-                    methodElement != null ? methodElement.getTextTrim() : null);                        
-   
-               if (refsElement != null)
-               {
-                  for (Element refElement : (List<Element>) refsElement.elements("ref"))
-                  {
-                     action.getContext().createWrapperFromElement(refElement);
-                  }
-      
-                  for (Wrapper w : action.getContext().getInRefs().values())
-                  {
-                     w.unmarshal();
-                  }
-               }
-   
-               if (paramsElement != null)
-               {
-                  for (Element paramElement : (List<Element>) paramsElement.elements("param"))
-                  {
-                     action.addParameter(action.getContext().createWrapperFromElement(
-                           (Element) paramElement.elements().get(0)));
-                  }
-               }
-            }
-            
-            for (Element beanElement : (List<Element>) modelElement.elements("bean"))
-            {
-               Element beanNameElement = beanElement.element("name");
-               Element beanQualifierElement = beanElement.element("qualifier");
-               Element beanPropertyElement = beanElement.element("property");
-               
-               model.addBean(beanElement.attributeValue("alias"),
-                     beanNameElement.getTextTrim(), 
-                     beanQualifierElement != null ? beanQualifierElement.getTextTrim() : null, 
-                     beanPropertyElement != null ? beanPropertyElement.getTextTrim() : null);
-            }
-            
-            // TODO Unmarshal expressions - don't support this until security implications investigated
-            for (Element exprElement : (List<Element>) modelElement.elements("expression"))
-            {
-               
-            }
-            
-            if (action != null)
-            {
-               action.execute();                              
-            }            
+         if (ctx.getConversationId() != null && !ctx.getConversationId().isEmpty())
+         { 
+            conversationManager.beginOrRestoreConversation(ctx.getConversationId());
          }
-      }
-
-      if (action != null && action.getException() != null)
-      {
-         out.write(ENVELOPE_TAG_OPEN);
-         out.write(BODY_TAG_OPEN);         
-         MarshalUtils.marshalException(action.getException(), action.getContext(), out);
-         out.write(BODY_TAG_CLOSE);
-         out.write(ENVELOPE_TAG_CLOSE);
-         out.flush();
-      }      
-      else
-      {      
+         else
+         {
+            conversationManager.beginOrRestoreConversation(null);
+         }
+         
+         Set<Model> models = new HashSet<Model>(); 
+         
+         for (Element modelElement : (List<Element>) env.element("body").elements("model"))
+         {     
+            String operation = modelElement.attributeValue("operation");
+            String callId = modelElement.attributeValue("callId");
+            
+            if ("fetch".equals(operation))
+            {
+               processFetchRequest(modelElement, models, callId);
+            }
+            else if ("apply".equals(operation))
+            {
+               processApplyRequest(modelElement, models, callId);
+            }
+         }
+   
+         for (Model model : models)
+         {
+            if (model.getAction() != null && model.getAction().getException() != null)
+            {
+               out.write(ENVELOPE_TAG_OPEN);
+               out.write(BODY_TAG_OPEN);         
+               MarshalUtils.marshalException(model.getAction().getException(), 
+                     model.getAction().getContext(), out);
+               out.write(BODY_TAG_CLOSE);
+               out.write(ENVELOPE_TAG_CLOSE);
+               out.flush();
+               return;
+            }
+         }
+         
          for (Model model : models)
          {
             model.evaluate();
          }
          
+         Conversation conversation = conversationInstance.get();
          ctx.setConversationId(conversation.getId());      
          marshalResponse(models, ctx, response.getOutputStream());
       }
+      finally
+      {
+         if (conversationContext != null)
+         {
+            conversationContext.setBeanStore(null);
+            conversationContext.setActive(false);            
+         }
+      }
+   }
+   
+   @SuppressWarnings({ "unchecked" }) 
+   private void processFetchRequest(Element modelElement, Set<Model> models, String callId)
+      throws Exception
+   {
+      Model model = registry.createModel();
+      models.add(model);
+      model.setCallId(callId);           
+      
+      if (modelElement.elements("action").size() > 0)
+      {         
+         unmarshalAction(modelElement.element("action"), model, callId);
+      }
+      
+      for (Element beanElement : (List<Element>) modelElement.elements("bean"))
+      {
+         Element beanNameElement = beanElement.element("name");
+         Element beanQualifierElement = beanElement.element("qualifier");
+         Element beanPropertyElement = beanElement.element("property");
+         
+         model.addBean(beanElement.attributeValue("alias"),
+               beanNameElement.getTextTrim(), 
+               beanQualifierElement != null ? beanQualifierElement.getTextTrim() : null, 
+               beanPropertyElement != null ? beanPropertyElement.getTextTrim() : null);
+      }
+      
+      // TODO Unmarshal expressions - don't support this until security implications investigated
+      for (Element exprElement : (List<Element>) modelElement.elements("expression"))
+      {
+         
+      }
+      
+      if (model.getAction() != null)
+      {
+         model.getAction().execute();                              
+      }         
+   }
+   
+   @SuppressWarnings("unchecked")
+   private void unmarshalAction(Element actionElement, Model model, String callId)
+   {
+      Element targetElement = actionElement.element("target");
+      Element qualifiersElement = actionElement.element("qualifiers");
+      Element methodElement = actionElement.element("method");
+      Element paramsElement = actionElement.element("params");
+      Element refsElement = actionElement.element("refs");
+      
+      model.setAction(new Call(beanManager, callId, targetElement.getTextTrim(), 
+           qualifiersElement != null ? qualifiersElement.getTextTrim() : null, 
+           methodElement != null ? methodElement.getTextTrim() : null));                        
+
+      if (refsElement != null)
+      {
+         for (Element refElement : (List<Element>) refsElement.elements("ref"))
+         {
+            model.getAction().getContext().createWrapperFromElement(refElement);
+         }
+
+         for (Wrapper w : model.getAction().getContext().getInRefs().values())
+         {
+            w.unmarshal();
+         }
+      }
+
+      if (paramsElement != null)
+      {
+         for (Element paramElement : (List<Element>) paramsElement.elements("param"))
+         {
+            model.getAction().addParameter(model.getAction().getContext().createWrapperFromElement(
+                  (Element) paramElement.elements().get(0)));
+         }
+      }      
+   }
+   
+   @SuppressWarnings("unchecked")
+   private void processApplyRequest(Element modelElement, Set<Model> models, String callId)
+      throws Exception
+   {
+      Model model = registry.getModel(modelElement.attributeValue("uid"));
+      model.setCallId(callId); 
+      model.setAction(null);
+      
+      CallContext ctx = new CallContext(beanManager);
+      
+      Element refsElement = modelElement.element("refs");
+      for (Element ref : (List<Element>) refsElement.elements("ref"))
+      {
+         ctx.createWrapperFromElement(ref);
+      }
+      
+      Element delta = modelElement.element("delta");
+      if (delta != null)
+      {
+         List<Element> changesets = delta.elements("changeset");
+         for (Element changeset : changesets)
+         {
+            int refId = Integer.parseInt(changeset.attributeValue("refid"));
+            
+            if (changeset.elements("member").size() > 0)
+            {
+               for (Element member : (List<Element>) changeset.elements("member"))
+               {
+                  String name = member.attributeValue("name");
+                  Wrapper w = model.getCallContext().createWrapperFromElement(
+                        (Element) member.elementIterator().next());
+                  model.setModelProperty(refId, name, w);                  
+               }
+            }
+            
+         }
+      }
+      
+      if (modelElement.elements("action").size() > 0)
+      {         
+         unmarshalAction(modelElement.element("action"), model, callId);
+      }      
+      
+      if (model.getAction() != null)
+      {
+         model.getAction().execute();                              
+      }               
    }
    
    private void marshalResponse(Set<Model> models, RequestContext ctx, 
