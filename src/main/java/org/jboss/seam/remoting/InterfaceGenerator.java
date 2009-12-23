@@ -22,7 +22,6 @@ import java.util.Set;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -286,8 +285,6 @@ public class InterfaceGenerator implements RequestHandler
    private void appendBeanSource(OutputStream out, Class<?> beanClass, Set<Type> types)
          throws IOException
    {
-      StringBuilder componentSrc = new StringBuilder();
-
       Set<Class<?>> componentTypes = new HashSet<Class<?>>();
 
       // Check if any of the methods are annotated with @WebRemote, and if so
@@ -325,18 +322,6 @@ public class InterfaceGenerator implements RequestHandler
 
       String name = beanManager.getBeans(beanClass).iterator().next().getName();
       String beanName = name != null ? name : beanClass.getName();
-      if (beanName.contains("."))
-      {
-         componentSrc.append("Seam.createNamespace('");
-         componentSrc.append(beanName.substring(0, beanName.lastIndexOf('.')));
-         componentSrc.append("');\n");
-
-      }
-
-      componentSrc.append("Seam.type.");
-      componentSrc.append(beanName);
-      componentSrc.append(" = function() {\n");
-      componentSrc.append("  this.__callback = new Object();\n");
 
       for (Class<?> type : componentTypes)
       {
@@ -348,68 +333,42 @@ public class InterfaceGenerator implements RequestHandler
          {
             types.add(type);
 
+            // Build the bean stub
+            StringBuilder componentSrc = new StringBuilder();            
+            componentSrc.append("Seam.registerBean(\"");
+            componentSrc.append(beanName);
+            componentSrc.append("\", null, {");
+            
+            boolean first = true;
             for (Method m : type.getDeclaredMethods())
             {
                if (m.getAnnotation(WebRemote.class) == null)
                   continue;
 
+               if (!first) 
+               {
+                  componentSrc.append(", ");               
+               }
+               else
+               {
+                  first = false;
+               }
+               
                // Append the return type to the source block
                appendTypeSource(out, m.getGenericReturnType(), types);
-
-               componentSrc.append("  Seam.type.");
-               componentSrc.append(beanName);
-               componentSrc.append(".prototype.");
+               
                componentSrc.append(m.getName());
-               componentSrc.append(" = function(");
+               componentSrc.append(": ");
+               componentSrc.append(m.getGenericParameterTypes().length);
 
-               // Insert parameters p0..pN
                for (int i = 0; i < m.getGenericParameterTypes().length; i++)
                {
                   appendTypeSource(out, m.getGenericParameterTypes()[i], types);
-
-                  if (i > 0)
-                  {
-                     componentSrc.append(", ");
-                  }
-                  componentSrc.append("p");
-                  componentSrc.append(i);
-               }
-
-               if (m.getGenericParameterTypes().length > 0)
-                  componentSrc.append(", ");
-
-               componentSrc.append("callback, exceptionHandler) {\n");
-               componentSrc.append("    return Seam.execute(this, \"");
-               componentSrc.append(m.getName());
-               componentSrc.append("\", [");
-
-               for (int i = 0; i < m.getParameterTypes().length; i++)
-               {
-                  if (i > 0)
-                     componentSrc.append(", ");
-                  componentSrc.append("p");
-                  componentSrc.append(i);
-               }
-
-               componentSrc.append("], callback, exceptionHandler);\n");
-               componentSrc.append("  }\n");
+               }                
             }
+            componentSrc.append("});\n");            
+            out.write(componentSrc.toString().getBytes());                        
          }
-         componentSrc.append("}\n");
-
-         // Set the component name
-         componentSrc.append("Seam.type.");
-         componentSrc.append(beanName);
-         componentSrc.append(".__name = \"");
-         componentSrc.append(beanName);
-         componentSrc.append("\";\n\n");
-
-         // Register the component
-         componentSrc.append("Seam.registerBean(Seam.type.");
-         componentSrc.append(beanName);
-         componentSrc.append(");\n\n");
-
-         out.write(componentSrc.toString().getBytes());
       }
    }
 
@@ -477,25 +436,12 @@ public class InterfaceGenerator implements RequestHandler
          return;
       }
 
-      StringBuilder typeSource = new StringBuilder();
-
-      // Determine whether this class is a component; if so, use its name
-      // otherwise use its class name.
       Bean<?> bean = beanManager.getBeans(classType).iterator().next();
       
       String componentName = bean.getName();
       if (componentName == null)
          componentName = classType.getName();
 
-      String typeName = componentName.replace('.', '$');
-
-      typeSource.append("Seam.type.");
-      typeSource.append(typeName);
-      typeSource.append(" = function() {\n");
-
-      StringBuilder fields = new StringBuilder();
-      StringBuilder accessors = new StringBuilder();
-      StringBuilder mutators = new StringBuilder();
       Map<String, String> metadata = new HashMap<String, String>();
 
       String getMethodName = null;
@@ -606,77 +552,27 @@ public class InterfaceGenerator implements RequestHandler
          if (getMethodName != null || setMethodName != null)
          {
             metadata.put(propertyName, getFieldType(propertyType));
-
-            fields.append("  this.");
-            fields.append(propertyName);
-            fields.append(" = undefined;\n");
-
-            if (getMethodName != null)
-            {
-               accessors.append("  Seam.type.");
-               accessors.append(typeName);
-               accessors.append(".prototype.");
-               accessors.append(getMethodName);
-               accessors.append(" = function() { return this.");
-               accessors.append(propertyName);
-               accessors.append("; }\n");
-            }
-
-            if (setMethodName != null)
-            {
-               mutators.append("  Seam.type.");
-               mutators.append(typeName);
-               mutators.append(".prototype.");
-               mutators.append(setMethodName);
-               mutators.append(" = function(");
-               mutators.append(propertyName);
-               mutators.append(") { this.");
-               mutators.append(propertyName);
-               mutators.append(" = ");
-               mutators.append(propertyName);
-               mutators.append("; }\n");
-            }
          }
       }
 
-      typeSource.append(fields);
-      typeSource.append(accessors);
-      typeSource.append(mutators);
-
-      typeSource.append("}\n\n");
-
-      // Append the type name
-      typeSource.append("Seam.type.");
-      typeSource.append(typeName);
-      typeSource.append(".__name = \"");
+      StringBuilder typeSource = new StringBuilder();
+      typeSource.append("Seam.registerBean(\"");
       typeSource.append(componentName);
-      typeSource.append("\";\n");
-
-      // Append the metadata
-      typeSource.append("Seam.type.");
-      typeSource.append(typeName);
-      typeSource.append(".__metadata = [\n");
+      typeSource.append("\", {");
 
       boolean first = true;
-
       for (String key : metadata.keySet())
       {
          if (!first)
-            typeSource.append(",\n");
-
-         typeSource.append("  {field: \"");
+            typeSource.append(", ");
          typeSource.append(key);
-         typeSource.append("\", type: \"");
+         typeSource.append(": \"");
          typeSource.append(metadata.get(key));
-         typeSource.append("\"}");
-
+         typeSource.append("\"");
          first = false;
-      }
-
-      typeSource.append("];\n\n");
-      typeSource.append("Seam.registerBean(Seam.type.");
-      typeSource.append(typeName);
-      typeSource.append(");\n\n");
+      }      
+      
+      typeSource.append("});\n");
 
       out.write(typeSource.toString().getBytes());
    }

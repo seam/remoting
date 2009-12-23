@@ -1,5 +1,4 @@
 var Seam = {
-  type: {},
   beans: new Array(),
   debug: false,
   debugWindow: null,
@@ -39,15 +38,43 @@ Seam.getBeanName = function(obj) {
   return t ? t.__name : undefined;
 }
 
-Seam.registerBean = function(bean) {
+Seam.registerBean = function(name, metadata, methods) {
+  var t = function() {};
+  t.__name = name;  
+  
+  if (metadata) {
+    var m = new Array();
+    for (var f in metadata) {
+      var s = f.substring(0,1).toUpperCase() + f.substring(1);
+      t.prototype["set" + s] = function(value) { this[f] = value; };
+      t.prototype["get" + s] = function() { return this[f]; };
+      m.push({field:f, type:metadata[f]});
+    }
+    t.__metadata = m;
+  }
+  else {
+    for (var m in methods) {
+      var pc = methods[m];
+      t.prototype[m] = function() {
+        var p = new Array();
+        for (var i=0; i<pc; i++) {
+          p[i] = arguments[i];
+        }
+        var c = (arguments.length > pc) ? arguments[pc] : undefined;
+        var eh = (arguments.length > (pc + 1)) ? arguments[pc + 1] : undefined;
+        return Seam.execute(this, m, p, c, eh);
+      };
+    }    
+  }
+  
   var b = Seam.beans;
   for (var i=0; i<b.length; i++) {
-    if (b[i].__name == bean.__name) {
-      b[i] = bean;
+    if (b[i].__name == name) {
+      b[i] = t;
       return;
     }
   }
-  b.push(bean);
+  b.push(t);  
 }
 
 Seam.isBeanRegistered = function(name) {
@@ -103,15 +130,6 @@ Seam.log = function(msg) {
   }
   if (Seam.debugWindow) {
     Seam.debugWindow.document.write("<pre>" + (new Date()) + ": " + msg.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</pre><br/>");
-  }
-}
-
-Seam.createNamespace = function(namespace) {
-  var p = namespace.split(".");
-  var b = Seam.type;
-  for(var i=0; i<p.length; i++) {
-    if (typeof b[p[i]] == "undefined") b[p[i]] = new Object();
-    b = b[p[i]];
   }
 }
 
