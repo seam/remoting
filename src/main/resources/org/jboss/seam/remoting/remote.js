@@ -1,5 +1,5 @@
 var Seam = {
-  beans: new Array(),
+  beans: {},
   debug: false,
   debugWindow: null,
   PATH_EXECUTE: "/execute",
@@ -9,26 +9,20 @@ var Seam = {
 }
 
 Seam.createBean = function(name) {
-  var b = Seam.beans;
-  for (var i=0; i<b.length; i++) {
-    if (b[i].__name == name) {
-      var v = new b[i];
-      if (arguments.length > 1) {
-        v.__qualifiers = new Array();
-        for (var j=1; j<arguments.length; j++) {
-          v.__qualifiers.push(arguments[j]);
-        }
-      }
-      return v;
+  if (!Seam.beans[name]) return null;
+  var b = new Seam.beans[name]; 
+  if (arguments.length > 1) {
+    b.__qualifiers = new Array();
+    for (var i=1; i<arguments.length; i++) {
+      b.__qualifiers.push(arguments[i]);
     }
   }
-  return null;
+  return b;
 }
 
 Seam.getBeanType = function(obj) {
-  var b = Seam.beans;
-  for (var i=0; i<b.length; i++) {
-    if (obj instanceof b[i]) return b[i];
+  for (var b in Seam.beans) {
+    if (obj instanceof Seam.beans[b]) return Seam.beans[b];
   }
   return undefined;
 }
@@ -67,23 +61,11 @@ Seam.registerBean = function(name, metadata, methods) {
     }    
   }
   
-  var b = Seam.beans;
-  for (var i=0; i<b.length; i++) {
-    if (b[i].__name == name) {
-      b[i] = t;
-      return;
-    }
-  }
-  b.push(t);  
+  Seam.beans[name] = t;
 }
 
 Seam.isBeanRegistered = function(name) {
-  var b = Seam.beans;
-  for (var i=0; i<b.length; i++) {
-    if (b[i].__name == name)
-      return true;
-  }
-  return false;
+  return Seam.beans[name] != null;
 }
 
 Seam.getBeanMetadata = function(obj) {
