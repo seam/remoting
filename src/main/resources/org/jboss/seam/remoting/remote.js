@@ -12,7 +12,7 @@ Seam.createBean = function(name) {
   if (!Seam.beans[name]) return null;
   var b = new Seam.beans[name];
   if (arguments.length > 1) {
-    b.__qualifiers = new Array();
+    b.__qualifiers = [];
     for (var i=1; i<arguments.length; i++) {
       b.__qualifiers.push(arguments[i]);
     }
@@ -41,7 +41,7 @@ Seam.registerBean = function(name, metadata, methods) {
   var t = function() {};
   t.__name = name;
   if (metadata) {
-    var m = new Array();
+    var m = [];
     for (var f in metadata) {
       var s = f.substring(0,1).toUpperCase() + f.substring(1);
       t.prototype["set" + s] = function(value) { this[f] = value; };
@@ -53,7 +53,7 @@ Seam.registerBean = function(name, metadata, methods) {
     for (var m in methods) {
       var pc = methods[m];
       t.prototype[m] = function() {
-        var p = new Array();
+        var p = [];
         for (var i=0; i<pc; i++) {
           p[i] = arguments[i];
         }
@@ -67,10 +67,17 @@ Seam.registerBean = function(name, metadata, methods) {
 }
 
 Seam.loadBeans = function() {
+  var names = [];
+  var cb = null;
+  for (var i=0; i<arguments.length; i++) {
+    if (typeof arguments[i] != "function")
+      names.push(arguments[i]);
+    else
+      cb = arguments[i];
+  }
   var n = "org.jboss.seam.remoting.BeanMetadata";
   if (!Seam.isBeanRegistered(n)) Seam.registerBean(n, {name: "str", methods: "Seam.Map", properties: "Seam.Map"});
-  var cb = function() {};  
-  Seam.execute("org.jboss.seam.remoting.MetadataCache", "loadBeans", arguments, cb);
+  Seam.execute("org.jboss.seam.remoting.MetadataCache", "loadBeans", [names], cb);
 }
 
 Seam.getBeanMetadata = function(obj) {
@@ -85,7 +92,7 @@ Seam.Xml = {
     }
   },
   childNodes: function(e, tag) {
-    var n = new Array();
+    var n = [];
     for (var i=0; i<e.childNodes.length;i++) {
       if (e.childNodes.item(i).tagName == tag) n.push(e.childNodes.item(i));
     }
@@ -147,7 +154,7 @@ Seam.equals = function(v1, v2) {
 }
 
 Seam.Map = function() {
-  this.elements = new Array();
+  this.elements = [];
   Seam.Map.prototype.size = function() {
     return this.elements.length;
   }
@@ -155,14 +162,14 @@ Seam.Map = function() {
     return this.elements.length == 0;
   }
   Seam.Map.prototype.keySet = function() {
-    var keySet = new Array();
+    var keySet = [];
     for (var i=0; i<this.elements.length; i++) {
       keySet[keySet.length] = this.elements[i].key;
     }
     return keySet;
   }
   Seam.Map.prototype.values = function() {
-    var vals = new Array();
+    var vals = [];
     for (var i=0; i<this.elements.length; i++) {
       vals.push(this.elements[i].value);
     }
@@ -305,7 +312,7 @@ Seam.createCall = function(component, methodName, params, callback, exceptionHan
     d += "</qualifiers>";
   }
   d += "<method>" + methodName + "</method>" + "<params>";
-  var refs = new Array();
+  var refs = [];
   for (var i=0; i<params.length; i++) {
     d += "<param>" + Seam.serializeValue(params[i], null, refs) + "</param>";
   }
@@ -337,7 +344,7 @@ Seam.createEnvelope = function(header, body) {
 Seam.__callId = 0;
 Seam.pendingCalls = new Seam.Map();
 Seam.inBatch = false;
-Seam.batchedCalls = new Array();
+Seam.batchedCalls = [];
 
 Seam.startBatch = function() {
   Seam.inBatch = true;
@@ -505,8 +512,8 @@ Seam.unmarshalContext = function(ctxNode, context) {
 
 Seam.unmarshalRefs = function(refsNode) {
   if (!refsNode) return;
-  var refs = new Array();
-  var objs = new Array();
+  var refs = [];
+  var objs = [];
   var cn = Seam.Xml.childNodes(refsNode, "ref");
   for (var i=0; i<cn.length; i++) {
     var refId = parseInt(cn[i].getAttribute("id"));
@@ -549,7 +556,7 @@ Seam.unmarshalValue = function(element, refs) {
       return decodeURIComponent(data);
     case "ref": return refs[parseInt(element.getAttribute("id"))];
     case "bag":
-      var value = new Array();
+      var value = [];
       var cn = Seam.Xml.childNodes(element, "element");
       for (var i=0; i<cn.length; i++) {
         value.push(Seam.unmarshalValue(cn[i].firstChild, refs));
@@ -575,7 +582,7 @@ Seam.cloneObject = function(obj, refMap) {
     if (obj == null) return null;
     var m = (refMap == null) ? new Seam.Map() : refMap;
     if (obj instanceof Array) {
-      var c = new Array();
+      var c = [];
       m.put(obj, c);
       for (var i=0; i<obj.length; i++) {
         c[i] = Seam.cloneObject(obj[i], m);
@@ -639,7 +646,7 @@ Seam.Action = function() {
   this.beanType = null;
   this.qualifiers = null;
   this.method = null;
-  this.params = new Array();
+  this.params = [];
   this.expression = null;
   Seam.Action.prototype.setBeanType = function(beanType) {
     this.beanType = beanType;
@@ -764,7 +771,7 @@ Seam.Delta = function(model) {
   }
 
   Seam.Delta.prototype.buildRefs = function() {
-    var refs = new Array();
+    var refs = [];
     for (var i=0; i<this.refs.elements.length; i++) {
       refs.push(this.refs.elements[i]);
     }
@@ -774,11 +781,11 @@ Seam.Delta = function(model) {
 
 Seam.Model = function() {
   this.id = null;
-  this.expressions = new Array();
-  this.beans = new Array();
-  this.values = new Array();
-  this.sourceRefs = new Array();
-  this.workingRefs = new Array();
+  this.expressions = [];
+  this.beans = [];
+  this.values = [];
+  this.sourceRefs = [];
+  this.workingRefs = [];
   this.callback = null;
 
   Seam.Model.prototype.addExpression = function(alias, expr) {
@@ -797,7 +804,7 @@ Seam.Model = function() {
   Seam.Model.prototype.addBean = function(alias, bean) {
     var q = null;
     if (arguments.length > 2) {
-      q = new Array();
+      q = [];
       for (var i=2; i<arguments.length; i++) {
         q.push(arguments[i]);
       }
@@ -808,7 +815,7 @@ Seam.Model = function() {
   Seam.Model.prototype.addBeanProperty = function(alias, bean, property) {
     var q = null;
     if (arguments.length > 3) {
-      q = new Array();
+      q = [];
       for (var i=3; i<arguments.length; i++) {
         q.push(arguments[i]);
       }
@@ -827,7 +834,7 @@ Seam.Model = function() {
   Seam.Model.prototype.createFetchRequest = function(a) {
     var callId = "" + Seam.__callId++;
     var d = "<model operation=\"fetch\" callId=\"" + callId + "\">";
-    var refs = new Array();
+    var refs = [];
     if (a) {
       d += "<action>";
       if (a.beanType) {
