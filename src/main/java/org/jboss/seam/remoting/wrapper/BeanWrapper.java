@@ -12,7 +12,7 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.dom4j.Element;
-import org.jboss.seam.remoting.InterfaceGenerator;
+import org.jboss.seam.remoting.MetadataCache;
 
 /**
  * @author Shane Bryzak
@@ -35,7 +35,22 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
    {
       super(beanManager);
    }
+   
+   private MetadataCache metadataCache;
+   
+   @SuppressWarnings("unchecked")
+   private MetadataCache getMetadataCache()
+   {
+      if (metadataCache == null)
+      {
+         Bean<MetadataCache> bean = (Bean<MetadataCache>) beanManager.getBeans(
+               MetadataCache.class).iterator().next(); 
+         metadataCache = bean.create(beanManager.createCreationalContext(bean));
+      }
+      return metadataCache;
+   }
 
+   @SuppressWarnings("unchecked")
    @Override
    public void setElement(Element element)
    {
@@ -244,8 +259,7 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
 
       out.write(BEAN_START_TAG_CLOSE);
 
-      for (String propertyName : InterfaceGenerator
-            .getAccessibleProperties(cls))
+      for (String propertyName : getMetadataCache().getAccessibleProperties(cls).keySet())
       {
          String fieldPath = path != null && path.length() > 0 ? String.format(
                "%s.%s", path, propertyName) : propertyName;

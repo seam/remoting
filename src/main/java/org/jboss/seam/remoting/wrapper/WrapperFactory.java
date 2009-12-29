@@ -25,8 +25,9 @@ public class WrapperFactory
    /**
     * A registry of wrapper types
     */
-   private Map<String, Class> wrapperRegistry = new HashMap<String, Class>();
+   private Map<String, Class<?>> wrapperRegistry = new HashMap<String, Class<?>>();
 
+   @SuppressWarnings("unchecked")
    private Map<Class, Class> classRegistry = new HashMap<Class, Class>();
 
    /**
@@ -63,12 +64,12 @@ public class WrapperFactory
       registerWrapperClass(Byte.class, NumberWrapper.class);
    }
 
-   public void registerWrapper(String type, Class wrapperClass)
+   public void registerWrapper(String type, Class<?> wrapperClass)
    {
       wrapperRegistry.put(type, wrapperClass);
    }
 
-   public void registerWrapperClass(Class cls, Class wrapperClass)
+   public void registerWrapperClass(Class<?> cls, Class<?> wrapperClass)
    {
       classRegistry.put(cls, wrapperClass);
    }
@@ -78,6 +79,7 @@ public class WrapperFactory
       return factory;
    }
 
+   @SuppressWarnings("unchecked")
    public Wrapper createWrapper(String type, BeanManager beanManager)
    {
       Class wrapperClass = wrapperRegistry.get(type);
@@ -99,6 +101,7 @@ public class WrapperFactory
             "Failed to create wrapper for type: %s", type));
    }
 
+   @SuppressWarnings("unchecked")
    public Wrapper getWrapperForObject(Object obj, BeanManager beanManager)
    {
       if (obj == null)

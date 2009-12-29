@@ -3,16 +3,6 @@ package org.jboss.seam.remoting;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,7 +16,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.jboss.seam.remoting.annotations.WebRemote;
+import org.jboss.seam.remoting.BeanMetadata.BeanType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +30,7 @@ public class InterfaceGenerator implements RequestHandler
    private static final Logger log = LoggerFactory.getLogger(InterfaceGenerator.class);
    
    @Inject BeanManager beanManager;
-
-   /**
-    * Maintain a cache of the accessible fields
-    */
-   private static Map<Class<?>, Set<String>> accessibleProperties = new HashMap<Class<?>, Set<String>>();
+   @Inject MetadataCache metadataCache;
 
    /**
     * A cache of component interfaces, keyed by name.
@@ -52,24 +38,18 @@ public class InterfaceGenerator implements RequestHandler
    private Map<Class<?>, byte[]> interfaceCache = new HashMap<Class<?>, byte[]>();
    
    /**
-    * 
-    * @param request
-    *           HttpServletRequest
-    * @param response
-    *           HttpServletResponse
-    * @throws Exception
+    * Handles the request
     */
    public void handle(final HttpServletRequest request,
          final HttpServletResponse response) throws Exception
    {
       if (request.getQueryString() == null)
       {
-         throw new ServletException("Invalid request - no component specified");
+         response.sendError(HttpServletResponse.SC_BAD_REQUEST, 
+               "Invalid request - no component specified");
       }
 
       Set<Class<?>> typesCached = new HashSet<Class<?>>();
-      Set<Type> types = new HashSet<Type>();
-
       response.setContentType("text/javascript");
 
       Enumeration<?> e = request.getParameterNames();
@@ -94,187 +74,62 @@ public class InterfaceGenerator implements RequestHandler
             {
                log.error(String.format("Component not found: [%s]",
                      componentName));
-               throw new ServletException(
-                     "Invalid request - component not found.");               
+               response.sendError(HttpServletResponse.SC_NOT_FOUND, 
+                     String.format("Component not found: [%s]", componentName));              
             }            
          }
          
          typesCached.add(beanClass);
       }
 
-      generateBeanInterface(typesCached, response.getOutputStream(), types);
+      generateBeanInterface(typesCached, response.getOutputStream(), null);
    }
 
    /**
-    * Generates the JavaScript code required to invoke the methods of a
-    * component/s.
+    * Generates the JavaScript code required to invoke the methods of a bean.
     * 
-    * @param components
-    *           Component[] The components to generate javascript for
-    * @param out
-    *           OutputStream The OutputStream to write the generated javascript
-    *           to
-    * @throws IOException
-    *            Thrown if there is an error writing to the OutputStream
+    * @param classes Set<Class<?>> The bean classes for which to generate JavaScript stubs
+    * @param out OutputStream The OutputStream to write the generated JavaScript
+    * @param types Set<Type> Used to keep track of which bean classes have been
+    *        generated, can be null
+    * @throws IOException Thrown if there is an error writing to the OutputStream
     */
    public void generateBeanInterface(Set<Class<?>> classes, OutputStream out,
-         Set<Type> types) throws IOException
+         Set<BeanMetadata> types) throws IOException
    {
-      for (Class<?> cls : classes)
+      if (types == null)
       {
-         if (cls != null)
+         types = new HashSet<BeanMetadata>();
+      }
+      
+      for (Class<?> beanClass : classes)
+      {
+         if (beanClass != null)
          {
-            if (!interfaceCache.containsKey(cls))
+            if (!interfaceCache.containsKey(beanClass))
             {
                synchronized (interfaceCache)
                {
-                  if (!interfaceCache.containsKey(cls))
+                  if (!interfaceCache.containsKey(beanClass))
                   {
                      ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-                     appendBeanSource(bOut, cls, types);
-                     interfaceCache.put(cls, bOut.toByteArray());
+                     addDependency(beanClass, types);
+                     appendBeanSource(bOut, beanClass, types);
+                     interfaceCache.put(beanClass, bOut.toByteArray());
                   }
                }
             }
-            out.write(interfaceCache.get(cls));
+            out.write(interfaceCache.get(beanClass));
          }
       }
    }
 
    /**
-    * A helper method, used internally by InterfaceGenerator and also when
-    * serializing responses. Returns a list of the property names for the
-    * specified class which should be included in the generated interface for
-    * the type.
-    * 
-    * @param cls
-    *           Class
-    * @return List
-    */
-   public static Set<String> getAccessibleProperties(Class<?> cls)
-   {
-      /**
-       * @todo This is a hack to get the "real" class - find out if there is an
-       *       API method in CGLIB that can be used instead
-       */
-      if (cls.getName().contains("EnhancerByCGLIB"))
-         cls = cls.getSuperclass();
-
-      if (!accessibleProperties.containsKey(cls))
-      {
-         synchronized (accessibleProperties)
-         {
-            if (!accessibleProperties.containsKey(cls))
-            {
-               Set<String> properties = new HashSet<String>();
-
-               Class<?> c = cls;
-               while (c != null && !c.equals(Object.class))
-               {
-                  for (Field f : c.getDeclaredFields())
-                  {
-                     if (!Modifier.isTransient(f.getModifiers())
-                           && !Modifier.isStatic(f.getModifiers()))
-                     {
-                        String fieldName = f.getName().substring(0, 1)
-                              .toUpperCase()
-                              + f.getName().substring(1);
-                        String getterName = String.format("get%s", fieldName);
-                        String setterName = String.format("set%s", fieldName);
-                        Method getMethod = null;
-                        Method setMethod = null;
-
-                        try
-                        {
-                           getMethod = c.getMethod(getterName);
-                        }
-                        catch (SecurityException ex)
-                        {
-                        }
-                        catch (NoSuchMethodException ex)
-                        {
-                           // it might be an "is" method...
-                           getterName = String.format("is%s", fieldName);
-                           try
-                           {
-                              getMethod = c.getMethod(getterName);
-                           }
-                           catch (NoSuchMethodException ex2)
-                           { /* don't care */
-                           }
-                        }
-
-                        try
-                        {
-                           setMethod = c.getMethod(setterName, new Class[] { f
-                                 .getType() });
-                        }
-                        catch (SecurityException ex)
-                        {
-                        }
-                        catch (NoSuchMethodException ex)
-                        { /* don't care */
-                        }
-
-                        if (Modifier.isPublic(f.getModifiers())
-                              || (getMethod != null
-                                    && Modifier.isPublic(getMethod
-                                          .getModifiers()) || (setMethod != null && Modifier
-                                    .isPublic(setMethod.getModifiers()))))
-                        {
-                           properties.add(f.getName());
-                        }
-                     }
-                  }
-
-                  //
-                  for (Method m : c.getDeclaredMethods())
-                  {
-                     if (m.getName().startsWith("get")
-                           || m.getName().startsWith("is"))
-                     {
-                        int startIdx = m.getName().startsWith("get") ? 3 : 2;
-
-                        try
-                        {
-                           c.getMethod(String.format("set%s", m.getName()
-                                 .substring(startIdx)), m.getReturnType());
-                        }
-                        catch (NoSuchMethodException ex)
-                        {
-                           continue;
-                        }
-
-                        String propertyName = String.format("%s%s", Character
-                              .toLowerCase(m.getName().charAt(startIdx)), m
-                              .getName().substring(startIdx + 1));
-
-                        if (!properties.contains(propertyName))
-                        {
-                           properties.add(propertyName);
-                        }
-                     }
-                  }
-
-                  c = c.getSuperclass();
-               }
-
-               accessibleProperties.put(cls, properties);
-            }
-         }
-      }
-
-      return accessibleProperties.get(cls);
-   }
-
-   /**
-    * Appends component interface code to an outputstream for a specified
+    * Appends component interface code to an OutputStream for a specified
     * component.
     * 
-    * @param out
-    *           OutputStream The OutputStream to write to
-    * @param component
-    *           Component The component to generate an interface for
+    * @param out OutputStream The OutputStream to write to
+    * @param beanClass Class<?> The bean class to generate an interface for
     * @param types
     *           Set A list of types that have already been generated for this
     *           request. If this component has already been generated (i.e. it
@@ -282,366 +137,85 @@ public class InterfaceGenerator implements RequestHandler
     * @throws IOException
     *            If there is an error writing to the OutputStream.
     */
-   private void appendBeanSource(OutputStream out, Class<?> beanClass, Set<Type> types)
+   private void addDependency(Class<?> beanClass, Set<BeanMetadata> types)
          throws IOException
    {
-      Set<Class<?>> componentTypes = new HashSet<Class<?>>();
-
-      // Check if any of the methods are annotated with @WebRemote, and if so
-      // treat it as an "action" component instead of a type component
-      for (Method m : beanClass.getDeclaredMethods())
+      types.add(metadataCache.getMetadata(beanClass));
+      
+      for (Class<?> dependencyClass : metadataCache.getDependencies(beanClass))
       {
-         if (m.getAnnotation(WebRemote.class) != null)
+         if (!types.contains(dependencyClass))
          {
-            componentTypes.add(beanClass);
-            break;
+            addDependency(dependencyClass, types);
          }
-      }
+      }      
+   }
 
-      if (componentTypes.isEmpty())
-      {
-         appendTypeSource(out, beanClass, types);
-         return;
-      }
-
-      // If types already contains all the component types, then return
-      boolean foundNew = false;
-      for (Class<?> type : componentTypes)
-      {
-         if (!types.contains(type))
+   /**
+    * Appends the interface code for a JavaBean (state holding) class to an OutputStream.
+    * 
+    * @param out OutputStream
+    * @param classType Class<?>
+    * @param types Set<Type>
+    * @throws IOException
+    */
+   private void appendBeanSource(OutputStream out, Class<?> classType,
+         Set<BeanMetadata> types) throws IOException
+   {
+      StringBuilder src = new StringBuilder();
+      
+      for (BeanMetadata meta : types)
+      {          
+         if (meta.getBeanType() == BeanType.action)
          {
-            foundNew = true;
-            break;
-         }
-      }
-
-      if (!foundNew)
-      {
-         return;
-      }
-
-      String name = beanManager.getBeans(beanClass).iterator().next().getName();
-      String beanName = name != null ? name : beanClass.getName();
-
-      for (Class<?> type : componentTypes)
-      {
-         if (types.contains(type))
-         {
-            break;
+            src.append("Seam.registerBean(\"");
+            src.append(meta.getName());
+            src.append("\", null, {");
+            
+            boolean first = true;
+            for (String methodName : meta.getMethods().keySet())
+            {      
+               if (!first) 
+               {
+                  src.append(", ");               
+               }
+               else
+               {
+                  first = false;
+               }
+                              
+               src.append(methodName);
+               src.append(": ");
+               src.append(meta.getMethods().get(methodName));
+            }
+            src.append("});\n");            
          }
          else
          {
-            types.add(type);
-
-            // Build the bean stub
-            StringBuilder componentSrc = new StringBuilder();            
-            componentSrc.append("Seam.registerBean(\"");
-            componentSrc.append(beanName);
-            componentSrc.append("\", null, {");
+            src.append("Seam.registerBean(\"");
+            src.append(meta.getName());
+            src.append("\", {");
             
             boolean first = true;
-            for (Method m : type.getDeclaredMethods())
+            for (String propertyName : meta.getProperties().keySet())
             {
-               if (m.getAnnotation(WebRemote.class) == null)
-                  continue;
-
                if (!first) 
                {
-                  componentSrc.append(", ");               
+                  src.append(", ");
                }
                else
                {
                   first = false;
                }
                
-               // Append the return type to the source block
-               appendTypeSource(out, m.getGenericReturnType(), types);
-               
-               componentSrc.append(m.getName());
-               componentSrc.append(": ");
-               componentSrc.append(m.getGenericParameterTypes().length);
-
-               for (int i = 0; i < m.getGenericParameterTypes().length; i++)
-               {
-                  appendTypeSource(out, m.getGenericParameterTypes()[i], types);
-               }                
+               src.append(propertyName);
+               src.append(": \"");
+               src.append(meta.getProperties().get(propertyName));
+               src.append("\"");
             }
-            componentSrc.append("});\n");            
-            out.write(componentSrc.toString().getBytes());                        
+            src.append("});\n");            
          }
-      }
-   }
-
-   /**
-    * Append Javascript interface code for a specified class to a block of code.
-    * 
-    * @param source
-    *           StringBuilder The code block to append to
-    * @param type
-    *           Class The type to generate a Javascript interface for
-    * @param types
-    *           Set A list of the types already generated (only include each
-    *           type once).
-    */
-   private void appendTypeSource(OutputStream out, Type type, Set<Type> types)
-         throws IOException
-   {
-      if (type instanceof Class<?>)
-      {
-         Class<?> classType = (Class<?>) type;
-
-         if (classType.isArray())
-         {
-            appendTypeSource(out, classType.getComponentType(), types);
-            return;
-         }
-
-         if (classType.getName().startsWith("java.") || types.contains(type)
-               || classType.isPrimitive())
-         {
-            return;
-         }
-
-         // Keep track of which types we've already added
-         types.add(type);
-
-         appendClassSource(out, classType, types);
-      }
-      else if (type instanceof ParameterizedType)
-      {
-         for (Type t : ((ParameterizedType) type).getActualTypeArguments())
-         {
-            appendTypeSource(out, t, types);
-         }
-      }
-   }
-
-   /**
-    * Appends the interface code for a non-component class to an OutputStream.
-    * 
-    * @param out
-    *           OutputStream
-    * @param classType
-    *           Class
-    * @param types
-    *           Set
-    * @throws IOException
-    */
-   private void appendClassSource(OutputStream out, Class<?> classType,
-         Set<Type> types) throws IOException
-   {
-      // Don't generate interfaces for enums
-      if (classType.isEnum())
-      {
-         return;
-      }
-
-      Bean<?> bean = beanManager.getBeans(classType).iterator().next();
-      
-      String componentName = bean.getName();
-      if (componentName == null)
-         componentName = classType.getName();
-
-      Map<String, String> metadata = new HashMap<String, String>();
-
-      String getMethodName = null;
-      String setMethodName = null;
-
-      for (String propertyName : getAccessibleProperties(classType))
-      {
-         Type propertyType = null;
-
-         Field f = null;
-         try
-         {
-            f = classType.getDeclaredField(propertyName);
-            propertyType = f.getGenericType();
-         }
-         catch (NoSuchFieldException ex)
-         {
-            setMethodName = String.format("set%s%s", Character
-                  .toUpperCase(propertyName.charAt(0)), propertyName
-                  .substring(1));
-
-            try
-            {
-               getMethodName = String.format("get%s%s", Character
-                     .toUpperCase(propertyName.charAt(0)), propertyName
-                     .substring(1));
-               propertyType = classType.getMethod(getMethodName)
-                     .getGenericReturnType();
-            }
-            catch (NoSuchMethodException ex2)
-            {
-               try
-               {
-                  getMethodName = String.format("is%s%s", Character
-                        .toUpperCase(propertyName.charAt(0)), propertyName
-                        .substring(1));
-
-                  propertyType = classType.getMethod(getMethodName)
-                        .getGenericReturnType();
-               }
-               catch (NoSuchMethodException ex3)
-               {
-                  // ???
-                  continue;
-               }
-            }
-         }
-
-         appendTypeSource(out, propertyType, types);
-
-         // Include types referenced by generic declarations
-         if (propertyType instanceof ParameterizedType)
-         {
-            for (Type t : ((ParameterizedType) propertyType)
-                  .getActualTypeArguments())
-            {
-               if (t instanceof Class<?>)
-               {
-                  appendTypeSource(out, t, types);
-               }
-            }
-         }
-
-         if (f != null)
-         {
-            String fieldName = propertyName.substring(0, 1).toUpperCase()
-                  + propertyName.substring(1);
-            String getterName = String.format("get%s", fieldName);
-            String setterName = String.format("set%s", fieldName);
-
-            try
-            {
-               classType.getMethod(getterName);
-               getMethodName = getterName;
-            }
-            catch (SecurityException ex)
-            {
-            }
-            catch (NoSuchMethodException ex)
-            {
-               getterName = String.format("is%s", fieldName);
-               try
-               {
-                  if (Modifier.isPublic(classType.getMethod(getterName)
-                        .getModifiers()))
-                     getMethodName = getterName;
-               }
-               catch (NoSuchMethodException ex2)
-               { /* don't care */
-               }
-            }
-
-            try
-            {
-               if (Modifier.isPublic(classType.getMethod(setterName,
-                     f.getType()).getModifiers()))
-                  setMethodName = setterName;
-            }
-            catch (SecurityException ex)
-            {
-            }
-            catch (NoSuchMethodException ex)
-            { /* don't care */
-            }
-         }
-
-         // Construct the list of fields.
-         if (getMethodName != null || setMethodName != null)
-         {
-            metadata.put(propertyName, getFieldType(propertyType));
-         }
-      }
-
-      StringBuilder typeSource = new StringBuilder();
-      typeSource.append("Seam.registerBean(\"");
-      typeSource.append(componentName);
-      typeSource.append("\", {");
-
-      boolean first = true;
-      for (String key : metadata.keySet())
-      {
-         if (!first)
-            typeSource.append(", ");
-         typeSource.append(key);
-         typeSource.append(": \"");
-         typeSource.append(metadata.get(key));
-         typeSource.append("\"");
-         first = false;
       }      
-      
-      typeSource.append("});\n");
-
-      out.write(typeSource.toString().getBytes());
-   }
-
-   /**
-    * Returns the remoting "type" for a specified class.
-    * 
-    * @param type
-    *           Class
-    * @return String
-    */
-   protected String getFieldType(Type type)
-   {
-      if (type.equals(String.class)
-            || (type instanceof Class<?> && ((Class<?>) type).isEnum())
-            || type.equals(BigInteger.class) || type.equals(BigDecimal.class))
-      {
-         return "str";
-      }
-      else if (type.equals(Boolean.class) || type.equals(Boolean.TYPE))
-      {
-         return "bool";
-      }
-      else if (type.equals(Short.class) || type.equals(Short.TYPE)
-            || type.equals(Integer.class) || type.equals(Integer.TYPE)
-            || type.equals(Long.class) || type.equals(Long.TYPE)
-            || type.equals(Float.class) || type.equals(Float.TYPE)
-            || type.equals(Double.class) || type.equals(Double.TYPE)
-            || type.equals(Byte.class) || type.equals(Byte.TYPE))
-      {
-         return "number";
-      }
-      else if (type instanceof Class<?>)
-      {
-         Class<?> cls = (Class<?>) type;
-         if (Date.class.isAssignableFrom(cls)
-               || Calendar.class.isAssignableFrom(cls))
-         {
-            return "date";
-         }
-         else if (cls.isArray())
-         {
-            return "bag";
-         }
-         else if (cls.isAssignableFrom(Map.class))
-         {
-            return "map";
-         }
-         else if (cls.isAssignableFrom(Collection.class))
-         {
-            return "bag";
-         }
-      }
-      else if (type instanceof ParameterizedType)
-      {
-         ParameterizedType pt = (ParameterizedType) type;
-
-         if (pt.getRawType() instanceof Class<?>
-               && Map.class.isAssignableFrom((Class<?>) pt.getRawType()))
-         {
-            return "map";
-         }
-         else if (pt.getRawType() instanceof Class<?>
-               && Collection.class.isAssignableFrom((Class<?>) pt.getRawType()))
-         {
-            return "bag";
-         }
-      }
-
-      return "bean";
+      out.write(src.toString().getBytes());         
    }
 }
