@@ -1,5 +1,6 @@
 package org.jboss.seam.remoting;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -16,11 +17,15 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletResponse;
 
 import org.jboss.seam.remoting.BeanMetadata.BeanType;
 import org.jboss.seam.remoting.annotations.WebRemote;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Caches BeanMetadata instances
@@ -30,6 +35,8 @@ import org.jboss.seam.remoting.annotations.WebRemote;
 @ApplicationScoped
 public class MetadataCache
 {
+   private static final Logger log = LoggerFactory.getLogger(MetadataCache.class);
+   
    private Map<Class<?>,BeanMetadata> metadataCache;
    
    private Map<Class<?>, Set<Class<?>>> beanDependencies;
@@ -74,6 +81,53 @@ public class MetadataCache
             }
          }
          return metadataCache.get(beanClass);
+      }
+   }
+   
+   @WebRemote
+   public Set<BeanMetadata> loadBeans(Set<String> names)
+   {
+      Set<BeanMetadata> meta = new HashSet<BeanMetadata>();
+      
+      for (String name : names)
+      {      
+         Class<?> beanClass = null;
+   
+         Set<Bean<?>> beans = beanManager.getBeans(name);
+         
+         if (!beans.isEmpty())
+         {
+            beanClass = beans.iterator().next().getBeanClass();
+         }
+         else
+         {
+            try
+            {
+               beanClass = Class.forName(name);
+            }
+            catch (ClassNotFoundException ex) 
+            {
+               log.error(String.format("Component not found: [%s]", name));
+               throw new IllegalArgumentException(String.format("Component not found: [%s]", name));             
+            }            
+         }
+         
+         addBeanDependencies(beanClass, meta);
+      }     
+            
+      return meta;
+   }
+   
+   private void addBeanDependencies(Class<?> beanClass, Set<BeanMetadata> types)
+   {
+      types.add(getMetadata(beanClass));
+   
+      for (Class<?> dependencyClass : getDependencies(beanClass))
+      {
+         if (!types.contains(dependencyClass))
+         {
+            addBeanDependencies(dependencyClass, types);
+         }
       }
    }
    

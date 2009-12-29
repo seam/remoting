@@ -32,7 +32,12 @@ Seam.getBeanName = function(obj) {
   return t ? t.__name : undefined;
 }
 
+Seam.isBeanRegistered = function(name) {
+  return Seam.beans[name] != null;
+}
+
 Seam.registerBean = function(name, metadata, methods) {
+  if (Seam.isBeanRegistered(name)) return;
   var t = function() {};
   t.__name = name;
   if (metadata) {
@@ -61,8 +66,11 @@ Seam.registerBean = function(name, metadata, methods) {
   Seam.beans[name] = t;
 }
 
-Seam.isBeanRegistered = function(name) {
-  return Seam.beans[name] != null;
+Seam.loadBeans = function() {
+  var n = "org.jboss.seam.remoting.BeanMetadata";
+  if (!Seam.isBeanRegistered(n)) Seam.registerBean(n, {name: "str", methods: "Seam.Map", properties: "Seam.Map"});
+  var cb = function() {};  
+  Seam.execute("org.jboss.seam.remoting.MetadataCache", "loadBeans", arguments, cb);
 }
 
 Seam.getBeanMetadata = function(obj) {
