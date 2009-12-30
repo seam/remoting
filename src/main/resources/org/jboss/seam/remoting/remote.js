@@ -84,26 +84,17 @@ Seam.loadBeans = function() {
   }
   var n = "org.jboss.seam.remoting.BeanMetadata";
   if (!Seam.isBeanRegistered(n)) Seam.registerBean(n, {name: "str", methods: "Seam.Map", properties: "Seam.Map"});
-  var callback = function(beans) {
-    for (var i=0; i<beans.length; i++) {
-      var meta = beans[i]; 
-      if (meta.beanType == "state") {
-        var props = {};
-        for (var j=0;j<meta.properties.elements.length; j++) {
-          props[meta.properties.elements[j].key] = meta.properties.elements[j].value;
-        }
-        Seam.registerBean(meta.name, props);
-      } else if (meta.beanType == "action") {
-        var methods = {};
-        for (var j=0; j<meta.methods.elements.length; j++) {
-          methods[meta.methods.elements[j].key] = meta.methods.elements[j].value;
-        }
-        Seam.registerBean(meta.name, null, methods);
-      }
-    } 
-    if (cb) cb();
-  }
-  Seam.execute("org.jboss.seam.remoting.MetadataCache", "loadBeans", [names], callback);
+  var c = Seam.createLoadBeansCall([names], cb);
+  var envelope = Seam.createEnvelope(Seam.createHeader(c.id), c.data);
+  Seam.pendingCalls.put(c.id, c);
+  Seam.sendAjaxRequest(envelope, Seam.PATH_EXECUTE, Seam.processResponse, false);
+}
+
+Seam.createLoadBeansCall = function(names, callback, originalCall) {
+  var c = Seam.createCall("org.jboss.seam.remoting.MetadataCache", "loadBeans", names, callback);
+  c.handler = Seam.processLoadBeansResponse;
+  if (originalCall) c.originalCall = originalCall;
+  return c;  
 }
 
 Seam.getBeanMetadata = function(obj) {
@@ -381,13 +372,9 @@ Seam.cancelCall = function(callId) {
 
 Seam.execute = function(component, methodName, params, callback, exceptionHandler) {
   var c = Seam.createCall(component, methodName, params, callback, exceptionHandler);
-  if (Seam.inBatch) {
-    Seam.batchedCalls.push(c);
-  } else {
-    var envelope = Seam.createEnvelope(Seam.createHeader(c.id), c.data);
-    Seam.pendingCalls.put(c.id, c);
-    Seam.sendAjaxRequest(envelope, Seam.PATH_EXECUTE, Seam.processResponse, false);
-  }
+  var envelope = Seam.createEnvelope(Seam.createHeader(c.id), c.data);
+  Seam.pendingCalls.put(c.id, c);
+  Seam.sendAjaxRequest(envelope, Seam.PATH_EXECUTE, Seam.processResponse, false);
   return c;
 }
 
@@ -447,6 +434,44 @@ Seam.sendAjaxRequest = function(env, path, callback, silent) {
   r.send(env);
 }
 
+Seam.processLoadBeansResponse = function(call) {   
+  var cn = Seam.Xml.childNode;
+  Seam.pendingCalls.remove(call.callId);
+  var n = cn(cn(call.response.documentElement, "body"), "result");
+  var valueNode = cn(n, "value");
+  var exceptionNode = cn(n, "exception");
+  if (exceptionNode != null && call.exceptionHandler != null) {
+    var msgNode = cn(exceptionNode, "message");
+    var msg = Seam.unmarshalValue(msgNode.firstChild);
+    call.exceptionHandler(new Seam.Exception(msg));
+  } else {
+    var refsNode = cn(n, "refs");
+    var refs = Seam.unmarshalRefs(refsNode);
+    var v = Seam.unmarshalValue(valueNode.firstChild, refs);
+    for (var i=0; i<v.length; i++) {
+      var meta = v[i]; 
+      if (meta.beanType == "state") {
+        var props = {};
+        for (var j=0;j<meta.properties.elements.length; j++) {
+          props[meta.properties.elements[j].key] = meta.properties.elements[j].value;
+        }
+        Seam.registerBean(meta.name, props);
+      } else if (meta.beanType == "action") {
+        var methods = {};
+        for (var j=0; j<meta.methods.elements.length; j++) {
+          methods[meta.methods.elements[j].key] = meta.methods.elements[j].value;
+        }
+        Seam.registerBean(meta.name, null, methods);
+      }
+    }
+    if (call.callback) {
+      call.callback(v, call.context);
+    } else if (call.originalCall) {
+      call.originalCall.handler(call.originalCall);
+    }
+  }
+}
+
 Seam.preProcessCallResponse = function(call) {
   var cn = Seam.Xml.childNode;
   var bodyNode = cn(call.response.documentElement, "body");
@@ -456,7 +481,11 @@ Seam.preProcessCallResponse = function(call) {
       var refsNode = cn(n, "refs");
       var u = Seam.validateRefs(refsNode, call);
       if (u.length > 0) {
-        // todo load the unknown types        
+        call.handler = Seam.processCallResponse;
+        var c = Seam.createLoadBeansCall(u, null, call);
+        var envelope = Seam.createEnvelope(Seam.createHeader(c.id), c.data);
+        Seam.pendingCalls.put(c.id, c);
+        Seam.sendAjaxRequest(envelope, Seam.PATH_EXECUTE, Seam.processResponse, false);                        
       } else {
         Seam.processCallResponse(call);
       }
@@ -479,7 +508,7 @@ Seam.processCallResponse = function(call) {
     var refs = Seam.unmarshalRefs(refsNode);
     var v = Seam.unmarshalValue(valueNode.firstChild, refs);
     call.callback(v, call.context);
-  } 
+  }
 }
 
 Seam.preProcessModelResponse = function(call) {
@@ -521,14 +550,6 @@ Seam.processResponse = function(doc) {
         if (call.handler) call.handler(call); 
       }
     }
-  }
-}
-
-Seam.processLoadTypes = function(callId) {
-  var call = Seam.pendingCalls.get(callId);
-  if (call) {
-    Seam.pendingCalls.remove(callId);
-    if (call.model) call.model.processResponse(call.model.modelNode, true);
   }
 }
 
