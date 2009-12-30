@@ -93,15 +93,14 @@ public class ModelHandler implements RequestHandler
          for (Element modelElement : (List<Element>) env.element("body").elements("model"))
          {     
             String operation = modelElement.attributeValue("operation");
-            String callId = modelElement.attributeValue("callId");
             
             if ("fetch".equals(operation))
             {
-               processFetchRequest(modelElement, models, callId);
+               processFetchRequest(modelElement, models);
             }
             else if ("apply".equals(operation))
             {
-               processApplyRequest(modelElement, models, callId);
+               processApplyRequest(modelElement, models);
             }
          }
    
@@ -140,16 +139,15 @@ public class ModelHandler implements RequestHandler
    }
    
    @SuppressWarnings({ "unchecked" }) 
-   private void processFetchRequest(Element modelElement, Set<Model> models, String callId)
+   private void processFetchRequest(Element modelElement, Set<Model> models)
       throws Exception
    {
       Model model = registry.createModel();
-      models.add(model);
-      model.setCallId(callId);           
+      models.add(model); 
       
       if (modelElement.elements("action").size() > 0)
       {         
-         unmarshalAction(modelElement.element("action"), model, callId);
+         unmarshalAction(modelElement.element("action"), model);
       }
       
       for (Element beanElement : (List<Element>) modelElement.elements("bean"))
@@ -177,7 +175,7 @@ public class ModelHandler implements RequestHandler
    }
    
    @SuppressWarnings("unchecked")
-   private void unmarshalAction(Element actionElement, Model model, String callId)
+   private void unmarshalAction(Element actionElement, Model model)
    {
       Element targetElement = actionElement.element("target");
       Element qualifiersElement = actionElement.element("qualifiers");
@@ -185,7 +183,7 @@ public class ModelHandler implements RequestHandler
       Element paramsElement = actionElement.element("params");
       Element refsElement = actionElement.element("refs");
       
-      model.setAction(new Call(beanManager, callId, targetElement.getTextTrim(), 
+      model.setAction(new Call(beanManager, targetElement.getTextTrim(), 
            qualifiersElement != null ? qualifiersElement.getTextTrim() : null, 
            methodElement != null ? methodElement.getTextTrim() : null));                        
 
@@ -213,12 +211,11 @@ public class ModelHandler implements RequestHandler
    }
    
    @SuppressWarnings("unchecked")
-   private void processApplyRequest(Element modelElement, Set<Model> models, String callId)
+   private void processApplyRequest(Element modelElement, Set<Model> models)
       throws Exception
    {
       Model model = registry.getModel(modelElement.attributeValue("uid"));
       models.add(model);
-      model.setCallId(callId); 
       model.setAction(null);
       
       CallContext ctx = new CallContext(beanManager);
@@ -253,7 +250,7 @@ public class ModelHandler implements RequestHandler
       
       if (modelElement.elements("action").size() > 0)
       {         
-         unmarshalAction(modelElement.element("action"), model, callId);
+         unmarshalAction(modelElement.element("action"), model);
       }      
       
       if (model.getAction() != null)

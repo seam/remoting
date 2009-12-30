@@ -20,11 +20,17 @@ public class RequestContext
             {
                setConversationId(convId.getText());
             }
+            Element callId = context.element("callId");
+            if (callId != null)
+            {
+               setCallId(Long.valueOf(callId.getText()));
+            }
          }
       }
    }
    
   private String conversationId;
+  private Long callId;
 
   public String getConversationId()
   {
@@ -34,5 +40,15 @@ public class RequestContext
   public void setConversationId(String conversationId)
   {
     this.conversationId = conversationId;
+  }
+  
+  public Long getCallId()
+  {
+     return callId;
+  }
+  
+  public void setCallId(Long callId)
+  {
+     this.callId = callId;
   }
 }

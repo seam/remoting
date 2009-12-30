@@ -31,8 +31,6 @@ public class Call
    
    private BeanManager beanManager;
 
-   private String id;
-
    private String methodName;
    private Throwable exception;
 
@@ -46,11 +44,9 @@ public class Call
    
    private Bean<?> targetBean = null;
 
-   public Call(BeanManager beanManager, String id, String beanName, 
-         String qualifiers, String methodName)
+   public Call(BeanManager beanManager, String beanName, String qualifiers, String methodName)
    {
       this.beanManager = beanManager;
-      this.id = id;
       this.methodName = methodName;
       this.context = new CallContext(beanManager);
       
@@ -131,16 +127,6 @@ public class Call
    public void setResult(Object result)
    {
       this.result = result;
-   }
-
-   /**
-    * Returns the id of this call.
-    * 
-    * @return String
-    */
-   public String getId()
-   {
-      return id;
    }
 
    /**

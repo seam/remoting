@@ -15,8 +15,6 @@ import org.jboss.seam.remoting.wrapper.Wrapper;
  */
 public class MarshalUtils
 {
-   private static final byte[] RESULT_TAG_OPEN_START = "<result id=\"".getBytes();
-   private static final byte[] RESULT_TAG_OPEN_END = "\">".getBytes();
    private static final byte[] RESULT_TAG_OPEN = "<result>".getBytes();
    private static final byte[] RESULT_TAG_CLOSE = "</result>".getBytes();
    
@@ -40,16 +38,7 @@ public class MarshalUtils
    public static void marshalCallResult(Call call, OutputStream out)
          throws IOException
    {
-      if (call.getId() != null)
-      {
-         out.write(RESULT_TAG_OPEN_START);
-         out.write(call.getId().getBytes());
-         out.write(RESULT_TAG_OPEN_END);
-      }
-      else
-      {
-         out.write(RESULT_TAG_OPEN);
-      }
+      out.write(RESULT_TAG_OPEN);
 
       if (call.getException() != null)
       {
@@ -84,14 +73,7 @@ public class MarshalUtils
       throws IOException
    {
       out.write(MODEL_TAG_OPEN_START);
-      out.write(model.getId().getBytes());
-      
-      if (model.getCallId() != null)
-      {
-         out.write("\" callId=\"".getBytes());
-         out.write(model.getCallId().getBytes());
-      }
-      
+      out.write(model.getId().getBytes());      
       out.write(MODEL_TAG_OPEN_END);
       
       for (String alias : model.getBeanProperties().keySet())

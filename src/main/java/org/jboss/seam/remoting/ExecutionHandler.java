@@ -4,9 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.enterprise.context.Conversation;
 import javax.enterprise.inject.spi.BeanManager;
@@ -76,19 +74,14 @@ public class ExecutionHandler implements RequestHandler
       }
 
       // Extract the calls from the request
-      List<Call> calls = unmarshalCalls(env);
-
-      // Execute each of the calls
-      for (Call call : calls)
-      {
-         call.execute();
-      }
+      Call call = unmarshalCall(env);
+      call.execute();
 
       // Store the conversation ID in the outgoing context
       ctx.setConversationId(conversation.getId());
 
       // Package up the response
-      marshalResponse(calls, ctx, response.getOutputStream());
+      marshalResponse(call, ctx, response.getOutputStream());
    }
 
    /**
@@ -99,57 +92,49 @@ public class ExecutionHandler implements RequestHandler
     * @throws Exception
     */
    @SuppressWarnings("unchecked")
-   private List<Call> unmarshalCalls(Element env) throws Exception
+   private Call unmarshalCall(Element env) throws Exception
    {
       try
       {
-         List<Call> calls = new ArrayList<Call>();
+         Element callElement = env.element("body").element("call");
+  
+         Element targetNode = callElement.element("target");
+         Element qualifiersNode = callElement.element("qualifiers");
+         Element methodNode = callElement.element("method");
+         
+         Call call = new Call(beanManager, targetNode.getText(), 
+               qualifiersNode != null ? qualifiersNode.getText() : null, 
+               methodNode.getText());
 
-         List<Element> callElements = env.element("body").elements("call");
-
-         for (Element e : callElements)
-         {           
-            Element targetNode = e.element("target");
-            Element qualifiersNode = e.element("qualifiers");
-            Element methodNode = e.element("method");
-            
-            Call call = new Call(beanManager, e.attributeValue("id"), 
-                  targetNode.getText(), 
-                  qualifiersNode != null ? qualifiersNode.getText() : null, 
-                  methodNode.getText());
-
-            // First reconstruct all the references
-            Element refsNode = e.element("refs");
-            
-            Iterator iter = refsNode.elementIterator("ref");
-            while (iter.hasNext())
-            {
-               call.getContext()
-                     .createWrapperFromElement((Element) iter.next());
-            }
-
-            // Now unmarshal the ref values
-            for (Wrapper w : call.getContext().getInRefs().values())
-            {
-               w.unmarshal();
-            }
-
-            Element paramsNode = e.element("params");
-
-            // Then process the param values
-            iter = paramsNode.elementIterator("param");
-            while (iter.hasNext())
-            {
-               Element param = (Element) iter.next();
-
-               call.addParameter(call.getContext().createWrapperFromElement(
-                     (Element) param.elementIterator().next()));
-            }
-
-            calls.add(call);
+         // First reconstruct all the references
+         Element refsNode = callElement.element("refs");
+         
+         Iterator iter = refsNode.elementIterator("ref");
+         while (iter.hasNext())
+         {
+            call.getContext()
+                  .createWrapperFromElement((Element) iter.next());
          }
 
-         return calls;
+         // Now unmarshal the ref values
+         for (Wrapper w : call.getContext().getInRefs().values())
+         {
+            w.unmarshal();
+         }
+
+         Element paramsNode = callElement.element("params");
+
+         // Then process the param values
+         iter = paramsNode.elementIterator("param");
+         while (iter.hasNext())
+         {
+            Element param = (Element) iter.next();
+
+            call.addParameter(call.getContext().createWrapperFromElement(
+                  (Element) param.elementIterator().next()));
+         }
+
+         return call;
       }
       catch (Exception ex)
       {
@@ -167,28 +152,26 @@ public class ExecutionHandler implements RequestHandler
     *           OutputStream The stream to write to
     * @throws IOException
     */
-   private void marshalResponse(List<Call> calls, RequestContext ctx,
-         OutputStream out) throws IOException
+   private void marshalResponse(Call call, RequestContext ctx, OutputStream out) 
+      throws IOException
    {
       out.write(ENVELOPE_TAG_OPEN);
-
+      out.write(HEADER_OPEN);
+      out.write(CONTEXT_TAG_OPEN);
       if (ctx.getConversationId() != null)
       {
-         out.write(HEADER_OPEN);
-         out.write(CONTEXT_TAG_OPEN);
          out.write(CONVERSATION_ID_TAG_OPEN);
          out.write(ctx.getConversationId().getBytes());
          out.write(CONVERSATION_ID_TAG_CLOSE);
-         out.write(CONTEXT_TAG_CLOSE);
-         out.write(HEADER_CLOSE);
       }
+      out.write(CALL_ID_TAG_OPEN);
+      out.write(ctx.getCallId().toString().getBytes());
+      out.write(CALL_ID_TAG_CLOSE);
+      out.write(CONTEXT_TAG_CLOSE);
+      out.write(HEADER_CLOSE);
 
       out.write(BODY_TAG_OPEN);
-
-      for (Call call : calls)
-      {
-         MarshalUtils.marshalCallResult(call, out);
-      }
+      MarshalUtils.marshalCallResult(call, out);
 
       out.write(BODY_TAG_CLOSE);
       out.write(ENVELOPE_TAG_CLOSE);

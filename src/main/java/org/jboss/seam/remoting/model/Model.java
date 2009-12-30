@@ -31,7 +31,6 @@ public class Model implements Serializable
    
    private BeanManager beanManager;
    private String id;
-   private String callId;
    private CallContext callContext;
    private Call action;
    
@@ -121,17 +120,7 @@ public class Model implements Serializable
       callContext = new CallContext(beanManager);
       beanProperties = new HashMap<String, BeanProperty>();
    }
-   
-   public void setCallId(String callId)
-   {
-      this.callId = callId;
-   }
-   
-   public String getCallId()
-   {
-      return callId;
-   }
-   
+     
    /**
     * Evaluate each of the model's bean properties, expressions, etc and
     * store the values in the BeanProperty map.
