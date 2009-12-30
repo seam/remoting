@@ -207,7 +207,7 @@ public class ModelHandler implements RequestHandler
    private Model processApplyRequest(Element modelElement)
       throws Exception
    {
-      Model model = registry.getModel(modelElement.attributeValue("uid"));
+      Model model = registry.getModel(modelElement.attributeValue("id"));
       model.setAction(null);
       
       CallContext ctx = new CallContext(beanManager);
@@ -258,19 +258,19 @@ public class ModelHandler implements RequestHandler
    {
       out.write(ENVELOPE_TAG_OPEN);
 
+      out.write(HEADER_OPEN);
+      out.write(CONTEXT_TAG_OPEN);
       if (ctx.getConversationId() != null)
       {
-         out.write(HEADER_OPEN);
-         out.write(CONTEXT_TAG_OPEN);
          out.write(CONVERSATION_ID_TAG_OPEN);
          out.write(ctx.getConversationId().getBytes());
          out.write(CONVERSATION_ID_TAG_CLOSE);
-         out.write(CALL_ID_TAG_OPEN);
-         out.write(ctx.getCallId().toString().getBytes());
-         out.write(CALL_ID_TAG_CLOSE);
-         out.write(CONTEXT_TAG_CLOSE);
-         out.write(HEADER_CLOSE);
       }
+      out.write(CALL_ID_TAG_OPEN);
+      out.write(ctx.getCallId().toString().getBytes());
+      out.write(CALL_ID_TAG_CLOSE);
+      out.write(CONTEXT_TAG_CLOSE);
+      out.write(HEADER_CLOSE);
 
       out.write(BODY_TAG_OPEN);
 

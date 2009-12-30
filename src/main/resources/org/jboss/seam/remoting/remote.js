@@ -516,7 +516,7 @@ Seam.processCallResponse = function(call) {
   }
 }
 
-Seam.preProcessModelFetchResponse = function(call) {
+Seam.preProcessModelResponse = function(call) {
   var cn = Seam.Xml.childNode;
   var b = cn(call.response.documentElement, "body");
   if (b) {
@@ -525,19 +525,19 @@ Seam.preProcessModelFetchResponse = function(call) {
       var refsNode = cn(m, "refs");
       var u = Seam.validateRefs(refsNode);
       if (u.length > 0) {
-        call.handler = Seam.processModelFetchResponse;
+        call.handler = Seam.processModelResponse;
         var c = Seam.createImportBeansCall(u, null, call);
         var envelope = Seam.createEnvelope(Seam.createHeader(c.id), c.data);
         Seam.pendingCalls.put(c.id, c);
         Seam.sendAjaxRequest(envelope, Seam.PATH_EXECUTE, Seam.processResponse, false);                        
       } else {
-        Seam.processModelFetchResponse(call);
+        Seam.processModelResponse(call);
       }
     }
   }  
 }
 
-Seam.processModelFetchResponse = function(call) {
+Seam.processModelResponse = function(call) {
   Seam.pendingCalls.remove(call.callId);
   var cn = Seam.Xml.childNode;  
   var b = cn(call.response.documentElement, "body");
@@ -919,7 +919,7 @@ Seam.Model = function() {
 
   Seam.Model.prototype.createFetchRequest = function(a) {
     var callId = "" + Seam.__callId++;
-    var d = "<model operation=\"fetch\" callId=\"" + callId + "\">";
+    var d = "<model operation=\"fetch\">";
     var refs = [];
     if (a) {
       d += "<action>";
@@ -968,12 +968,12 @@ Seam.Model = function() {
       }
     }
     d += "</model>";
-    return {data:d, id:callId, model:this, handler: Seam.preProcessModelFetchResponse};
+    return {data:d, id:callId, model:this, handler: Seam.preProcessModelResponse};
   }
 
   Seam.Model.prototype.processResponse = function(modelNode) {
     var refsNode = Seam.Xml.childNode(modelNode, "refs");
-    this.id = modelNode.getAttribute("uid");
+    this.id = modelNode.getAttribute("id");
     var valueNodes = Seam.Xml.childNodes(modelNode, "value");         
     this.sourceRefs = Seam.unmarshalRefs(refsNode);
     this.workingRefs = Seam.cloneObject(this.sourceRefs);
@@ -997,7 +997,7 @@ Seam.Model = function() {
 
   Seam.Model.prototype.createApplyRequest = function(a, delta) {
     var callId = "" + Seam.__callId++;
-    var d = "<model uid=\"" + this.id + "\" operation=\"apply\">";
+    var d = "<model id=\"" + this.id + "\" operation=\"apply\">";
     var refs = delta.buildRefs();
     if (a) {
       d += "<action>";
@@ -1048,7 +1048,7 @@ Seam.Model = function() {
       d += "</refs>";
     }
     d += "</model>";
-    return {data:d, id:callId, model:this, handler: null};
+    return {data:d, id:callId, model:this, handler: Seam.preProcessModelResponse};
   }
 
   Seam.Model.prototype.getRefId = function(v) {

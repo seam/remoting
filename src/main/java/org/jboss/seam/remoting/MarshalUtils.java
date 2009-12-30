@@ -18,7 +18,7 @@ public class MarshalUtils
    private static final byte[] RESULT_TAG_OPEN = "<result>".getBytes();
    private static final byte[] RESULT_TAG_CLOSE = "</result>".getBytes();
    
-   private static final byte[] MODEL_TAG_OPEN_START = "<model uid=\"".getBytes();
+   private static final byte[] MODEL_TAG_OPEN_START = "<model id=\"".getBytes();
    private static final byte[] MODEL_TAG_OPEN_END = "\">".getBytes();
    private static final byte[] MODEL_TAG_CLOSE = "</model>".getBytes();
 
