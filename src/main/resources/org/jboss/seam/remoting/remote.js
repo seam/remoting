@@ -66,7 +66,7 @@ Seam.registerBean = function(name, metadata, methods) {
   Seam.beans[name] = t;
 }
 
-Seam.loadBeans = function() {
+Seam.importBeans = function() {
   var names = [];
   var cb = null;
   for (var i=0; i<arguments.length; i++) {
@@ -82,17 +82,22 @@ Seam.loadBeans = function() {
         cb = arguments[i];
     }
   }
-  var n = "org.jboss.seam.remoting.BeanMetadata";
-  if (!Seam.isBeanRegistered(n)) Seam.registerBean(n, {name: "str", methods: "Seam.Map", properties: "Seam.Map"});
-  var c = Seam.createLoadBeansCall([names], cb);
+  
+  var c = Seam.createImportBeansCall(names, cb);
   var envelope = Seam.createEnvelope(Seam.createHeader(c.id), c.data);
   Seam.pendingCalls.put(c.id, c);
   Seam.sendAjaxRequest(envelope, Seam.PATH_EXECUTE, Seam.processResponse, false);
 }
 
-Seam.createLoadBeansCall = function(names, callback, originalCall) {
-  var c = Seam.createCall("org.jboss.seam.remoting.MetadataCache", "loadBeans", names, callback);
-  c.handler = Seam.processLoadBeansResponse;
+Seam.createImportBeansCall = function(names, callback, originalCall) {
+  var n = "org.jboss.seam.remoting.BeanMetadata";
+  if (!Seam.isBeanRegistered(n)) {
+    Seam.registerBean(n, {name: "str", methods: "Seam.Map", properties: "Seam.Map"});
+    Seam.registerBean("org.jboss.seam.remoting.MetadataCache", null, {loadBeans:1});
+  }
+
+  var c = Seam.createCall(new Seam.beans["org.jboss.seam.remoting.MetadataCache"](), "loadBeans", [names], callback);
+  c.handler = Seam.processImportBeansResponse;
   if (originalCall) c.originalCall = originalCall;
   return c;  
 }
@@ -315,7 +320,7 @@ Seam.serializeType = function(obj, refs) {
 
 Seam.createCall = function(component, methodName, params, callback, exceptionHandler) {
   var callId = "" + Seam.__callId++;
-  if (!callback) callback = component.__callback[methodName];
+  if (!callback && component.__callback) callback = component.__callback[methodName];
   var d = "<call><target>" + Seam.getBeanType(component).__name + "</target>";
   if (component.__qualifiers != null) {
     d += "<qualifiers>";
@@ -434,7 +439,7 @@ Seam.sendAjaxRequest = function(env, path, callback, silent) {
   r.send(env);
 }
 
-Seam.processLoadBeansResponse = function(call) {   
+Seam.processImportBeansResponse = function(call) {   
   var cn = Seam.Xml.childNode;
   Seam.pendingCalls.remove(call.callId);
   var n = cn(cn(call.response.documentElement, "body"), "result");
@@ -479,10 +484,10 @@ Seam.preProcessCallResponse = function(call) {
     var n = cn(bodyNode, "result");
     if (n) {
       var refsNode = cn(n, "refs");
-      var u = Seam.validateRefs(refsNode, call);
+      var u = Seam.validateRefs(refsNode);
       if (u.length > 0) {
         call.handler = Seam.processCallResponse;
-        var c = Seam.createLoadBeansCall(u, null, call);
+        var c = Seam.createImportBeansCall(u, null, call);
         var envelope = Seam.createEnvelope(Seam.createHeader(c.id), c.data);
         Seam.pendingCalls.put(c.id, c);
         Seam.sendAjaxRequest(envelope, Seam.PATH_EXECUTE, Seam.processResponse, false);                        
@@ -511,17 +516,35 @@ Seam.processCallResponse = function(call) {
   }
 }
 
-Seam.preProcessModelResponse = function(call) {
-  var bodyNode = cn(doc.documentElement, "body");
-  if (bodyNode) {
-    var n = Seam.Xml.childNodes(bodyNode, "model");
-    for (var i=0; i<n.length; i++) {
-      var callId = n[i].getAttribute("callId");
-      var call = Seam.pendingCalls.get(callId);
-      Seam.pendingCalls.remove(callId);
-      if (call.model) call.model.processResponse(n[i]);
+Seam.preProcessModelFetchResponse = function(call) {
+  var cn = Seam.Xml.childNode;
+  var b = cn(call.response.documentElement, "body");
+  if (b) {
+    var m = cn(b, "model");
+    if (m) {
+      var refsNode = cn(m, "refs");
+      var u = Seam.validateRefs(refsNode);
+      if (u.length > 0) {
+        call.handler = Seam.processModelFetchResponse;
+        var c = Seam.createImportBeansCall(u, null, call);
+        var envelope = Seam.createEnvelope(Seam.createHeader(c.id), c.data);
+        Seam.pendingCalls.put(c.id, c);
+        Seam.sendAjaxRequest(envelope, Seam.PATH_EXECUTE, Seam.processResponse, false);                        
+      } else {
+        Seam.processModelFetchResponse(call);
+      }
     }
   }  
+}
+
+Seam.processModelFetchResponse = function(call) {
+  Seam.pendingCalls.remove(call.callId);
+  var cn = Seam.Xml.childNode;  
+  var b = cn(call.response.documentElement, "body");
+  if (b) {
+    var n = cn(b, "model");
+    if (call.model) call.model.processResponse(n);  
+  }
 }
 
 Seam.displayError = function(code) {
@@ -945,7 +968,7 @@ Seam.Model = function() {
       }
     }
     d += "</model>";
-    return {data:d, id:callId, model:this, handler: null};
+    return {data:d, id:callId, model:this, handler: Seam.preProcessModelFetchResponse};
   }
 
   Seam.Model.prototype.processResponse = function(modelNode) {
@@ -974,7 +997,7 @@ Seam.Model = function() {
 
   Seam.Model.prototype.createApplyRequest = function(a, delta) {
     var callId = "" + Seam.__callId++;
-    var d = "<model uid=\"" + this.id + "\" operation=\"apply\" callId=\"" + callId + "\">";
+    var d = "<model uid=\"" + this.id + "\" operation=\"apply\">";
     var refs = delta.buildRefs();
     if (a) {
       d += "<action>";

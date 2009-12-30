@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
@@ -244,18 +245,19 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
          cls = cls.getSuperclass();
       }
 
-      // TODO fix this, bean might not have a name
-      Bean<?> bean = beanManager.getBeans(cls).iterator().next();
-      String componentName = bean.getName();
+      String componentName = cls.getName();
+      
+      Set<Bean<?>> beans = beanManager.getBeans(cls);
+      if (beans.size() > 0)
+      {
+         Bean<?> bean = beanManager.getBeans(cls).iterator().next();
+         if (bean.getName() != null)
+         {
+            componentName = bean.getName();
+         }
+      }            
 
-      if (componentName != null)
-      {
-         out.write(componentName.getBytes());
-      }
-      else
-      {
-         out.write(cls.getName().getBytes());
-      }
+      out.write(componentName.getBytes());
 
       out.write(BEAN_START_TAG_CLOSE);
 

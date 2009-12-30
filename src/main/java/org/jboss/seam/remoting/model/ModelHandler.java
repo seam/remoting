@@ -88,44 +88,36 @@ public class ModelHandler implements RequestHandler
             conversationContext.setActive(true);
          }
          
-         Set<Model> models = new HashSet<Model>(); 
+         Element modelElement = env.element("body").element("model");
+         String operation = modelElement.attributeValue("operation");
          
-         for (Element modelElement : (List<Element>) env.element("body").elements("model"))
-         {     
-            String operation = modelElement.attributeValue("operation");
-            
-            if ("fetch".equals(operation))
-            {
-               processFetchRequest(modelElement, models);
-            }
-            else if ("apply".equals(operation))
-            {
-               processApplyRequest(modelElement, models);
-            }
+         Model model = null;
+           
+         if ("fetch".equals(operation))
+         {
+            model = processFetchRequest(modelElement);
+         }
+         else if ("apply".equals(operation))
+         {
+            model = processApplyRequest(modelElement);
          }
    
-         for (Model model : models)
+         if (model.getAction() != null && model.getAction().getException() != null)
          {
-            if (model.getAction() != null && model.getAction().getException() != null)
-            {
-               response.getOutputStream().write(ENVELOPE_TAG_OPEN);
-               response.getOutputStream().write(BODY_TAG_OPEN);         
-               MarshalUtils.marshalException(model.getAction().getException(), 
-                     model.getAction().getContext(), response.getOutputStream());
-               response.getOutputStream().write(BODY_TAG_CLOSE);
-               response.getOutputStream().write(ENVELOPE_TAG_CLOSE);
-               response.getOutputStream().flush();
-               return;
-            }
+            response.getOutputStream().write(ENVELOPE_TAG_OPEN);
+            response.getOutputStream().write(BODY_TAG_OPEN);         
+            MarshalUtils.marshalException(model.getAction().getException(), 
+                  model.getAction().getContext(), response.getOutputStream());
+            response.getOutputStream().write(BODY_TAG_CLOSE);
+            response.getOutputStream().write(ENVELOPE_TAG_CLOSE);
+            response.getOutputStream().flush();
+            return;
          }
          
-         for (Model model : models)
-         {
-            model.evaluate();
-         }
+         model.evaluate();
          
          ctx.setConversationId(conversation.isTransient() ? null : conversation.getId());
-         marshalResponse(models, ctx, response.getOutputStream());
+         marshalResponse(model, ctx, response.getOutputStream());
       }
       finally
       {
@@ -139,11 +131,10 @@ public class ModelHandler implements RequestHandler
    }
    
    @SuppressWarnings({ "unchecked" }) 
-   private void processFetchRequest(Element modelElement, Set<Model> models)
+   private Model processFetchRequest(Element modelElement)
       throws Exception
    {
       Model model = registry.createModel();
-      models.add(model); 
       
       if (modelElement.elements("action").size() > 0)
       {         
@@ -171,7 +162,9 @@ public class ModelHandler implements RequestHandler
       if (model.getAction() != null)
       {
          model.getAction().execute();                              
-      }         
+      }
+      
+      return model;
    }
    
    @SuppressWarnings("unchecked")
@@ -211,11 +204,10 @@ public class ModelHandler implements RequestHandler
    }
    
    @SuppressWarnings("unchecked")
-   private void processApplyRequest(Element modelElement, Set<Model> models)
+   private Model processApplyRequest(Element modelElement)
       throws Exception
    {
       Model model = registry.getModel(modelElement.attributeValue("uid"));
-      models.add(model);
       model.setAction(null);
       
       CallContext ctx = new CallContext(beanManager);
@@ -256,10 +248,12 @@ public class ModelHandler implements RequestHandler
       if (model.getAction() != null)
       {
          model.getAction().execute();                              
-      }               
+      }    
+      
+      return model;
    }
    
-   private void marshalResponse(Set<Model> models, RequestContext ctx, 
+   private void marshalResponse(Model model, RequestContext ctx, 
          OutputStream out) throws IOException
    {
       out.write(ENVELOPE_TAG_OPEN);
@@ -271,16 +265,16 @@ public class ModelHandler implements RequestHandler
          out.write(CONVERSATION_ID_TAG_OPEN);
          out.write(ctx.getConversationId().getBytes());
          out.write(CONVERSATION_ID_TAG_CLOSE);
+         out.write(CALL_ID_TAG_OPEN);
+         out.write(ctx.getCallId().toString().getBytes());
+         out.write(CALL_ID_TAG_CLOSE);
          out.write(CONTEXT_TAG_CLOSE);
          out.write(HEADER_CLOSE);
       }
 
       out.write(BODY_TAG_OPEN);
 
-      for (Model model : models)
-      {
-         MarshalUtils.marshalModel(model, out);
-      }
+      MarshalUtils.marshalModel(model, out);
 
       out.write(BODY_TAG_CLOSE);
       out.write(ENVELOPE_TAG_CLOSE);
