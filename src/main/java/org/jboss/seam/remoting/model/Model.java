@@ -17,6 +17,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import org.jboss.seam.remoting.AnnotationsParser;
 import org.jboss.seam.remoting.Call;
 import org.jboss.seam.remoting.CallContext;
+import org.jboss.seam.remoting.wrapper.BeanWrapper;
 import org.jboss.seam.remoting.wrapper.ConversionException;
 import org.jboss.seam.remoting.wrapper.Wrapper;
 
@@ -180,63 +181,6 @@ public class Model implements Serializable
       
       Bean<?> bean = beans.iterator().next();
       beanProperties.put(alias, new BeanProperty(bean, propertyName));
-   }
-   
-   public void setModelProperty(int refId, String name, Wrapper wrapper)
-   {
-      Wrapper outRef = callContext.getOutRefs().get(refId);
-      
-      try
-      {
-         Field f = outRef.getValue().getClass().getField(name);
-         if (wrapper.conversionScore(f.getType()).getScore() > 0)
-         {
-            // found a match
-            boolean accessible = f.isAccessible();
-            try
-            {
-               if (!f.isAccessible()) f.setAccessible(true);
-               f.set(outRef.getValue(), wrapper.convert(f.getType()));
-            }
-            catch (ConversionException ex)
-            {
-               throw new RuntimeException("Exception converting model property value", ex);
-            }
-            catch (IllegalAccessException ex)
-            {
-               throw new RuntimeException("Exception setting model property", ex);
-            }
-            finally
-            {
-               f.setAccessible(accessible);
-            }
-         }
-      }
-      catch (NoSuchFieldException ex)
-      {
-         String methodName = "set" + name.substring(0, 1).toUpperCase() + name.substring(1);
-         for (Method m : outRef.getValue().getClass().getMethods())
-         {
-            if (m.getName().equals(methodName) && m.getParameterTypes().length == 1 &&
-                  wrapper.conversionScore(m.getParameterTypes()[0]).getScore() > 0)
-            {
-               try
-               {
-                  m.invoke(outRef.getValue(), wrapper.convert(m.getParameterTypes()[0]));
-                  break;
-               }
-               catch (Exception ex2) 
-               {
-                  throw new RuntimeException("Exception converting model property value", ex2);
-               }
-            }
-         }
-      }
-   }
-   
-   public void applyChanges(Set<ChangeSet> delta)
-   {
-      
    }
    
    public void setAction(Call action)

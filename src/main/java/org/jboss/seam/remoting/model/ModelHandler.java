@@ -4,9 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.enterprise.context.Conversation;
 import javax.enterprise.inject.spi.BeanManager;
@@ -22,6 +20,8 @@ import org.jboss.seam.remoting.CallContext;
 import org.jboss.seam.remoting.MarshalUtils;
 import org.jboss.seam.remoting.RequestContext;
 import org.jboss.seam.remoting.RequestHandler;
+import org.jboss.seam.remoting.wrapper.BagWrapper;
+import org.jboss.seam.remoting.wrapper.BeanWrapper;
 import org.jboss.seam.remoting.wrapper.Wrapper;
 import org.jboss.weld.Container;
 import org.jboss.weld.context.ContextLifecycle;
@@ -231,12 +231,35 @@ public class ModelHandler implements RequestHandler
                for (Element member : (List<Element>) changeset.elements("member"))
                {
                   String name = member.attributeValue("name");
+                  
                   Wrapper w = model.getCallContext().createWrapperFromElement(
                         (Element) member.elementIterator().next());
-                  model.setModelProperty(refId, name, w);                  
+                  
+                  if (w instanceof BagWrapper)
+                  {
+                     // TODO process collection updates
+                  }
+                  else
+                  {                     
+                     Wrapper ref = model.getCallContext().getOutRefs().get(refId);
+                     if (ref instanceof BeanWrapper)
+                     {
+                        ((BeanWrapper) ref).setBeanProperty(name, w);
+                     }
+                     else
+                     {
+                        throw new IllegalStateException("Changeset for refId [" +
+                              refId + "] does not reference a valid bean object");
+                     }
+                  }
+                  
                }
             }
             
+            if (changeset.elements("bag").size() > 0)
+            {
+               // TODO process root node collection updates
+            }            
          }
       }
       
