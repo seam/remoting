@@ -50,20 +50,19 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
       }
       return metadataCache;
    }
-
-   @SuppressWarnings("unchecked")
+   
    @Override
+   @SuppressWarnings("unchecked")
    public void setElement(Element element)
    {
       super.setElement(element);
 
       String beanType = element.attributeValue("type");
 
-      // TODO do it this way, it might not be a managed bean...
-      Bean bean = beanManager.getBeans(beanType).iterator().next();
-
-      if (bean != null)
+      Set<Bean<?>> beans = beanManager.getBeans(beanType); 
+      if (beans.size() > 0)
       {
+         Bean bean = beans.iterator().next();
          value = bean.create(beanManager.createCreationalContext(bean));
       }
       else
@@ -80,12 +79,113 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
       }
    }
    
+   public Type getBeanPropertyType(String propertyName)
+   {
+      Class<?> cls = value.getClass();
+      
+      String getter = "get" + Character.toUpperCase(propertyName.charAt(0)) +
+          propertyName.substring(1);
+      
+      for (Method m : cls.getMethods())
+      {
+         if (getter.equals(m.getName())) return m.getGenericReturnType(); 
+      }
+      
+      Field field = null;
+      while (field == null && !cls.equals(Object.class))
+      {
+         try
+         {
+            field = cls.getDeclaredField(propertyName);
+         }
+         catch (NoSuchFieldException e)
+         {
+            cls = cls.getSuperclass();
+         }
+      }
+      
+      if (field == null)
+      {
+         throw new IllegalArgumentException("Invalid property name [" + propertyName +
+               "] specified for target class [" + value.getClass() + "]");
+      }
+      
+      return field.getGenericType();
+   }
+   
+   public Wrapper getBeanProperty(String propertyName)
+   {
+      Class<?> cls = value.getClass();
+      
+      Field f = null;
+      try
+      {
+         f = cls.getField(propertyName);
+      }
+      catch (NoSuchFieldException ex) { }
+
+      boolean accessible = false;
+      try
+      {
+         // Temporarily set the field's accessibility so we can read it
+         if (f != null)
+         {
+            accessible = f.isAccessible();
+            f.setAccessible(true);
+            return context.createWrapperFromObject(f.get(value), null);
+         }
+         else
+         {
+            Method accessor = null;
+            try
+            {
+               accessor = cls.getMethod(String.format("get%s%s",
+                     Character.toUpperCase(propertyName.charAt(0)),
+                     propertyName.substring(1)));
+            }
+            catch (NoSuchMethodException ex)
+            {
+               try
+               {
+                  accessor = cls.getMethod(String.format("is%s%s",
+                        Character.toUpperCase(propertyName.charAt(0)),
+                        propertyName.substring(1)));
+               }
+               catch (NoSuchMethodException ex2)
+               {
+                  // uh oh... continue with the next one
+                  return null;
+               }
+            }
+
+            try
+            {
+               return context.createWrapperFromObject(accessor.invoke(value), null);
+            }
+            catch (InvocationTargetException ex)
+            {
+               throw new RuntimeException(String.format(
+                     "Failed to read property [%s] for object [%s]",
+                     propertyName, value));
+            }
+         }
+      }
+      catch (IllegalAccessException ex)
+      {
+         throw new RuntimeException("Error reading value from field.");
+      }
+      finally
+      {
+         if (f != null)
+            f.setAccessible(accessible);
+      }      
+   }
+   
    public void setBeanProperty(String propertyName, Wrapper valueWrapper)
    {
       Class<?> cls = value.getClass();
 
       // We're going to try a combination of ways to set the property value
-      // here
       Method method = null;
       Field field = null;
 
@@ -164,8 +264,7 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
          boolean accessible = field.isAccessible();
          try
          {
-            if (!accessible)
-               field.setAccessible(true);
+            if (!accessible) field.setAccessible(true);
             field.set(value, fieldValue);
          }
          catch (Exception ex)
@@ -210,14 +309,15 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
       }
    }
 
+   /**
+    * Writes the object reference ID to the specified OutputStream
+    */
    public void marshal(OutputStream out) throws IOException
    {
       context.addOutRef(this);
 
       out.write(REF_START_TAG_OPEN);
-      out
-            .write(Integer.toString(context.getOutRefs().indexOf(this))
-                  .getBytes());
+      out.write(Integer.toString(context.getOutRefs().indexOf(this)).getBytes());
       out.write(REF_START_TAG_END);
    }
 
@@ -227,6 +327,14 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
       serialize(out, null);
    }
 
+   /**
+    * Writes a serialized representation of the object's properties to the specified
+    * OutputStream.
+    * 
+    * @param out
+    * @param constraints
+    * @throws IOException
+    */
    public void serialize(OutputStream out, List<String> constraints)
          throws IOException
    {
@@ -275,79 +383,18 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
                componentName != null ? componentName : cls.getName(),
                propertyName);
 
-         if (constraints == null
-               || (!constraints.contains(fieldPath) && !constraints
-                     .contains(wildCard)))
+         if (constraints == null || (!constraints.contains(fieldPath) && 
+               !constraints.contains(wildCard)))
          {
             out.write(MEMBER_START_TAG_OPEN);
             out.write(propertyName.getBytes());
             out.write(MEMBER_START_TAG_CLOSE);
 
-            Field f = null;
-            try
+            Wrapper w = getBeanProperty(propertyName);
+            if (w != null)
             {
-               f = cls.getField(propertyName);
-            }
-            catch (NoSuchFieldException ex)
-            {
-            }
-
-            boolean accessible = false;
-            try
-            {
-               // Temporarily set the field's accessibility so we can read it
-               if (f != null)
-               {
-                  accessible = f.isAccessible();
-                  f.setAccessible(true);
-                  context.createWrapperFromObject(f.get(value), fieldPath)
-                        .marshal(out);
-               }
-               else
-               {
-                  Method accessor = null;
-                  try
-                  {
-                     accessor = cls.getMethod(String.format("get%s%s",
-                           Character.toUpperCase(propertyName.charAt(0)),
-                           propertyName.substring(1)));
-                  }
-                  catch (NoSuchMethodException ex)
-                  {
-                     try
-                     {
-                        accessor = cls.getMethod(String.format("is%s%s",
-                              Character.toUpperCase(propertyName.charAt(0)),
-                              propertyName.substring(1)));
-                     }
-                     catch (NoSuchMethodException ex2)
-                     {
-                        // uh oh... continue with the next one
-                        continue;
-                     }
-                  }
-
-                  try
-                  {
-                     context.createWrapperFromObject(accessor.invoke(value),
-                           fieldPath).marshal(out);
-                  }
-                  catch (InvocationTargetException ex)
-                  {
-                     throw new RuntimeException(String.format(
-                           "Failed to read property [%s] for object [%s]",
-                           propertyName, value));
-                  }
-               }
-            }
-            catch (IllegalAccessException ex)
-            {
-               throw new RuntimeException("Error reading value from field.");
-            }
-            finally
-            {
-               if (f != null)
-                  f.setAccessible(accessible);
+               w.setPath(fieldPath);
+               w.marshal(out);
             }
 
             out.write(MEMBER_CLOSE_TAG);

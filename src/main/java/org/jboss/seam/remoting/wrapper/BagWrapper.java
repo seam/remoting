@@ -58,12 +58,19 @@ public class BagWrapper extends BaseWrapper implements Wrapper
       {
          vals = new ArrayList<Object>();
          for (int i = 0; i < Array.getLength(value); i++)
+         {
             vals.add(Array.get(value, i));
-      } else if (Collection.class.isAssignableFrom(value.getClass()))
+         }
+      } 
+      else if (Collection.class.isAssignableFrom(value.getClass()))
+      {
          vals = (Collection) value;
+      }
       else
+      {
          throw new RuntimeException(String.format(
                "Can not marshal object as bag: [%s]", value));
+      }
 
       for (Object val : vals)
       {
@@ -82,32 +89,39 @@ public class BagWrapper extends BaseWrapper implements Wrapper
       List<Wrapper> vals = new ArrayList<Wrapper>();
 
       for (Element e : (List<Element>) element.elements("element"))
-         vals.add(context.createWrapperFromElement((Element) e.elements()
-               .get(0)));
+      {
+         vals.add(context.createWrapperFromElement((Element) e.elements().get(0)));
+      }
 
       if (type instanceof Class && ((Class) type).isArray())
       {
          Class arrayType = ((Class) type).getComponentType();
          value = Array.newInstance(arrayType, vals.size()); // Fix this
          for (int i = 0; i < vals.size(); i++)
+         {
             Array.set(value, i, vals.get(i).convert(arrayType));
-      } else if (type instanceof Class
-            && Collection.class.isAssignableFrom((Class) type))
+         }
+      } 
+      else if (type instanceof Class && 
+            Collection.class.isAssignableFrom((Class) type))
       {
          try
          {
             value = getConcreteClass((Class) type).newInstance();
-         } catch (Exception ex)
+         } 
+         catch (Exception ex)
          {
             throw new ConversionException(String.format(
                   "Could not create instance of target type [%s].", type));
          }
+         
          for (Wrapper w : vals)
+         {
             ((Collection) value).add(w.convert(Object.class));
-      } else if (type instanceof ParameterizedType
-            && Collection.class
-                  .isAssignableFrom((Class) ((ParameterizedType) type)
-                        .getRawType()))
+         }
+      } 
+      else if (type instanceof ParameterizedType && 
+            Collection.class.isAssignableFrom((Class) ((ParameterizedType) type).getRawType()))
       {
          Class rawType = (Class) ((ParameterizedType) type).getRawType();
          Type genType = Object.class;
@@ -121,14 +135,17 @@ public class BagWrapper extends BaseWrapper implements Wrapper
          try
          {
             value = getConcreteClass(rawType).newInstance();
-         } catch (Exception ex)
+         } 
+         catch (Exception ex)
          {
             throw new ConversionException(String.format(
                   "Could not create instance of target type [%s].", rawType));
          }
 
          for (Wrapper w : vals)
+         {
             ((Collection) value).add(w.convert(genType));
+         }
       }
 
       return value;
@@ -140,13 +157,22 @@ public class BagWrapper extends BaseWrapper implements Wrapper
       {
          // Support Set, Queue and (by default, and as a last resort) List
          if (Set.class.isAssignableFrom(c))
+         {
             return HashSet.class;
+         }
          else if (Queue.class.isAssignableFrom(c))
+         {
             return LinkedList.class;
+         }
          else
+         {
             return ArrayList.class;
-      } else
+         }
+      } 
+      else
+      {
          return c;
+      }
    }
 
    /**
@@ -158,18 +184,14 @@ public class BagWrapper extends BaseWrapper implements Wrapper
    public ConversionScore conversionScore(Class<?> cls)
    {
       // There's no such thing as an exact match for a bag, so we'll just look
-      // for
-      // a compatible match
-
-      if (cls.isArray())
+      // for a compatible match
+      if (cls.isArray() || cls.equals(Object.class) || Collection.class.isAssignableFrom(cls))
+      {
          return ConversionScore.compatible;
-
-      if (cls.equals(Object.class))
-         return ConversionScore.compatible;
-
-      if (Collection.class.isAssignableFrom(cls))
-         return ConversionScore.compatible;
-
-      return ConversionScore.nomatch;
+      }
+      else
+      {
+         return ConversionScore.nomatch;
+      }
    }
 }

@@ -4,7 +4,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.lang.reflect.Array;
+import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.enterprise.context.Conversation;
 import javax.enterprise.inject.spi.BeanManager;
@@ -22,6 +27,7 @@ import org.jboss.seam.remoting.RequestContext;
 import org.jboss.seam.remoting.RequestHandler;
 import org.jboss.seam.remoting.wrapper.BagWrapper;
 import org.jboss.seam.remoting.wrapper.BeanWrapper;
+import org.jboss.seam.remoting.wrapper.MapWrapper;
 import org.jboss.seam.remoting.wrapper.Wrapper;
 import org.jboss.weld.Container;
 import org.jboss.weld.context.ContextLifecycle;
@@ -32,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Handles incoming model fetch/applyUpdate requests
+ * Handles incoming model fetch/apply requests
  *  
  * @author Shane Bryzak
  */
@@ -45,7 +51,6 @@ public class ModelHandler implements RequestHandler
    @Inject ModelRegistry registry;
    @Inject Conversation conversation;
    
-   @SuppressWarnings("unchecked")
    public void handle(HttpServletRequest request, HttpServletResponse response)
          throws Exception
    {
@@ -154,10 +159,10 @@ public class ModelHandler implements RequestHandler
       }
       
       // TODO Unmarshal expressions - don't support this until security implications investigated
-      for (Element exprElement : (List<Element>) modelElement.elements("expression"))
-      {
+      //for (Element exprElement : (List<Element>) modelElement.elements("expression"))
+      //{
          
-      }
+      //}
       
       if (model.getAction() != null)
       {
@@ -228,38 +233,79 @@ public class ModelHandler implements RequestHandler
             
             if (changeset.elements("member").size() > 0)
             {
+               Wrapper target = model.getCallContext().getOutRefs().get(refId);
+               if (!(target instanceof BeanWrapper))
+               {
+                  throw new IllegalStateException("Changeset for refId [" +
+                        refId + "] does not reference a valid bean object");                     
+               }
+               
                for (Element member : (List<Element>) changeset.elements("member"))
                {
                   String name = member.attributeValue("name");
                   
-                  Wrapper w = model.getCallContext().createWrapperFromElement(
+                  Wrapper source = model.getCallContext().createWrapperFromElement(
                         (Element) member.elementIterator().next());
-                  
-                  if (w instanceof BagWrapper)
-                  {
-                     // TODO process collection updates
-                  }
-                  else
-                  {                     
-                     Wrapper ref = model.getCallContext().getOutRefs().get(refId);
-                     if (ref instanceof BeanWrapper)
+                                                      
+                  if (source instanceof BagWrapper)
+                  {                  
+                     Object targetBag = ((BeanWrapper) target).getBeanProperty(name);
+                     if (targetBag == null)
                      {
-                        ((BeanWrapper) ref).setBeanProperty(name, w);
+                        ((BeanWrapper) target).setBeanProperty(name, source);
                      }
                      else
                      {
-                        throw new IllegalStateException("Changeset for refId [" +
-                              refId + "] does not reference a valid bean object");
+                        Type t = ((BeanWrapper) target).getBeanPropertyType(name);
+                        if (!cloneBagContents(source.convert(t), targetBag))
+                        {
+                           ((BeanWrapper) target).setBeanProperty(name, source);
+                        }
                      }
                   }
-                  
+                  else if (source instanceof MapWrapper)
+                  {                     
+                     Object targetMap = ((BeanWrapper) target).getBeanProperty(name);
+                     if (!Map.class.isAssignableFrom(targetMap.getClass()))
+                     {
+                        throw new IllegalStateException("Cannot assign Map value " +
+                              "to non Map property [" + target.getClass().getName() +
+                              "." + name + "]");
+                     }
+                     
+                     if (targetMap == null)
+                     {
+                        ((BeanWrapper) target).setBeanProperty(name, source);
+                     }
+                     else
+                     {                        
+                        Type t = ((BeanWrapper) target).getBeanPropertyType(name);                        
+                        cloneMapContents((Map) source.convert(t), (Map) targetMap);
+                     }
+                  }                  
+                  else
+                  {                                          
+                     ((BeanWrapper) target).setBeanProperty(name, source);
+                  }
                }
             }
             
             if (changeset.elements("bag").size() > 0)
             {
-               // TODO process root node collection updates
+               Wrapper target = model.getCallContext().getOutRefs().get(refId);               
+               Wrapper source = model.getCallContext().createWrapperFromElement(
+                     (Element) changeset.element("bag"));
+               cloneBagContents(source.convert(target.getValue().getClass()), 
+                     target.getValue());
             }            
+            else if (changeset.elements("map").size() > 0)
+            {
+               Wrapper target = model.getCallContext().getOutRefs().get(refId);
+               Wrapper source = model.getCallContext().createWrapperFromElement(
+                     (Element) changeset.element("map"));
+               cloneMapContents((Map) source.convert(target.getValue().getClass()),
+                     (Map) target.getValue());
+            }
          }
       }
       
@@ -274,6 +320,98 @@ public class ModelHandler implements RequestHandler
       }    
       
       return model;
+   }
+   
+   /**
+    * Clones the contents of the specified source bag into the specified target
+    * bag. If the contents can be cloned, this method returns true, otherwise it
+    * returns false.
+    *  
+    * @param sourceBag
+    * @param targetBag
+    * @return
+    */
+   @SuppressWarnings("unchecked")
+   private boolean cloneBagContents(Object sourceBag, Object targetBag)
+   {
+      Class<?> cls = sourceBag.getClass();
+      if (cls.isArray())
+      {
+         int sourceLen = Array.getLength(sourceBag);
+         int targetLen = Array.getLength(targetBag);
+         if (targetLen != sourceLen) return false;
+         for (int i = 0; i < sourceLen; i++)
+         {
+            Array.set(targetBag, i, Array.get(sourceBag, i));
+         }
+         return true;
+      }
+      else if (List.class.isAssignableFrom(cls))
+      {
+         List sourceList = (List) sourceBag;
+         List targetList = (List) targetBag;
+         
+         while (targetList.size() > sourceList.size())
+         {
+            targetList.remove(targetList.size() - 1);
+         }
+         
+         for (int i = 0; i < sourceList.size(); i++)
+         {
+            targetList.set(i, sourceList.get(i));
+         }
+         return true;        
+      }
+      else if (Set.class.isAssignableFrom(cls))
+      {
+         Set sourceSet = (Set) sourceBag;
+         Set targetSet = (Set) targetBag;
+         
+         for (Object e : sourceSet)
+         {
+            if (!targetSet.contains(e))
+            {
+               targetSet.add(e);
+            }
+         }
+         
+         for (Object e : targetSet)
+         {
+            if (!sourceSet.contains(e))
+            {
+               targetSet.remove(e);
+            }
+         }         
+         return true;
+      }
+      
+      return false;
+   }
+   
+   /**
+    * Clones the contents of one Map into another
+    * 
+    * @param sourceMap
+    * @param targetMap
+    */
+   @SuppressWarnings("unchecked")
+   private void cloneMapContents(Map sourceMap, Map targetMap)
+   {
+      for (Object key : sourceMap.keySet())
+      {
+         if (!targetMap.containsKey(key))
+         {
+            targetMap.put(key, sourceMap.get(key));
+         }
+      }
+      
+      for (Object key : targetMap.keySet())
+      {
+         if (!sourceMap.containsKey(key))
+         {
+            targetMap.remove(key);
+         }
+      }      
    }
    
    private void marshalResponse(Model model, RequestContext ctx, 
