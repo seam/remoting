@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -95,34 +94,40 @@ public class ModelHandler implements RequestHandler
          
          Element modelElement = env.element("body").element("model");
          String operation = modelElement.attributeValue("operation");
-         
-         Model model = null;
            
-         if ("fetch".equals(operation))
+         if ("expand".equals(operation))
          {
-            model = processFetchRequest(modelElement);
+            processExpandRequest(modelElement, ctx, response.getOutputStream());  
          }
-         else if ("apply".equals(operation))
+         else
          {
-            model = processApplyRequest(modelElement);
+            Model model = null;
+            if ("fetch".equals(operation))
+            {
+               model = processFetchRequest(modelElement);
+            }
+            else if ("apply".equals(operation))
+            {
+               model = processApplyRequest(modelElement);
+            }
+      
+            if (model.getAction() != null && model.getAction().getException() != null)
+            {
+               response.getOutputStream().write(ENVELOPE_TAG_OPEN);
+               response.getOutputStream().write(BODY_TAG_OPEN);         
+               MarshalUtils.marshalException(model.getAction().getException(), 
+                     model.getAction().getContext(), response.getOutputStream());
+               response.getOutputStream().write(BODY_TAG_CLOSE);
+               response.getOutputStream().write(ENVELOPE_TAG_CLOSE);
+               response.getOutputStream().flush();
+               return;
+            }
+            
+            model.evaluate();
+            
+            ctx.setConversationId(conversation.isTransient() ? null : conversation.getId());
+            marshalResponse(model, ctx, response.getOutputStream());            
          }
-   
-         if (model.getAction() != null && model.getAction().getException() != null)
-         {
-            response.getOutputStream().write(ENVELOPE_TAG_OPEN);
-            response.getOutputStream().write(BODY_TAG_OPEN);         
-            MarshalUtils.marshalException(model.getAction().getException(), 
-                  model.getAction().getContext(), response.getOutputStream());
-            response.getOutputStream().write(BODY_TAG_CLOSE);
-            response.getOutputStream().write(ENVELOPE_TAG_CLOSE);
-            response.getOutputStream().flush();
-            return;
-         }
-         
-         model.evaluate();
-         
-         ctx.setConversationId(conversation.isTransient() ? null : conversation.getId());
-         marshalResponse(model, ctx, response.getOutputStream());
       }
       finally
       {
@@ -320,6 +325,57 @@ public class ModelHandler implements RequestHandler
       }    
       
       return model;
+   }
+   
+   private void processExpandRequest(Element modelElement, RequestContext ctx, OutputStream out)
+      throws Exception
+   {
+      Model model = registry.getModel(modelElement.attributeValue("id"));
+      model.setAction(null);
+    
+      Element refElement = modelElement.element("ref");
+      if (refElement == null)
+      {
+         throw new IllegalStateException("Invalid request state - no object ref found");
+      }
+      
+      int refId = Integer.parseInt(refElement.attributeValue("refid"));
+      Wrapper target = model.getCallContext().getOutRefs().get(refId);
+      
+      int newRefIdx = model.getCallContext().getOutRefs().size();
+      
+      Element memberElement = refElement.element("member");
+      String memberName = memberElement.attributeValue("name");
+      
+      Wrapper value = ((BeanWrapper) target).getBeanProperty(memberName);
+      if (value instanceof BagWrapper)
+      {
+         ((BagWrapper) value).setLoadLazy(true);
+      }
+    
+      out.write(ENVELOPE_TAG_OPEN);
+
+      out.write(HEADER_OPEN);
+      out.write(CONTEXT_TAG_OPEN);
+      if (ctx.getConversationId() != null)
+      {
+         out.write(CONVERSATION_ID_TAG_OPEN);
+         out.write(ctx.getConversationId().getBytes());
+         out.write(CONVERSATION_ID_TAG_CLOSE);
+      }
+      out.write(CALL_ID_TAG_OPEN);
+      out.write(ctx.getCallId().toString().getBytes());
+      out.write(CALL_ID_TAG_CLOSE);
+      out.write(CONTEXT_TAG_CLOSE);
+      out.write(HEADER_CLOSE);
+
+      out.write(BODY_TAG_OPEN);
+
+      MarshalUtils.marshalModelExpand(model, value, out, newRefIdx);      
+
+      out.write(BODY_TAG_CLOSE);
+      out.write(ENVELOPE_TAG_CLOSE);
+      out.flush();  
    }
    
    /**

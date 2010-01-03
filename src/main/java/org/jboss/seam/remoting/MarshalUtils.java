@@ -95,6 +95,53 @@ public class MarshalUtils
       out.write(MODEL_TAG_CLOSE);
    }
    
+   public static void marshalModelExpand(Model model, Wrapper value, 
+         OutputStream out, int newRefIdx)
+      throws IOException
+   {
+      out.write(MODEL_TAG_OPEN_START);
+      out.write(model.getId().getBytes());      
+      out.write(MODEL_TAG_OPEN_END);
+      
+      out.write(RESULT_TAG_OPEN);
+      value.marshal(out);
+      out.write(RESULT_TAG_CLOSE);
+      
+      if (model.getCallContext().getOutRefs().size() > newRefIdx)
+      {
+         out.write(RequestHandler.REFS_TAG_OPEN);           
+         marshalNewRefs(model.getCallContext().getOutRefs(), newRefIdx, null, out);
+         out.write(RequestHandler.REFS_TAG_CLOSE);
+      }
+      
+      out.write(MODEL_TAG_CLOSE);      
+   }
+   
+   public static void marshalNewRefs(List<Wrapper> refs, int startIdx, 
+         List<String> constraints, OutputStream out)
+      throws IOException   
+   {
+      for (int i = startIdx; i < refs.size(); i++)
+      {
+         Wrapper wrapper = refs.get(i);
+
+         out.write(RequestHandler.REF_TAG_OPEN_START);
+         out.write(Integer.toString(i).getBytes());
+         out.write(RequestHandler.REF_TAG_OPEN_END);
+
+         if (wrapper instanceof BeanWrapper && constraints != null)
+         {
+            ((BeanWrapper) wrapper).serialize(out, constraints);
+         }
+         else
+         {
+            wrapper.serialize(out);
+         }
+
+         out.write(RequestHandler.REF_TAG_CLOSE);
+      }      
+   }   
+   
    public static void marshalRefs(List<Wrapper> refs, List<String> constraints, 
          OutputStream out)
       throws IOException   
