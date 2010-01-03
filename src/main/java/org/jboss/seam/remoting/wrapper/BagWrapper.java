@@ -36,6 +36,8 @@ public class BagWrapper extends BaseWrapper implements Wrapper
    private static final byte[] ELEMENT_TAG_OPEN = "<element>".getBytes();
    private static final byte[] ELEMENT_TAG_CLOSE = "</element>".getBytes();
    
+   private static final byte[] UNDEFINED_TAG = "<undefined/>".getBytes();
+   
    private boolean loadLazy = false;
    
    public void setLoadLazy(boolean loadLazy)
@@ -46,18 +48,18 @@ public class BagWrapper extends BaseWrapper implements Wrapper
    @SuppressWarnings("unchecked")
    public void marshal(OutputStream out) throws IOException
    {
-      out.write(BAG_TAG_OPEN);
-
       // Fix to prevent uninitialized lazy loading in Hibernate
       if (value instanceof PersistentCollection && !loadLazy)
       {
          if (!((PersistentCollection) value).wasInitialized())
          {
-            out.write(BAG_TAG_CLOSE);
+            out.write(UNDEFINED_TAG);
             return;
          }
       }
 
+      out.write(BAG_TAG_OPEN);      
+      
       Collection<Object> vals = null;
 
       // If the value is an array, convert it to a Collection

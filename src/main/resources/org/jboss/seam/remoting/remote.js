@@ -699,6 +699,7 @@ Seam.unmarshalValue = function(element, refs) {
       }
       return m;
     case "date": return Seam.deserializeDate(element.firstChild.nodeValue);
+    case "undefined": return undefined;
     default: return null;
   }
 }
@@ -809,7 +810,6 @@ Seam.Delta = function(model) {
   this.refs = new Seam.Map();
 
   Seam.Delta.prototype.testEqual = function(v1, v2) {
-    var eq = this.testEqual;
     if (v1 == null) return v2 == null;
     switch (typeof(v1)) {
       case "number":
@@ -827,7 +827,7 @@ Seam.Delta = function(model) {
           if (!(v2 instanceof Array)) return false;
           if (v1.length != v2.length) return false;
           for (var i=0; i<v1.length; i++) {
-            if (!eq(v1[i], v2[i])) return false;
+            if (!this.testEqual(v1[i], v2[i])) return false;
           }
           return true;
         } else if (v1 instanceof Seam.Map) {
@@ -835,8 +835,8 @@ Seam.Delta = function(model) {
           if (v1.size() != v2.size()) return false;
           for (var i=0; i<v1.size(); i++) {
             var e = v1.elements[i];
-            if (Seam.getBeanType(e.key) && eq(e.value, v2.get(this.getSourceObject(e.key)))) break;
-            if (eq(e.value, v2.get(e.key)) && (e.value != null || v2.contains(e.key))) break;
+            if (Seam.getBeanType(e.key) && this.testEqual(e.value, v2.get(this.getSourceObject(e.key)))) break;
+            if (this.testEqual(e.value, v2.get(e.key)) && (e.value != null || v2.contains(e.key))) break;
             return false;
           }
           return true;
@@ -1100,6 +1100,7 @@ Seam.Model = function() {
   }
   
   Seam.Model.prototype.expand = function(v, p, callback) {
+    if (v[p] != undefined) return;
     var refId = this.getRefId(v);    
     var r = this.createExpandRequest(refId, p);
     var env = Seam.createEnvelope(Seam.createHeader(r.id), r.data);
@@ -1117,11 +1118,11 @@ Seam.Model = function() {
 
   Seam.Model.prototype.processExpandResponse = function(modelNode, refId, propName) {
     var refsNode = Seam.Xml.childNode(modelNode, "refs");
-    var valueNode = Seam.Xml.childNode(modelNode, "value");
+    var resultNode = Seam.Xml.childNode(modelNode, "result");
     Seam.unmarshalRefs(refsNode, this.sourceRefs);
     Seam.unmarshalRefs(refsNode, this.workingRefs);
-    this.sourceRefs[refId][propName] = Seam.unmarshalValue(valueNode.firstChild,this.sourceRefs);
-    this.workingRefs[refId][propName] = Seam.unmarshalValue(valueNode.firstChild,this.workingRefs);
+    this.sourceRefs[refId][propName] = Seam.unmarshalValue(resultNode.firstChild,this.sourceRefs);
+    this.workingRefs[refId][propName] = Seam.unmarshalValue(resultNode.firstChild,this.workingRefs);
     if (this.callback) this.callback(this);
   }
 }
