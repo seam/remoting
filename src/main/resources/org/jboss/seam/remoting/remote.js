@@ -572,7 +572,7 @@ Seam.processModelExpandResponse = function(call) {
   var b = cn(call.response.documentElement, "body");
   if (b) {
     var n = cn(b, "model");
-    if (call.model) call.model.processExpandResponse(n, call.refId, call.property);
+    if (call.model) call.model.processExpandResponse(n, call.refId, call.property, call.callback);
   }
 }
 
@@ -582,7 +582,7 @@ Seam.processModelResponse = function(call) {
   var b = cn(call.response.documentElement, "body");
   if (b) {
     var n = cn(b, "model");
-    if (call.model) call.model.processResponse(n);  
+    if (call.model) call.model.processResponse(n, call.callback);  
   }
 }
 
@@ -911,7 +911,6 @@ Seam.Model = function() {
   this.values = [];
   this.sourceRefs = [];
   this.workingRefs = [];
-  this.callback = null;
 
   Seam.Model.prototype.addExpression = function(alias, expr) {
     this.expressions.push({alias: alias, expr: expr});
@@ -948,15 +947,14 @@ Seam.Model = function() {
     this.beans.push({alias: alias, bean: bean, property: property, qualifiers: q});
   }
 
-  Seam.Model.prototype.fetch = function(action, callback) {
-    this.callback = callback;
-    var r = this.createFetchRequest(action);
+  Seam.Model.prototype.fetch = function(action, cb) {
+    var r = this.createFetchRequest(action, cb);
     var env = Seam.createEnvelope(Seam.createHeader(r.id), r.data);
     Seam.pendingCalls.put(r.id, r);
     Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
   }
 
-  Seam.Model.prototype.createFetchRequest = function(a) {
+  Seam.Model.prototype.createFetchRequest = function(a, cb) {
     var callId = "" + Seam.__callId++;
     var d = "<model operation=\"fetch\">";
     var refs = [];
@@ -1007,10 +1005,10 @@ Seam.Model = function() {
       }
     }
     d += "</model>";
-    return {data:d, id:callId, model:this, handler: Seam.preProcessModelResponse};
+    return {data:d, id:callId, model:this, handler: Seam.preProcessModelResponse, callback: cb};
   }
 
-  Seam.Model.prototype.processResponse = function(modelNode) {
+  Seam.Model.prototype.processResponse = function(modelNode, cb) {
     var refsNode = Seam.Xml.childNode(modelNode, "refs");
     this.id = modelNode.getAttribute("id");
     var valueNodes = Seam.Xml.childNodes(modelNode, "value");         
@@ -1020,21 +1018,21 @@ Seam.Model = function() {
       var value = Seam.unmarshalValue(valueNodes[i].firstChild,this.workingRefs);
       this.values.push({alias:valueNodes[i].getAttribute("alias"),value:value, refIndex:i});
     }
-    if (this.callback) this.callback(this);
+    if (cb) cb(this);
   }
 
-  Seam.Model.prototype.applyUpdates = function(a) {
+  Seam.Model.prototype.applyUpdates = function(a, cb) {
     var d = new Seam.Delta(this);
     for (var i=0; i<this.values.length; i++) {
       d.scanForChanges(this.values[i].value);
     }
-    var r = this.createApplyRequest(a, d);
+    var r = this.createApplyRequest(a, d, cb);
     var env = Seam.createEnvelope(Seam.createHeader(r.id), r.data);
     Seam.pendingCalls.put(r.id, r);
     Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
   }
 
-  Seam.Model.prototype.createApplyRequest = function(a, delta) {
+  Seam.Model.prototype.createApplyRequest = function(a, delta, cb) {
     var callId = "" + Seam.__callId++;
     var d = "<model id=\"" + this.id + "\" operation=\"apply\">";
     var refs = delta.buildRefs();
@@ -1087,7 +1085,7 @@ Seam.Model = function() {
       d += "</refs>";
     }
     d += "</model>";
-    return {data:d, id:callId, model:this, handler: Seam.preProcessModelResponse};
+    return {data:d, id:callId, model:this, handler: Seam.preProcessModelResponse, callback: cb};
   }
 
   Seam.Model.prototype.getRefId = function(v) {
@@ -1097,30 +1095,29 @@ Seam.Model = function() {
     return -1;
   }
   
-  Seam.Model.prototype.expand = function(v, p, callback) {
+  Seam.Model.prototype.expand = function(v, p, cb) {
     if (v[p] != undefined) return;
     var refId = this.getRefId(v);    
-    var r = this.createExpandRequest(refId, p);
+    var r = this.createExpandRequest(refId, p, cb);
     var env = Seam.createEnvelope(Seam.createHeader(r.id), r.data);
-    this.callback = callback;
     Seam.pendingCalls.put(r.id, r);
     Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
   }
 
-  Seam.Model.prototype.createExpandRequest = function(refId, propName) {
+  Seam.Model.prototype.createExpandRequest = function(refId, propName, cb) {
     var callId = "" + Seam.__callId++;
     var d = "<model id=\"" + this.id + "\" operation=\"expand\">" +
       "<ref id=\"" + refId + "\"><member name=\"" + propName + "\"/></ref></model>";
-    return {data: d, id: callId, model: this, refId: refId, property: propName, handler: Seam.preProcessModelExpandResponse};
+    return {data: d, id: callId, model: this, refId: refId, property: propName, handler: Seam.preProcessModelExpandResponse, callback: cb};
   }
 
-  Seam.Model.prototype.processExpandResponse = function(modelNode, refId, propName) {
+  Seam.Model.prototype.processExpandResponse = function(modelNode, refId, propName, cb) {
     var refsNode = Seam.Xml.childNode(modelNode, "refs");
     var resultNode = Seam.Xml.childNode(modelNode, "result");
     Seam.unmarshalRefs(refsNode, this.sourceRefs);
     Seam.unmarshalRefs(refsNode, this.workingRefs);
     this.sourceRefs[refId][propName] = Seam.unmarshalValue(resultNode.firstChild,this.sourceRefs);
     this.workingRefs[refId][propName] = Seam.unmarshalValue(resultNode.firstChild,this.workingRefs);
-    if (this.callback) this.callback(this);
+    if (cb) cb(this);
   }
 }
