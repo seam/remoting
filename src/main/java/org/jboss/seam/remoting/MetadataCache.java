@@ -120,7 +120,10 @@ public class MetadataCache
    
    private void addBeanDependencies(Class<?> beanClass, Set<BeanMetadata> types)
    {
-      types.add(getMetadata(beanClass));
+      BeanMetadata meta = getMetadata(beanClass);
+      if (types.contains(meta)) return;
+      
+      types.add(meta);
    
       for (Class<?> dependencyClass : getDependencies(beanClass))
       {

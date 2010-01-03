@@ -36,6 +36,14 @@ Seam.isBeanRegistered = function(name) {
   return Seam.beans[name] != null;
 }
 
+Seam.createSetterMethod = function(fieldName) {
+  return function(value) { this[fieldName] = value; }; 
+}
+
+Seam.createGetterMethod = function(fieldName) {
+  return function() { return this[fieldName]; }; 
+}
+
 Seam.registerBean = function(name, metadata, methods) {
   if (Seam.isBeanRegistered(name)) return;
   var t = function() {};
@@ -43,9 +51,9 @@ Seam.registerBean = function(name, metadata, methods) {
   if (metadata) {
     var m = [];
     for (var f in metadata) {
-      var s = f.substring(0,1).toUpperCase() + f.substring(1);
-      t.prototype["set" + s] = function(value) { this[f] = value; };
-      t.prototype["get" + s] = function() { return this[f]; };
+      var s = f.substring(0,1).toUpperCase() + f.substring(1);      
+      t.prototype["set" + s] = Seam.createSetterMethod(f);
+      t.prototype["get" + s] = Seam.createGetterMethod(f);
       m.push({field:f, type:metadata[f]});
     }
     t.__metadata = m;
