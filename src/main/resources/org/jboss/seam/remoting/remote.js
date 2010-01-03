@@ -320,7 +320,7 @@ Seam.serializeType = function(obj, refs) {
   var meta = Seam.getBeanMetadata(obj);
   for (var i=0; i<meta.length; i++) {
     d += "<member name=\"" + meta[i].field + "\">" +
-      Seam.serializeValue(obj[meta[i].field], meta[i].type, refs) + "</member>\n";
+      Seam.serializeValue(obj[meta[i].field], meta[i].type, refs) + "</member>";
   }
   d += "</bean>";
   return d;
@@ -857,8 +857,8 @@ Seam.Delta = function(model) {
   Seam.Delta.prototype.scanForChanges = function(obj) {
     if (obj == null || this.refs.contains(obj)) return;
     this.refs.put(obj, null);
+    var src = this.getSourceObject(obj);
     if (Seam.getBeanType(obj)) {
-      var src = this.getSourceObject(obj);
       var m = Seam.getBeanMetadata(obj);
       for (var i=0; i<m.length; i++) {
         var f=m[i].field;
@@ -867,16 +867,14 @@ Seam.Delta = function(model) {
         if (t == "bag" || t == "map" || t == "bean") this.scanForChanges(obj[f]);
       }
     } else if (obj instanceof Array) {
-      var src = this.getSourceObject(obj);
-      if (!this.testEqual(obj, src)) this.refs.put(obj, true);
+      if (src && !this.testEqual(obj, src)) this.refs.put(obj, true);
       for (var i=0; i<obj.length; i++) {
         if (Seam.getBeanType(obj[i]) || obj[i] instanceof Array || obj[i] instanceof Seam.Map) {
           this.scanForChanges(obj[i]);
         }
       }
     } else if (obj instanceof Seam.Map) {
-      var src = this.getSourceObject(obj);
-      if (!this.testEqual(obj, src)) this.refs.put(obj, true);
+      if (src && !this.testEqual(obj, src)) this.refs.put(obj, true);
       for (var i=0; i<obj.elements.length; i++) {
         var k = obj.elements[i].key;
         var v = obj.elements[i].value;
