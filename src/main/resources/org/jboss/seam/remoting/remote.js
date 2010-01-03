@@ -537,6 +537,37 @@ Seam.preProcessModelResponse = function(call) {
   }  
 }
 
+Seam.preProcessModelExpandResponse = function(call) {
+  var cn = Seam.Xml.childNode; 
+  var b = cn(call.response.documentElement, "body");
+  if (b) {
+    var m = cn(b, "model");
+    if (m) {  
+      var refsNode = cn(m, "refs");
+      var u = Seam.validateRefs(refsNode);
+      if (u.length > 0) {
+        call.handler = Seam.processModelExpandResponse;
+        var c = Seam.createImportBeansCall(u, null, call);
+        var envelope = Seam.createEnvelope(Seam.createHeader(c.id), c.data);
+        Seam.pendingCalls.put(c.id, c);
+        Seam.sendAjaxRequest(envelope, Seam.PATH_EXECUTE, Seam.processResponse, false);                        
+      } else {
+        Seam.processModelExpandResponse(call);
+      }
+    }
+  } 
+}
+
+Seam.processModelExpandResponse = function(call) {
+  Seam.pendingCalls.remove(call.callId);
+  var cn = Seam.Xml.childNode;
+  var b = cn(call.response.documentElement, "body");
+  if (b) {
+    var n = cn(b, "model");
+    if (call.model) call.model.processExpandResponse(n, call.refId, call.property);
+  }
+}
+
 Seam.processModelResponse = function(call) {
   Seam.pendingCalls.remove(call.callId);
   var cn = Seam.Xml.childNode;  
@@ -596,9 +627,9 @@ Seam.validateRefs = function(refsNode) {
   return unknowns;
 }
 
-Seam.unmarshalRefs = function(refsNode) {
+Seam.unmarshalRefs = function(refsNode, refs) {
   if (!refsNode) return;
-  var refs = [];
+  if (!refs) refs = [];
   var objs = [];
   var cn = Seam.Xml.childNodes(refsNode, "ref");
   for (var i=0; i<cn.length; i++) {
@@ -1056,5 +1087,31 @@ Seam.Model = function() {
       if (this.workingRefs[i] == v) return i;
     }
     return -1;
+  }
+  
+  Seam.Model.prototype.expand = function(v, p, callback) {
+    var refId = this.getRefId(v);    
+    var r = this.createExpandRequest(refId, p);
+    var env = Seam.createEnvelope(Seam.createHeader(r.id), r.data);
+    this.callback = callback;
+    Seam.pendingCalls.put(r.id, r);
+    Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
+  }
+
+  Seam.Model.prototype.createExpandRequest = function(refId, propName) {
+    var callId = "" + Seam.__callId++;
+    var d = "<model id=\"" + this.id + "\" operation=\"expand\">" +
+      "<ref id=\"" + refId + "\"><member name=\"" + propName + "\"/></ref></model>";
+    return {data: d, id: callId, model: this, refId: refId, property: propName, handler: Seam.preProcessModelExpandResponse};
+  }
+
+  Seam.Model.prototype.processExpandResponse = function(modelNode, refId, propName) {
+    var refsNode = Seam.Xml.childNode(modelNode, "refs");
+    var valueNode = Seam.Xml.childNode(modelNode, "value");
+    Seam.unmarshalRefs(refsNode, this.sourceRefs);
+    Seam.unmarshalRefs(refsNode, this.workingRefs);
+    this.sourceRefs[refId][propName] = Seam.unmarshalValue(valueNode.firstChild,this.sourceRefs);
+    this.workingRefs[refId][propName] = Seam.unmarshalValue(valueNode.firstChild,this.workingRefs);
+    if (this.callback) this.callback(this);
   }
 }
