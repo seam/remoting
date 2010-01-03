@@ -624,14 +624,16 @@ Seam.unmarshalContext = function(ctxNode, context) {
 
 Seam.validateRefs = function(refsNode) {
   var unknowns = [];
-  var cn = Seam.Xml.childNodes(refsNode, "ref");
-  for (var i=0; i<cn.length; i++) {
-    var n = cn[i].firstChild;
-    if (n.tagName == "bean") {
-      var name = n.getAttribute("type");
-      if (!Seam.isBeanRegistered(name)) unknowns.push(name);
-    } 
-  } 
+  if (refsNode) {
+    var cn = Seam.Xml.childNodes(refsNode, "ref");
+    for (var i=0; i<cn.length; i++) {
+      var n = cn[i].firstChild;
+      if (n.tagName == "bean") {
+        var name = n.getAttribute("type");
+        if (!Seam.isBeanRegistered(name)) unknowns.push(name);
+      }
+    }
+  }
   return unknowns;
 }
 

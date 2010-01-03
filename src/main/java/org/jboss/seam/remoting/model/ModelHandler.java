@@ -339,7 +339,7 @@ public class ModelHandler implements RequestHandler
          throw new IllegalStateException("Invalid request state - no object ref found");
       }
       
-      int refId = Integer.parseInt(refElement.attributeValue("refid"));
+      int refId = Integer.parseInt(refElement.attributeValue("id"));
       Wrapper target = model.getCallContext().getOutRefs().get(refId);
       
       int newRefIdx = model.getCallContext().getOutRefs().size();

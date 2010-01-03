@@ -5,7 +5,8 @@
    version="1.0">
    <persistence-unit name="model">
       <jta-data-source>modelDatasource</jta-data-source>
-      <class>org.jboss.seam.remoting.examples.model.Customer</class>
+      <class>org.jboss.seam.remoting.examples.model.Person</class>
+      <class>org.jboss.seam.remoting.examples.model.Address</class>
       <properties>
          <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
          <property name="hibernate.show_sql" value="true"/>

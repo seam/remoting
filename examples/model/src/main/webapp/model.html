@@ -19,40 +19,47 @@
     
     var model = null;
   
-    function loadCustomer() {
-      var customerId = document.getElementById("customerId").value;
+    function loadPerson() {
+      var personId = document.getElementById("personId").value;
       
       model = new Seam.Model();
 
-      var callback = function(model) { alert(model.getValue("customer").getFirstName()); };
+      var callback = function(model) { var p = model.getValue("person"); alert(p.getFirstName() + " " + p.getLastName()); };
               
-      model.addBeanProperty("customer", "org.jboss.seam.remoting.examples.model.CustomerAction", "customer");
+      model.addBeanProperty("person", "org.jboss.seam.remoting.examples.model.PersonAction", "person");
       model.fetch(new Seam.Action()
-        .setBeanType("org.jboss.seam.remoting.examples.model.CustomerAction")
-        .setMethod("editCustomer")
-        .addParam(customerId), callback);
+        .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
+        .setMethod("editPerson")
+        .addParam(personId), callback);
     }
     
-    function modifyCustomer() {
-      model.getValue("customer").setFirstName("bob");
+    function expandModel() {
+      var callback = function(model) { alert("Got addresses: " + model.getValue("person").getAddresses().length); };
+      
+      model.expand(model.getValue("person"), "addresses", callback); 
+    }
+    
+    function modifyPerson() {
+      model.getValue("person").setFirstName("bob");
     }
     
     function applyUpdates() {
       var callback = function(model) { alert("updates applied"); };
       
       model.applyUpdates(new Seam.Action()
-        .setBeanType("org.jboss.seam.remoting.examples.model.CustomerAction")
-        .setMethod("saveCustomer"),
+        .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
+        .setMethod("savePerson"),
         callback);
     }
 
     // ]]>
   </script> 
   
-  <label for="customerId">Customer ID</label><input type="text" id="customerId" value="1"/>
+  <label for="personId">Person ID</label><input type="text" id="personId" value="1"/>
   
-  <button onclick="javascript:loadCustomer()">Load customer</button> 
-  <button onclick="javascript:modifyCustomer()">Modify customer</button>
+  <button onclick="javascript:loadPerson()">Load person</button> 
+  <button onclick="javascript:expandModel()">expand model</button>
+  <button onclick="javascript:modifyPerson()">Modify person</button>
   <button onclick="javascript:applyUpdates()">Apply updates</button>
 
 
