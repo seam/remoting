@@ -17,33 +17,81 @@
   
   <script type="text/javascript">    
     //<![CDATA[
-    
+
+    // Turn on debug logging so we can see the request and response packets    
     Seam.debug = true;
-    
+        
     var model = null;
     
-    function fetch() {
-      alert("fetch");
+    // A helper function that returns the value of an element
+    function getElementValue(elementName) {
+      var value = document.getElementById(elementName).value;
+      return (value.trim().length > 0) ? value : null; 
     }
     
-    function apply() {
-      alert("apply");
-    }
-  
-    function loadPerson() {
-      var personId = document.getElementById("personId").value;
+    // Fetch the model
+    function fetch() {
+      var fetchActionBean = getElementValue("fetchActionBean");
+      var fetchActionQualifiers = getElementValue("fetchActionQualifiers");
+      var fetchActionMethod = getElementValue("fetchActionMethod");
+      var fetchActionParams = getElementValue("fetchActionParams");      
       
+      var action = null;      
+      
+      if (fetchActionBean) {
+        action = new Seam.Action();
+        action.setBeanType(fetchActionBean);
+        if (fetchActionQualifiers) action.setQualifiers(fetchActionQualifiers);
+        action.setMethod(fetchActionMethod);
+        if (fetchActionParams) {
+          var params = fetchActionParams.split(",");
+          for (var i = 0; i < params.length; i++) {
+            action.addParam(params[i].trim());
+          }
+        }
+      }
+          
       model = new Seam.Model();
-
-      var callback = function(model) { var p = model.getValue("person"); alert(p.getFirstName() + " " + p.getLastName()); };
+      var callback = function(model) { alert("model fetched"); };
               
       model.addBeanProperty("person", "org.jboss.seam.remoting.examples.model.PersonAction", "person");
-      model.fetch(new Seam.Action()
-        .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
-        .setMethod("editPerson")
-        .addParam(personId), callback);
+      
+      if (action)
+        model.fetch(action, callback);
+      else
+        model.fetch(callback);      
     }
     
+    // Apply changes to the model
+    function apply() {
+      var applyActionBean = getElementValue("applyActionBean");
+      var applyActionQualifiers = getElementValue("applyActionQualifiers");
+      var applyActionMethod = getElementValue("applyActionMethod");
+      var applyActionParams = getElementValue("applyActionParams");      
+      
+      var action = null;      
+      
+      if (applyActionBean) {
+        action = new Seam.Action();
+        action.setBeanType(applyActionBean);
+        if (applyActionQualifiers) action.setQualifiers(applyActionQualifiers);
+        action.setMethod(applyActionMethod);
+        if (applyActionParams) {
+          var params = applyActionParams.split(",");
+          for (var i = 0; i < params.length; i++) {
+            action.addParam(params[i].trim());
+          }
+        }
+      }
+      
+      var callback = function(model) { alert("model updates applied"); };
+      
+      if (action)
+        model.applyUpdates(action, callback);
+      else
+        model.applyUpdates(callback);       
+    }
+     
     function expandModel() {
       var callback = function(model) { alert("Got addresses: " + model.getValue("person").getAddresses().length); };
       
@@ -54,26 +102,13 @@
       model.getValue("person").setFirstName("bob");
     }
     
-    function applyUpdates() {
-      var callback = function(model) { alert("updates applied"); };
-      
-      model.applyUpdates(new Seam.Action()
-        .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
-        .setMethod("savePerson"),
-        callback);
-    }
-
     var tm = new xw.controls.TreeModel(new xw.controls.TreeNode("Root"));
-
     var abc = new xw.controls.TreeNode("ABC");
     tm.getRoot().add(abc);
-
     abc.add(new xw.controls.TreeNode("123", true));
     abc.add(new xw.controls.TreeNode("456", true));
-
     var def = new xw.controls.TreeNode("DEF");
     tm.getRoot().add(def);
-
     def.add(new xw.controls.TreeNode("xxx", true));
     def.add(new xw.controls.TreeNode("yyy", true));
     def.add(new xw.controls.TreeNode("zzz", true));
@@ -86,7 +121,7 @@
     <div class="sectionForm">
       <div class="formRow">
         <label for="fetchActionBean">Bean</label>
-        <input type="text" id="fetchActionBean" value="org.jboss.seam.remoting.example.model.PersonAction"/>
+        <input type="text" id="fetchActionBean" value="org.jboss.seam.remoting.examples.model.PersonAction"/>
       </div>
       <div class="formRow">
         <label for="fetchActionQualifiers">Qualifiers</label>
@@ -114,7 +149,7 @@
     <div class="sectionForm">
       <div class="formRow">
         <label for="applyActionBean">Bean</label>
-        <input type="text" id="applyActionBean" value="org.jboss.seam.remoting.example.model.PersonAction"/>
+        <input type="text" id="applyActionBean" value="org.jboss.seam.remoting.examples.model.PersonAction"/>
       </div>
       <div class="formRow">
         <label for="applyActionQualifiers">Qualifiers</label>
@@ -138,18 +173,19 @@
   </div>
   
   <div class="section">
-    <div class="sectionHeader">Model values</div>
+    <div class="sectionHeader">Model properties</div>
+    
+        
     
     <br class="clear"/>    
   </div>
   
   
-  <label for="personId">Person ID</label><input type="text" id="personId" value="1"/>
-  
-  <button onclick="javascript:loadPerson()">Load person</button> 
+
+
+ 
   <button onclick="javascript:expandModel()">expand model</button>
   <button onclick="javascript:modifyPerson()">Modify person</button>
-  <button onclick="javascript:applyUpdates()">Apply updates</button>
 
   <div id="tree" style="position:absolute;left:10px;width:300px;height:400px;border:1px solid #999999;overflow:auto"></div>
 
