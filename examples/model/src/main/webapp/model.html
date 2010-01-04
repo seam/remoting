@@ -4,6 +4,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 	<title>Seam Remoting - Model Example</title>
+	<link href="tree.css" rel="stylesheet" type="text/css"/>
 </head>
 
 <body>
@@ -11,6 +12,7 @@
   <h1>Seam Remoting - Model Example</h1>
   
   <script type="text/javascript" src="seam/resource/remoting/resource/remote.js?compress=true"></script>
+  <script type="text/javascript" src="tree.js"></script>
   
   <script type="text/javascript">    
     //<![CDATA[
@@ -52,6 +54,21 @@
         callback);
     }
 
+    var tm = new xw.controls.TreeModel(new xw.controls.TreeNode("Root"));
+
+    var abc = new xw.controls.TreeNode("ABC");
+    tm.getRoot().add(abc);
+
+    abc.add(new xw.controls.TreeNode("123", true));
+    abc.add(new xw.controls.TreeNode("456", true));
+
+    var def = new xw.controls.TreeNode("DEF");
+    tm.getRoot().add(def);
+
+    def.add(new xw.controls.TreeNode("xxx", true));
+    def.add(new xw.controls.TreeNode("yyy", true));
+    def.add(new xw.controls.TreeNode("zzz", true));
+
     // ]]>
   </script> 
   
@@ -62,6 +79,14 @@
   <button onclick="javascript:modifyPerson()">Modify person</button>
   <button onclick="javascript:applyUpdates()">Apply updates</button>
 
+  <div id="tree" style="position:absolute;left:10;width:300px;height:400px;border:1px solid #999999;overflow:auto"></div>
+
+  <script type="text/javascript">
+    //<![CDATA[
+    var t = new xw.controls.Tree("tree", tm);
+    t.paint();
+    // ]]>
+  </script> 
 
 </body>
 </html>
