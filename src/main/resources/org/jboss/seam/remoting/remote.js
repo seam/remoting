@@ -6,7 +6,7 @@ var Seam = {
   PATH_SUBSCRIPTION: "/subscription",
   PATH_MODEL: "/model",
   PATH_POLL: "/poll"
-}
+};
 
 Seam.createBean = function(name) {
   if (!Seam.beans[name]) return null;
@@ -18,31 +18,31 @@ Seam.createBean = function(name) {
     }
   }
   return b;
-}
+};
 
 Seam.getBeanType = function(obj) {
   for (var b in Seam.beans) {
     if (obj instanceof Seam.beans[b]) return Seam.beans[b];
   }
   return undefined;
-}
+};
 
 Seam.getBeanName = function(obj) {
   var t = Seam.getBeanType(obj);
   return t ? t.__name : undefined;
-}
+};
 
 Seam.isBeanRegistered = function(name) {
   return Seam.beans[name] != null;
-}
+};
 
 Seam.createSetterMethod = function(fieldName) {
   return function(value) { this[fieldName] = value; }; 
-}
+};
 
 Seam.createGetterMethod = function(fieldName) {
   return function() { return this[fieldName]; }; 
-}
+};
 
 Seam.registerBean = function(name, metadata, methods) {
   if (Seam.isBeanRegistered(name)) return;
@@ -72,7 +72,7 @@ Seam.registerBean = function(name, metadata, methods) {
     }
   }
   Seam.beans[name] = t;
-}
+};
 
 Seam.importBeans = function() {
   var names = [];
@@ -95,7 +95,7 @@ Seam.importBeans = function() {
   var envelope = Seam.createEnvelope(Seam.createHeader(c.id), c.data);
   Seam.pendingCalls.put(c.id, c);
   Seam.sendAjaxRequest(envelope, Seam.PATH_EXECUTE, Seam.processResponse, false);
-}
+};
 
 Seam.createImportBeansCall = function(names, callback, originalCall) {
   var n = "org.jboss.seam.remoting.BeanMetadata";
@@ -108,12 +108,12 @@ Seam.createImportBeansCall = function(names, callback, originalCall) {
   c.handler = Seam.processImportBeansResponse;
   if (originalCall) c.originalCall = originalCall;
   return c;  
-}
+};
 
 Seam.getBeanMetadata = function(obj) {
   var b = Seam.getBeanType(obj);
   return b ? b.__metadata : undefined;
-}
+};
 
 Seam.Xml = {
   childNode: function(e, tag) {
@@ -128,7 +128,7 @@ Seam.Xml = {
     }
     return n;
   }
-}
+};
 
 Seam.extractEncodedSessionId = function(url) {
   if (url.indexOf(';jsessionid=') >= 0) {
@@ -136,7 +136,7 @@ Seam.extractEncodedSessionId = function(url) {
     return url.substring(url.indexOf(';jsessionid=') + 12, qpos >= 0 ? qpos : url.length);
   }
   return null;
-}
+};
 
 Seam.encodedSessionId = Seam.extractEncodedSessionId(window.location.href);
 
@@ -155,16 +155,16 @@ Seam.log = function(msg) {
   if (Seam.debugWindow) {
     Seam.debugWindow.document.write("<pre>" + (new Date()) + ": " + msg.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</pre><br/>");
   }
-}
+};
 
 Seam.Context = function() {
   this.conversationId = null;
   this.callId = null;
-  Seam.Context.prototype.setConversationId = function(conversationId) { this.conversationId = conversationId; }
-  Seam.Context.prototype.getConversationId = function() { return this.conversationId; }
-  Seam.Context.prototype.setCallId = function(callId) { this.callId = callId; }
-  Seam.Context.prototype.getCallId = function() { return this.callId; }
-}
+  Seam.Context.prototype.setConversationId = function(conversationId) { this.conversationId = conversationId; };
+  Seam.Context.prototype.getConversationId = function() { return this.conversationId; };
+  Seam.Context.prototype.setCallId = function(callId) { this.callId = callId; };
+  Seam.Context.prototype.getCallId = function() { return this.callId; };
+};
 Seam.context = new Seam.Context();
 
 Seam.Exception = function(msg) {
@@ -172,44 +172,50 @@ Seam.Exception = function(msg) {
   Seam.Exception.prototype.getMessage = function() {
     return this.message;
   }
-}
+};
 
 Seam.equals = function(v1, v2) {
   if (v1 == v2) return true;
   if (v1 instanceof Date && v2 instanceof Date &&
       v1.getTime() == v2.getTime()) return true;
   return false;
-}
+};
 
 Seam.Map = function() {
   this.elements = [];
+
   Seam.Map.prototype.size = function() {
     return this.elements.length;
-  }
+  };
+  
   Seam.Map.prototype.isEmpty = function() {
     return this.elements.length == 0;
-  }
+  };
+  
   Seam.Map.prototype.keySet = function() {
     var keySet = [];
     for (var i=0; i<this.elements.length; i++) {
       keySet[keySet.length] = this.elements[i].key;
     }
     return keySet;
-  }
+  };
+  
   Seam.Map.prototype.values = function() {
     var vals = [];
     for (var i=0; i<this.elements.length; i++) {
       vals.push(this.elements[i].value);
     }
     return vals;
-  }
+  };
+  
   Seam.Map.prototype.get = function(key) {
     for (var i=0; i<this.elements.length; i++) {
       var e = this.elements[i];
       if (Seam.equals(e.key, key)) return e.value;
     }
     return null;
-  }
+  };
+  
   Seam.Map.prototype.put = function(key, value) {
     for (var i=0; i<this.elements.length; i++) {
       if (Seam.equals(this.elements[i].key, key)) {
@@ -218,7 +224,8 @@ Seam.Map = function() {
       }
     }
     this.elements.push({key:key,value:value});
-  }
+  };
+  
   Seam.Map.prototype.remove = function(key) {
     for (var i=0; i<this.elements.length; i++) {
       if (Seam.equals(this.elements[i].key, key)) {
@@ -226,14 +233,15 @@ Seam.Map = function() {
         break;
       }
     }
-  }
+  };
+  
   Seam.Map.prototype.contains = function(key) {
     for (var i=0; i<this.elements.length; i++) {
       if (Seam.equals(this.elements[i].key, key)) return true;
     }
     return false;
-  }
-}
+  };
+};
 
 Seam.serializeValue = function(v, type, refs) {
   if (v == null) return "<null/>";
@@ -266,7 +274,7 @@ Seam.serializeValue = function(v, type, refs) {
         return "<str>" + encodeURIComponent(v) + "</str>";
     }
   }
-}
+};
 
 Seam.serializeBag = function(v, refs) {
   var d = "<bag>";
@@ -275,7 +283,7 @@ Seam.serializeBag = function(v, refs) {
   }
   d += "</bag>";
   return d;
-}
+};
 
 Seam.serializeMap = function(v, refs) {
   var d = "<map>";
@@ -286,14 +294,14 @@ Seam.serializeMap = function(v, refs) {
   }
   d += "</map>";
   return d;
-}
+};
 
 Seam.serializeDate = function(v) {
   var zeroPad = function(val, digits) { while (("" + val).length < digits) val = "0" + val; return val; };
   return "<date>" + v.getFullYear() + zeroPad(v.getMonth() + 1, 2) + zeroPad(v.getDate(), 2) +
     zeroPad(v.getHours(), 2) + zeroPad(v.getMinutes(), 2) + zeroPad(v.getSeconds(), 2) +
     zeroPad(v.getMilliseconds(), 3) +"</date>";
-}
+};
 
 Seam.getTypeRef = function(obj, refs) {
   var refId = -1;
@@ -308,7 +316,7 @@ Seam.getTypeRef = function(obj, refs) {
     refs[refId] = obj;
   }
   return "<ref id=\"" + refId + "\"/>";
-}
+};
 
 Seam.serializeType = function(obj, refs) {
   var t = Seam.getBeanType(obj);
@@ -324,7 +332,7 @@ Seam.serializeType = function(obj, refs) {
   }
   d += "</bean>";
   return d;
-}
+};
 
 Seam.createCall = function(component, methodName, params, callback, exceptionHandler) {
   var callId = "" + Seam.__callId++;
@@ -349,7 +357,7 @@ Seam.createCall = function(component, methodName, params, callback, exceptionHan
   }
   d += "</refs></call>";
   return {data: d, id: callId, callback: callback, exceptionHandler: exceptionHandler, handler: Seam.preProcessCallResponse};
-}
+};
 
 Seam.createHeader = function(callId) {
   var h = "<context><callId>" + callId + "</callId>";
@@ -358,7 +366,7 @@ Seam.createHeader = function(callId) {
   }
   h += "</context>";
   return h;
-}
+};
 
 Seam.createEnvelope = function(header, body) {
   var d = "<envelope>";
@@ -366,7 +374,7 @@ Seam.createEnvelope = function(header, body) {
   if (body) d += "<body>" + body + "</body>";
   d += "</envelope>";
   return d;
-}
+};
 
 Seam.__callId = 0;
 Seam.pendingCalls = new Seam.Map();
@@ -381,7 +389,7 @@ Seam.cancelCall = function(callId) {
     }, 0);
     c.asyncReq.abort();
   }
-}
+};
 
 Seam.execute = function(component, methodName, params, callback, exceptionHandler) {
   var c = Seam.createCall(component, methodName, params, callback, exceptionHandler);
@@ -389,7 +397,7 @@ Seam.execute = function(component, methodName, params, callback, exceptionHandle
   Seam.pendingCalls.put(c.id, c);
   Seam.sendAjaxRequest(envelope, Seam.PATH_EXECUTE, Seam.processResponse, false);
   return c;
-}
+};
 
 Seam.sendAjaxRequest = function(env, path, callback, silent) {
   Seam.log("Request packet:\n" + env);
@@ -439,13 +447,13 @@ Seam.sendAjaxRequest = function(env, path, callback, silent) {
         Seam.displayError(r.status);
       }
     }
-  }
+  };
   if (Seam.encodedSessionId) {
     path += ';jsessionid=' + Seam.encodedSessionId;
   }
   r.open("POST", Seam.resourcePath + path, true);
   r.send(env);
-}
+};
 
 Seam.processImportBeansResponse = function(call) {   
   var cn = Seam.Xml.childNode;
@@ -483,7 +491,7 @@ Seam.processImportBeansResponse = function(call) {
       call.originalCall.handler(call.originalCall);
     }
   }
-}
+};
 
 Seam.preProcessCallResponse = function(call) {
   var cn = Seam.Xml.childNode;
@@ -504,7 +512,7 @@ Seam.preProcessCallResponse = function(call) {
       }
     }
   }
-}
+};
 
 Seam.processCallResponse = function(call) {
   var cn = Seam.Xml.childNode;
@@ -522,7 +530,7 @@ Seam.processCallResponse = function(call) {
     var v = Seam.unmarshalValue(valueNode.firstChild, refs);
     call.callback(v, call.context);
   }
-}
+};
 
 Seam.preProcessModelResponse = function(call) {
   var cn = Seam.Xml.childNode;
@@ -543,7 +551,7 @@ Seam.preProcessModelResponse = function(call) {
       }
     }
   }  
-}
+};
 
 Seam.preProcessModelExpandResponse = function(call) {
   var cn = Seam.Xml.childNode; 
@@ -564,7 +572,7 @@ Seam.preProcessModelExpandResponse = function(call) {
       }
     }
   } 
-}
+};
 
 Seam.processModelExpandResponse = function(call) {
   Seam.pendingCalls.remove(call.callId);
@@ -574,7 +582,7 @@ Seam.processModelExpandResponse = function(call) {
     var n = cn(b, "model");
     if (call.model) call.model.processExpandResponse(n, call.refId, call.property, call.callback);
   }
-}
+};
 
 Seam.processModelResponse = function(call) {
   Seam.pendingCalls.remove(call.callId);
@@ -584,15 +592,15 @@ Seam.processModelResponse = function(call) {
     var n = cn(b, "model");
     if (call.model) call.model.processResponse(n, call.callback);  
   }
-}
+};
 
 Seam.displayError = function(code) {
   alert("There was an error processing your request.  Error code: " + code);
-}
+};
 
 Seam.setCallback = function(component, methodName, callback) {
   component.__callback[methodName] = callback;
-}
+};
 
 Seam.processResponse = function(doc) {
   var cn = Seam.Xml.childNode;
@@ -613,14 +621,14 @@ Seam.processResponse = function(doc) {
       }
     }
   }
-}
+};
 
 Seam.unmarshalContext = function(ctxNode, context) {
   var c = Seam.Xml.childNode(ctxNode, "conversationId");
   if (c) context.setConversationId(c.firstChild.nodeValue);
   c = Seam.Xml.childNode(ctxNode, "callId");
   if (c) context.setCallId(c.firstChild.nodeValue);
-}
+};
 
 Seam.validateRefs = function(refsNode) {
   var unknowns = [];
@@ -635,7 +643,7 @@ Seam.validateRefs = function(refsNode) {
     }
   }
   return unknowns;
-}
+};
 
 Seam.unmarshalRefs = function(refsNode, refs) {
   if (!refsNode) return;
@@ -664,7 +672,7 @@ Seam.unmarshalRefs = function(refsNode, refs) {
     }
   }
   return refs;
-}
+};
 
 Seam.unmarshalValue = function(element, refs) {
   switch (element.tagName) {
@@ -702,7 +710,7 @@ Seam.unmarshalValue = function(element, refs) {
     case "undefined": return undefined;
     default: return null;
   }
-}
+};
 
 Seam.cloneObject = function(obj, refMap) {
   if (refMap && refMap.contains(obj)) return refMap.get(obj);
@@ -726,7 +734,7 @@ Seam.cloneObject = function(obj, refMap) {
     return c;
   }
   return obj;
-}
+};
 
 Seam.deserializeDate = function(val) {
   var d = new Date();
@@ -738,7 +746,7 @@ Seam.deserializeDate = function(val) {
   d.setSeconds(parseInt(val.substring(12,14), 10));
   d.setMilliseconds(parseInt(val.substring(14,17), 10));
   return d;
-}
+};
 
 Seam.loadingMsgDiv = null;
 Seam.loadingMessage = "Please wait...";
@@ -764,11 +772,11 @@ Seam.displayLoadingMessage = function() {
     Seam.loadingMsgDiv.innerHTML = Seam.loadingMessage;
     Seam.loadingMsgDiv.style.visibility = 'visible';
   }
-}
+};
 
 Seam.hideLoadingMessage = function() {
   if (Seam.loadingMsgDiv) Seam.loadingMsgDiv.style.visibility = 'hidden';
-}
+};
 
 Seam.Action = function() {
   this.beanType = null;
@@ -776,34 +784,39 @@ Seam.Action = function() {
   this.method = null;
   this.params = [];
   this.expression = null;
+  
   Seam.Action.prototype.setBeanType = function(beanType) {
     this.beanType = beanType;
     return this;
-  }
+  };
+  
   Seam.Action.prototype.setQualifiers = function(qualifiers) {
     this.qualifiers = qualifiers;
     return this;
-  }
+  };
+  
   Seam.Action.prototype.setMethod = function(method) {
     this.method = method;
     return this;
-  }
+  };
+  
   Seam.Action.prototype.addParam = function(param) {
     this.params.push(param);
     return this;
-  }
+  };
+  
   Seam.Action.prototype.setExpression = function(expr) {
     this.expression = expr;
     return this;
-  }
-}
+  };
+};
 
 Seam.Changeset = function() {
   this.propertyChange = new Seam.Map();
   Seam.Changeset.prototype.addProperty = function(name, val) {
     this.propertyChange.put(name, val);
-  }
-}
+  };
+};
 
 Seam.Delta = function(model) {
   this.model = model;
@@ -843,7 +856,7 @@ Seam.Delta = function(model) {
         }
     }
     return false;
-  }
+  };
 
   Seam.Delta.prototype.registerPropertyChange = function(obj, prop) {
     var cs = this.refs.get(obj);
@@ -852,7 +865,7 @@ Seam.Delta = function(model) {
       this.refs.put(obj, cs);
     }
     cs.addProperty(prop, obj[prop]);
-  }
+  };
 
   Seam.Delta.prototype.scanForChanges = function(obj) {
     if (obj == null || this.refs.contains(obj)) return;
@@ -886,14 +899,14 @@ Seam.Delta = function(model) {
         }
       }
     }
-  }
+  };
 
   Seam.Delta.prototype.getSourceObject = function(obj) {
     for (var i=0;i<this.model.workingRefs.length; i++) {
       if (obj == this.model.workingRefs[i]) return this.model.sourceRefs[i];
     }
     return null;
-  }
+  };
 
   Seam.Delta.prototype.buildRefs = function() {
     var refs = [];
@@ -901,8 +914,8 @@ Seam.Delta = function(model) {
       refs.push(this.refs.elements[i]);
     }
     return refs;
-  }
-}
+  };
+};
 
 Seam.Model = function() {
   this.id = null;
@@ -914,7 +927,7 @@ Seam.Model = function() {
 
   Seam.Model.prototype.addExpression = function(alias, expr) {
     this.expressions.push({alias: alias, expr: expr});
-  }
+  };
 
   Seam.Model.prototype.getValue = function(alias) {
     for (var i=0; i<this.values.length; i++) {
@@ -923,7 +936,7 @@ Seam.Model = function() {
       }
     }
     return null;
-  }
+  };
 
   Seam.Model.prototype.addBean = function(alias, bean) {
     var q = null;
@@ -934,7 +947,7 @@ Seam.Model = function() {
       }
     }
     this.beans.push({alias: alias, bean: bean, qualifiers: q});
-  }
+  };
 
   Seam.Model.prototype.addBeanProperty = function(alias, bean, property) {
     var q = null;
@@ -945,14 +958,14 @@ Seam.Model = function() {
       }
     }
     this.beans.push({alias: alias, bean: bean, property: property, qualifiers: q});
-  }
+  };
 
   Seam.Model.prototype.fetch = function(action, cb) {
     var r = this.createFetchRequest(action, cb);
     var env = Seam.createEnvelope(Seam.createHeader(r.id), r.data);
     Seam.pendingCalls.put(r.id, r);
     Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
-  }
+  };
 
   Seam.Model.prototype.createFetchRequest = function(a, cb) {
     var callId = "" + Seam.__callId++;
@@ -1006,7 +1019,7 @@ Seam.Model = function() {
     }
     d += "</model>";
     return {data:d, id:callId, model:this, handler: Seam.preProcessModelResponse, callback: cb};
-  }
+  };
 
   Seam.Model.prototype.processResponse = function(modelNode, cb) {
     var refsNode = Seam.Xml.childNode(modelNode, "refs");
@@ -1019,7 +1032,7 @@ Seam.Model = function() {
       this.values.push({alias:valueNodes[i].getAttribute("alias"),value:value, refIndex:i});
     }
     if (cb) cb(this);
-  }
+  };
 
   Seam.Model.prototype.applyUpdates = function(a, cb) {
     var d = new Seam.Delta(this);
@@ -1030,7 +1043,7 @@ Seam.Model = function() {
     var env = Seam.createEnvelope(Seam.createHeader(r.id), r.data);
     Seam.pendingCalls.put(r.id, r);
     Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
-  }
+  };
 
   Seam.Model.prototype.createApplyRequest = function(a, delta, cb) {
     var callId = "" + Seam.__callId++;
@@ -1086,14 +1099,14 @@ Seam.Model = function() {
     }
     d += "</model>";
     return {data:d, id:callId, model:this, handler: Seam.preProcessModelResponse, callback: cb};
-  }
+  };
 
   Seam.Model.prototype.getRefId = function(v) {
     for (var i=0; i<this.workingRefs.length; i++) {
       if (this.workingRefs[i] == v) return i;
     }
     return -1;
-  }
+  };
   
   Seam.Model.prototype.expand = function(v, p, cb) {
     if (v[p] != undefined) return;
@@ -1102,14 +1115,14 @@ Seam.Model = function() {
     var env = Seam.createEnvelope(Seam.createHeader(r.id), r.data);
     Seam.pendingCalls.put(r.id, r);
     Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
-  }
+  };
 
   Seam.Model.prototype.createExpandRequest = function(refId, propName, cb) {
     var callId = "" + Seam.__callId++;
     var d = "<model id=\"" + this.id + "\" operation=\"expand\">" +
       "<ref id=\"" + refId + "\"><member name=\"" + propName + "\"/></ref></model>";
     return {data: d, id: callId, model: this, refId: refId, property: propName, handler: Seam.preProcessModelExpandResponse, callback: cb};
-  }
+  };
 
   Seam.Model.prototype.processExpandResponse = function(modelNode, refId, propName, cb) {
     var refsNode = Seam.Xml.childNode(modelNode, "refs");
@@ -1119,5 +1132,5 @@ Seam.Model = function() {
     this.sourceRefs[refId][propName] = Seam.unmarshalValue(resultNode.firstChild,this.sourceRefs);
     this.workingRefs[refId][propName] = Seam.unmarshalValue(resultNode.firstChild,this.workingRefs);
     if (cb) cb(this);
-  }
-}
+  };
+};

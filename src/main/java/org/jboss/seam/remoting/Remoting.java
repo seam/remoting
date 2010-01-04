@@ -1,5 +1,6 @@
 package org.jboss.seam.remoting;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -56,6 +57,8 @@ public class Remoting extends HttpServlet
     * one context path.
     */
    private Map<String, byte[]> cachedConfig = new HashMap<String, byte[]>();
+   
+   private Map<String, byte[]> resourceCache = new HashMap<String, byte[]>();
 
    private static final Logger log = LoggerFactory.getLogger(Remoting.class);
 
@@ -108,43 +111,89 @@ public class Remoting extends HttpServlet
 
    /**
     * 
-    * @param resourceName
-    *           String
-    * @param out
-    *           OutputStream
+    * @param resourceName String The name of the resource to serve
+    * @param out OutputStream The OutputStream to write the resource to
     */
-   private void writeResource(String resourceName, HttpServletResponse response)
+   private void writeResource(String resourceName, HttpServletResponse response,
+         boolean compress)
          throws IOException
    {
-      // Only allow resource requests for .js files
-      if (resourceName.endsWith(".js"))
+      String cacheKey = resourceName + ":" + Boolean.toString(compress);
+      if (!resourceCache.containsKey(cacheKey))
       {
-         InputStream in = this.getClass().getClassLoader().getResourceAsStream(
-               "org/jboss/seam/remoting/" + resourceName);
-         try
+         synchronized(resourceCache)
          {
-            if (in != null)
+            if (!resourceCache.containsKey(cacheKey))
             {
-               response.setContentType("text/javascript");
-
-               byte[] buffer = new byte[1024];
-               int read = in.read(buffer);
-               while (read != -1)
+               ByteArrayOutputStream out = new ByteArrayOutputStream();
+               
+               // Only allow resource requests for .js files
+               if (resourceName.endsWith(".js"))
                {
-                  response.getOutputStream().write(buffer, 0, read);
-                  read = in.read(buffer);
+                  InputStream in = this.getClass().getClassLoader().getResourceAsStream(
+                        "org/jboss/seam/remoting/" + resourceName);
+                  try
+                  {
+                     if (in != null)
+                     {
+                        response.setContentType("text/javascript");
+      
+                        byte[] buffer = new byte[1024];
+                        int read = in.read(buffer);
+                        while (read != -1)
+                        {
+                           out.write(buffer, 0, read);
+                           read = in.read(buffer);
+                        }
+                        
+                        resourceCache.put(cacheKey, compress ? 
+                              compressResource(out.toByteArray()) : out.toByteArray());
+                        
+                        response.getOutputStream().write(resourceCache.get(cacheKey));
+                     } 
+                     else
+                     {
+                        log.error(String.format("Resource [%s] not found.", resourceName));
+                     }
+                  } 
+                  finally
+                  {
+                     if (in != null) in.close();
+                  }
                }
-            } else
-            {
-               log.error(String
-                     .format("Resource [%s] not found.", resourceName));
             }
-         } finally
-         {
-            if (in != null)
-               in.close();
          }
       }
+      else
+      {
+         response.getOutputStream().write(resourceCache.get(cacheKey));
+      }
+   }
+   
+   /**
+    * Compresses JavaScript resources by removing comments, cr/lf, leading and
+    * trailing white space.
+    * 
+    * @param resourceData The resource data to compress.
+    * @return
+    */
+   private byte[] compressResource(byte[] resourceData)
+   {
+      String resource = new String(resourceData);
+
+      // Remove comments
+      resource = resource.replaceAll("//[^\\n\\r]*[\\n\\r]", "");
+      
+      // Remove leading and trailing space and CR/LF's for lines with a statement terminator 
+      resource = resource.replaceAll(";\\s*[\\n\\r]+\\s*", ";");
+      
+      // Remove leading and trailing space and CR/LF's for lines with a block terminator 
+      resource = resource.replaceAll("}\\s*[\\n\\r]+\\s*", "}");
+      
+      // Replace any remaining leading/trailing space and CR/LF with a single space
+      resource = resource.replaceAll("\\s*[\\n\\r]+\\s*", " ");
+      
+      return resource.getBytes();
    }
 
    public int getPollTimeout()
@@ -231,7 +280,10 @@ public class Remoting extends HttpServlet
 
                if (REMOTING_RESOURCE_PATH.equals(path))
                {
-                  writeResource(resource, response);
+                  String compressParam = request.getParameter("compress");
+                  boolean compress = compressParam != null && "true".equals(compressParam);
+                  
+                  writeResource(resource, response, compress);
                   if ("remote.js".equals(resource))
                   {
                      appendConfig(response.getOutputStream(), request
