@@ -4,6 +4,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 	<title>Seam Remoting - Model Example</title>
+	<link href="style.css" rel="stylesheet" type="text/css"/>
 	<link href="tree.css" rel="stylesheet" type="text/css"/>
 </head>
 
@@ -20,6 +21,14 @@
     Seam.debug = true;
     
     var model = null;
+    
+    function fetch() {
+      alert("fetch");
+    }
+    
+    function apply() {
+      alert("apply");
+    }
   
     function loadPerson() {
       var personId = document.getElementById("personId").value;
@@ -70,7 +79,70 @@
     def.add(new xw.controls.TreeNode("zzz", true));
 
     // ]]>
-  </script> 
+  </script>   
+  
+  <div class="section">
+    <div class="sectionHeader">Fetch model action</div>
+    <div class="sectionForm">
+      <div class="formRow">
+        <label for="fetchActionBean">Bean</label>
+        <input type="text" id="fetchActionBean" value="org.jboss.seam.remoting.example.model.PersonAction"/>
+      </div>
+      <div class="formRow">
+        <label for="fetchActionQualifiers">Qualifiers</label>
+        <input type="text" id="fetchActionQualifiers"/>
+      </div>
+      <div class="formRow">
+        <label for="fetchActionMethod">Method</label>
+        <input type="text" id="fetchActionMethod" value="editPerson"/>
+      </div>
+      <div class="formRow">
+        <label for="fetchActionParams">Params</label>
+        <input type="text" id="fetchActionParams" value="1"/>
+      </div>                 
+    </div>
+    
+    <div class="sectionCommand">
+      <button onclick="javascript:fetch()">Fetch</button>
+    </div>        
+    
+    <br class="clear"/>
+  </div>
+  
+  <div class="section">
+    <div class="sectionHeader">Apply model action</div>
+    <div class="sectionForm">
+      <div class="formRow">
+        <label for="applyActionBean">Bean</label>
+        <input type="text" id="applyActionBean" value="org.jboss.seam.remoting.example.model.PersonAction"/>
+      </div>
+      <div class="formRow">
+        <label for="applyActionQualifiers">Qualifiers</label>
+        <input type="text" id="applyActionQualifiers"/>
+      </div>
+      <div class="formRow">
+        <label for="applyActionMethod">Method</label>
+        <input type="text" id="applyActionMethod" value="savePerson"/>
+      </div>
+      <div class="formRow">
+        <label for="applyActionParams">Params</label>
+        <input type="text" id="applyActionParams"/>
+      </div>          
+    </div>
+    
+    <div class="sectionCommand">
+      <button onclick="javascript:fetch()">Apply</button>
+    </div> 
+    
+    <br class="clear"/>
+  </div>
+  
+  <div class="section">
+    <div class="sectionHeader">Model values</div>
+    
+    <br class="clear"/>    
+  </div>
+  
   
   <label for="personId">Person ID</label><input type="text" id="personId" value="1"/>
   
@@ -79,7 +151,7 @@
   <button onclick="javascript:modifyPerson()">Modify person</button>
   <button onclick="javascript:applyUpdates()">Apply updates</button>
 
-  <div id="tree" style="position:absolute;left:10;width:300px;height:400px;border:1px solid #999999;overflow:auto"></div>
+  <div id="tree" style="position:absolute;left:10px;width:300px;height:400px;border:1px solid #999999;overflow:auto"></div>
 
   <script type="text/javascript">
     //<![CDATA[
