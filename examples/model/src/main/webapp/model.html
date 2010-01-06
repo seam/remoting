@@ -13,7 +13,6 @@
   <h1>Seam Remoting - Model Example</h1>
   
   <script type="text/javascript" src="seam/resource/remoting/resource/remote.js?compress=true"></script>
-  <script type="text/javascript" src="tree.js"></script>
   
   <script type="text/javascript">    
     //<![CDATA[
@@ -52,16 +51,55 @@
       }
           
       model = new Seam.Model();
-      var callback = function(model) { alert("model fetched"); };
-              
-      model.addBeanProperty("person", "org.jboss.seam.remoting.examples.model.PersonAction", "person");
+      
+      var alias = getElementValue("valueAlias1");
+      var bean = getElementValue("valueBean1");
+      var property = getElementValue("valueProperty1");            
+      if (alias && bean && property) model.addBeanProperty(alias, bean, property);
+
+      // TODO make this less "hard coded"      
+      alias = getElementValue("valueAlias2");
+      bean = getElementValue("valueBean2");
+      property = getElementValue("valueProperty2");            
+      if (alias && bean && property) model.addBeanProperty(alias, bean, property);
+      
+      alias = getElementValue("valueAlias3");
+      bean = getElementValue("valueBean3");
+      property = getElementValue("valueProperty3");
+      if (alias && bean && property) model.addBeanProperty(alias, bean, property);
       
       if (action)
-        model.fetch(action, callback);
+        model.fetch(action, fetchCallback);
       else
-        model.fetch(callback);      
+        model.fetch(fetchCallback);      
+    }
+      
+    function fetchCallback(model) {
+           
+      for (var i = 0; i < model.values.length; i++) {
+
+      }
     }
     
+    function renderValueNode(parentNode, value, alias) {
+      var beanType = Seam.getBeanType(value);
+      var meta = Seam.getBeanMetadata(value);
+
+      var valueNode = new xw.controls.TreeNode((alias ? alias + ":" : "") + beanType.__name, false, value);
+      parentNode.add(valueNode);
+
+      for (var j = 0; j < meta.length; j++) {
+        var fieldName = meta[j].field;
+        var fieldType = meta[j].type;
+        var leaf = fieldType != "bag" && fieldType != "map" && fieldType != "bean";
+        var node = new xw.controls.TreeNode(fieldName + ":" + value[fieldName], leaf);
+        if (!leaf) node.canExpand = true;
+        valueNode.add(node);
+        
+        if (!leaf && value[fieldName]) renderValueNode(valueNode, value[fieldName]);
+      }      
+    }
+          
     // Apply changes to the model
     function apply() {
       var applyActionBean = getElementValue("applyActionBean");
@@ -92,27 +130,14 @@
         model.applyUpdates(callback);       
     }
      
+     /*
     function expandModel() {
       var callback = function(model) { alert("Got addresses: " + model.getValue("person").getAddresses().length); };
       
       model.expand(model.getValue("person"), "addresses", callback); 
     }
+    */    
     
-    function modifyPerson() {
-      model.getValue("person").setFirstName("bob");
-    }
-    
-    var tm = new xw.controls.TreeModel(new xw.controls.TreeNode("Root"));
-    var abc = new xw.controls.TreeNode("ABC");
-    tm.getRoot().add(abc);
-    abc.add(new xw.controls.TreeNode("123", true));
-    abc.add(new xw.controls.TreeNode("456", true));
-    var def = new xw.controls.TreeNode("DEF");
-    tm.getRoot().add(def);
-    def.add(new xw.controls.TreeNode("xxx", true));
-    def.add(new xw.controls.TreeNode("yyy", true));
-    def.add(new xw.controls.TreeNode("zzz", true));
-
     // ]]>
   </script>   
   
@@ -166,7 +191,7 @@
     </div>
     
     <div class="sectionCommand">
-      <button onclick="javascript:fetch()">Apply</button>
+      <button onclick="javascript:apply()">Apply</button>
     </div> 
     
     <br class="clear"/>
@@ -174,25 +199,37 @@
   
   <div class="section">
     <div class="sectionHeader">Model properties</div>
-    
-        
-    
+      <table cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td>Alias</td>
+          <td>Bean</td>
+          <td>Property</td>
+        </tr>
+        <tr>
+          <td><input type="text" class="short" id="valueAlias1" value="person"/></td>
+          <td><input type="text" class="long" id="valueBean1" value="org.jboss.seam.remoting.examples.model.PersonAction"/></td>
+          <td><input type="text" class="short" id="valueProperty1" value="person"/></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="short" id="valueAlias2"/></td>
+          <td><input type="text" class="long" id="valueBean2"/></td>
+          <td><input type="text" class="short" id="valueProperty2"/></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="short" id="valueAlias3"/></td>
+          <td><input type="text" class="long" id="valueBean3"/></td>
+          <td><input type="text" class="short" id="valueProperty3"/></td>
+        </tr>
+      </table>
     <br class="clear"/>    
   </div>
-  
-  
 
-
- 
-  <button onclick="javascript:expandModel()">expand model</button>
-  <button onclick="javascript:modifyPerson()">Modify person</button>
-
-  <div id="tree" style="position:absolute;left:10px;width:300px;height:400px;border:1px solid #999999;overflow:auto"></div>
+  <div id="treeContainer" style="position:absolute;left:10px;width:450px;height:400px;border:1px solid #999999;overflow:auto"></div>
 
   <script type="text/javascript">
     //<![CDATA[
-    var t = new xw.controls.Tree("tree", tm);
-    t.paint();
+    var t = new xw.controls.Tree("treeContainer");
+    t.setRootVisible(true);    
     // ]]>
   </script> 
 

@@ -48,3 +48,12 @@ div.formRow input[type='text'] {
 	clear: both;
 	font-size: 0px;
 }
+
+
+.short {
+  width: 80px; 
+}
+
+.long {
+  width: 300px;
+}
