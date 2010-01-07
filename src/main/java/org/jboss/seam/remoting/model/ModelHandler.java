@@ -220,6 +220,13 @@ public class ModelHandler implements RequestHandler
       Model model = registry.getModel(modelElement.attributeValue("id"));
       model.setAction(null);
       
+      // We clone the outRefs to the inRefs so that the context can locate
+      // already-loaded refs when unmarshalling
+      for (int i = 0; i < model.getCallContext().getOutRefs().size(); i++)
+      {
+         model.getCallContext().getInRefs().put("" + i, model.getCallContext().getOutRefs().get(i));
+      }
+      
       CallContext ctx = new CallContext(beanManager);
       
       Element refsElement = modelElement.element("refs");
@@ -262,7 +269,7 @@ public class ModelHandler implements RequestHandler
                      else
                      {
                         Type t = ((BeanWrapper) target).getBeanPropertyType(name);
-                        if (!cloneBagContents(source.convert(t), targetBag))
+                        if (!cloneBagContents(source.convert(t), ((Wrapper) targetBag).getValue()));
                         {
                            ((BeanWrapper) target).setBeanProperty(name, source);
                         }
