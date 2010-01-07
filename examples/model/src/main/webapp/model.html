@@ -10,7 +10,7 @@
 
 <body onload="loadPeople()">
 
-  <h1>Seam Remoting - Model Example</h1>
+  <h1>Seam Remoting - Model API Example</h1>
   
   <script type="text/javascript" src="seam/resource/remoting/resource/remote.js"></script>
   <script type="text/javascript" src="seam/resource/remoting/interface.js?personSearch"></script>
@@ -80,8 +80,6 @@
       var addressDiv = document.getElementById("addresses");
       clearElement(addressDiv);      
       addressDiv.appendChild(createLinkRow("Load addresses", "loadAddresses()"));
-      
-      document.getElementById("applyChanges").disabled = false;
     }
     
     function loadAddresses() {
@@ -105,6 +103,21 @@
       } else {
         addressDiv.appendChild(document.createTextNode("No addresses found")); 
       }
+                
+      addressDiv.appendChild(createLinkRow("Create new address", "createAddress()"));
+    }
+    
+    function createAddress() {
+      var address = Seam.createBean("org.jboss.seam.remoting.examples.model.Address");
+      address.person = model.getValue("person");
+      address.streetNo = "";
+      address.streetName = "";
+      address.suburb = "";
+      address.postCode = "";
+      address.country = "";
+      address.person.addresses.push(address);
+      var addressesDiv = document.getElementById("addresses");
+      addressesDiv.insertBefore(createAddressEditor(address), addressesDiv.lastChild); 
     }
     
     function createLabel(text) {
@@ -122,12 +135,11 @@
       return input;
     }
     
-    function apply() {      
-      document.getElementById("applyChanges").disabled = true;
-
-      // TODO apply person changes here
-      
-      model.applyUpdates(); 
+    function apply() {
+      var action = new Seam.Action()
+        .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
+        .setMethod("savePerson");
+      model.applyUpdates(action);
     }
     
     function createDeleteAddressLink(address, div) {
@@ -211,7 +223,7 @@
     </div>
     
     <div class="personAction">
-      <button id="applyChanges" onclick="apply()" disabled="true">Apply changes</button>
+      <button id="applyChanges" onclick="apply()">Apply changes</button>
     </div>
     
     <br class="clear"/>
