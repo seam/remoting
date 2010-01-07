@@ -20,7 +20,7 @@ div.listContainer {
   font-weight: bold; 
 }
 
-div.personDetail {
+#personDetail {
   margin-left: 4px; 
   background-color: #eeeeee;
   float: left;

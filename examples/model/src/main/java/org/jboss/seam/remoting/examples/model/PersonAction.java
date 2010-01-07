@@ -1,6 +1,7 @@
 package org.jboss.seam.remoting.examples.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import javax.enterprise.context.Conversation;
 import javax.enterprise.context.ConversationScoped;
@@ -24,6 +25,7 @@ public class PersonAction implements Serializable
    {
       conversation.begin();
       person = new Person();
+      person.setAddresses(new ArrayList<Address>());
    }
    
    @WebRemote

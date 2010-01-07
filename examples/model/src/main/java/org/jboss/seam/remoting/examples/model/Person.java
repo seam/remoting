@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -63,7 +64,7 @@ public class Person implements Serializable
       this.dateOfBirth = dateOfBirth;
    }
    
-   @OneToMany(fetch = FetchType.LAZY, mappedBy = "person")
+   @OneToMany(fetch = FetchType.LAZY, mappedBy = "person", cascade = CascadeType.ALL)
    public Collection<Address> getAddresses()
    {
       return addresses;

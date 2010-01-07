@@ -23,12 +23,15 @@
         
     var model = null;        
     
+    // Clears all the child elements of the specified element
     function clearElement(e) {
       while (e.hasChildNodes()) {
         e.removeChild(e.firstChild);
       }      
     }
     
+    // Creates an anchor element inside a div with the specified text
+    // and optional onclick event
     function createLinkRow(text, onclick) {
       var link = document.createElement("a");
       link.href = "#";
@@ -39,6 +42,7 @@
       return div;      
     }
     
+    // Loads the full list of People entities via a remoting call
     function loadPeople() {
       var personList = document.getElementById("personList");
       
@@ -58,8 +62,18 @@
     function getElementValue(elementName) {
       var value = document.getElementById(elementName).value;
       return (value.trim().length > 0) ? value : null; 
-    }    
+    }   
     
+    function createPerson() {
+      var action = new Seam.Action()
+        .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
+        .setMethod("createPerson");
+      
+      model = new Seam.Model();
+      model.addBeanProperty("person", "org.jboss.seam.remoting.examples.model.PersonAction", "person");
+      model.fetch(action, fetchCallback);      
+    } 
+        
     function editPerson(personId) {
       var action = new Seam.Action()
         .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
@@ -75,11 +89,13 @@
       var person = model.getValue("person");
       document.getElementById("firstName").value = person.getFirstName();
       document.getElementById("lastName").value = person.getLastName();
-      document.getElementById("dob").value = person.getDateOfBirth();
+      document.getElementById("dob").value = person.getDateOfBirth().toLocaleString();
       
       var addressDiv = document.getElementById("addresses");
       clearElement(addressDiv);      
       addressDiv.appendChild(createLinkRow("Load addresses", "loadAddresses()"));
+      
+      document.getElementById("personDetail").style.display = "block";
     }
     
     function loadAddresses() {
@@ -136,10 +152,21 @@
     }
     
     function apply() {
+      var person = model.getValue("person");
+      person.firstName = document.getElementById("firstName").value;
+      person.lastName = document.getElementById("lastName").value;
+      person.dateOfBirth = new Date(document.getElementById("dob").value);
+      
       var action = new Seam.Action()
         .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
         .setMethod("savePerson");
-      model.applyUpdates(action);
+      model.applyUpdates(action, applyCallback);
+    }
+    
+    function applyCallback() {
+      loadPeople();       
+      alert("Changes applied");
+      document.getElementById("personDetail").style.display = "none";
     }
     
     function createDeleteAddressLink(address, div) {
@@ -191,16 +218,16 @@
   </script>   
   
   <div class="listContainer">
-    <div class="sectionHeader">People</div>
+    <div class="sectionHeader">People - click to edit</div>
     
     <div id="personList"></div>
     
     <div>
-      <a href="#" onclick="javascript:alert('new person')">Create new person</a>
+      <a href="#" onclick="createPerson()">Create new person</a>
     </div>
   </div>
   
-  <div class="personDetail">
+  <div id="personDetail" style="display:none">
     <div class="sectionHeader">Details</div>
     
     <div class="formRow">
