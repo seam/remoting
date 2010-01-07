@@ -89,13 +89,15 @@
       var person = model.getValue("person");
       document.getElementById("firstName").value = person.getFirstName();
       document.getElementById("lastName").value = person.getLastName();
-      document.getElementById("dob").value = person.getDateOfBirth().toLocaleString();
+      document.getElementById("dob").value = person.dateOfBirth != null ? person.dateOfBirth.toLocaleString() : "";
       
       var addressDiv = document.getElementById("addresses");
       clearElement(addressDiv);      
       addressDiv.appendChild(createLinkRow("Load addresses", "loadAddresses()"));
       
       document.getElementById("personDetail").style.display = "block";
+      
+      if (person.addresses) loadAddressesCallback();
     }
     
     function loadAddresses() {
