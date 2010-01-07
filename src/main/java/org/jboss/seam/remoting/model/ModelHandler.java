@@ -226,19 +226,22 @@ public class ModelHandler implements RequestHandler
       {
          model.getCallContext().getInRefs().put("" + i, model.getCallContext().getOutRefs().get(i));
       }
-            
-      List<Wrapper> newRefs = new ArrayList<Wrapper>();
-      
+                  
       Element refsElement = modelElement.element("refs");
-      for (Element ref : (List<Element>) refsElement.elements("ref"))
+      if (refsElement != null)
       {
-         newRefs.add(model.getCallContext().createWrapperFromElement(ref));
-      }
-      
-      // Unmarshal any new ref values
-      for (Wrapper w : newRefs)
-      {
-         w.unmarshal();
+         List<Wrapper> newRefs = new ArrayList<Wrapper>();
+         
+         for (Element ref : (List<Element>) refsElement.elements("ref"))
+         {
+            newRefs.add(model.getCallContext().createWrapperFromElement(ref));
+         }
+         
+         // Unmarshal any new ref values
+         for (Wrapper w : newRefs)
+         {
+            w.unmarshal();
+         }
       }
       
       Element delta = modelElement.element("delta");

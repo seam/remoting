@@ -359,10 +359,11 @@ Seam.createCall = function(component, methodName, params, callback, exceptionHan
   return {data: d, id: callId, callback: callback, exceptionHandler: exceptionHandler, handler: Seam.preProcessCallResponse};
 };
 
-Seam.createHeader = function(callId) {
+Seam.createHeader = function(callId, ctx) {
   var h = "<context><callId>" + callId + "</callId>";
-  if (Seam.context.getConversationId()) {
-    h += "<conversationId>" + Seam.context.getConversationId() + "</conversationId>";
+  if (!ctx) ctx = Seam.context;
+  if (ctx.getConversationId()) {
+    h += "<conversationId>" + ctx.getConversationId() + "</conversationId>";
   }
   h += "</context>";
   return h;
@@ -580,7 +581,10 @@ Seam.processModelExpandResponse = function(call) {
   var b = cn(call.response.documentElement, "body");
   if (b) {
     var n = cn(b, "model");
-    if (call.model) call.model.processExpandResponse(n, call.refId, call.property, call.callback);
+    if (call.model) {
+      call.model.context.setConversationId(call.context.conversationId);
+      call.model.processExpandResponse(n, call.refId, call.property, call.callback);
+    }
   }
 };
 
@@ -590,7 +594,10 @@ Seam.processModelResponse = function(call) {
   var b = cn(call.response.documentElement, "body");
   if (b) {
     var n = cn(b, "model");
-    if (call.model) call.model.processResponse(n, call.callback);  
+    if (call.model) {
+      call.model.context.setConversationId(call.context.conversationId);
+      call.model.processResponse(n, call.callback);
+    }
   }
 };
 
@@ -925,6 +932,7 @@ Seam.Model = function() {
   this.values = [];
   this.sourceRefs = [];
   this.workingRefs = [];
+  this.context = new Seam.Context();
 
   Seam.Model.prototype.addExpression = function(alias, expr) {
     this.expressions.push({alias: alias, expr: expr});
@@ -963,7 +971,7 @@ Seam.Model = function() {
 
   Seam.Model.prototype.fetch = function(action, cb) {
     var r = this.createFetchRequest(action, cb);
-    var env = Seam.createEnvelope(Seam.createHeader(r.id), r.data);
+    var env = Seam.createEnvelope(Seam.createHeader(r.id, this.context), r.data);
     Seam.pendingCalls.put(r.id, r);
     Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
   };
@@ -1041,7 +1049,7 @@ Seam.Model = function() {
       d.scanForChanges(this.values[i].value);
     }
     var r = this.createApplyRequest(a, d, cb);
-    var env = Seam.createEnvelope(Seam.createHeader(r.id), r.data);
+    var env = Seam.createEnvelope(Seam.createHeader(r.id, this.context), r.data);
     Seam.pendingCalls.put(r.id, r);
     Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
   };
@@ -1121,7 +1129,7 @@ Seam.Model = function() {
     if (v[p] != undefined) return;
     var refId = this.getRefId(v);    
     var r = this.createExpandRequest(refId, p, cb);
-    var env = Seam.createEnvelope(Seam.createHeader(r.id), r.data);
+    var env = Seam.createEnvelope(Seam.createHeader(r.id, this.context), r.data);
     Seam.pendingCalls.put(r.id, r);
     Seam.sendAjaxRequest(env, Seam.PATH_MODEL, Seam.processResponse, false);
   };
