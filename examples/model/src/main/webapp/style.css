@@ -5,28 +5,27 @@ body {
   color: #663009;
 }
 
+div.listContainer {
+  float: left;
+  width: 200px;
+}
+
+#personList {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
 .sectionHeader {
   font-size: 12px;
   font-weight: bold; 
 }
 
-div.section {
+div.personDetail {
+  margin-left: 4px; 
   background-color: #eeeeee;
-  margin: 6px; 
-  padding: 4px;
-}
-
-div.sectionForm {
   float: left;
-  width: 390px;
   padding: 4px;
-  border-right: 1px solid #cccccc; 
-}
-
-div.sectionCommand {
-  float: left;
-  width: 120px;
-  padding: 4px; 
+  width: 400px;
 }
 
 div.formRow {
@@ -41,7 +40,7 @@ div.formRow label {
 }
 
 div.formRow input[type='text'] {
-  width: 300px;
+  width: 200px;
 }
 
 .clear {
@@ -49,11 +48,22 @@ div.formRow input[type='text'] {
 	font-size: 0px;
 }
 
-
-.short {
-  width: 80px; 
+div.addressContainer {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  border-top: 1px solid #cccccc;
+  padding: 4px;
 }
 
-.long {
-  width: 300px;
+input.streetNo {
+  width: 60px; 
+  margin-right: 8px;
+}
+
+input.postCode {
+  width: 60px; 
+}
+
+.personAction {
+  float: right; 
 }

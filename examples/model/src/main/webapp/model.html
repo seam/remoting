@@ -8,11 +8,12 @@
 	<link href="tree.css" rel="stylesheet" type="text/css"/>
 </head>
 
-<body>
+<body onload="loadPeople()">
 
   <h1>Seam Remoting - Model Example</h1>
   
   <script type="text/javascript" src="seam/resource/remoting/resource/remote.js?compress=true"></script>
+  <script type="text/javascript" src="seam/resource/remoting/interface.js?personSearch"></script>
   
   <script type="text/javascript">    
     //<![CDATA[
@@ -20,219 +21,183 @@
     // Turn on debug logging so we can see the request and response packets    
     Seam.debug = true;
         
-    var model = null;
+    var model = null;        
+    
+    function clearElement(e) {
+      while (e.hasChildNodes()) {
+        e.removeChild(e.firstChild);
+      }      
+    }
+    
+    function createLinkRow(text, onclick) {
+      var link = document.createElement("a");
+      link.href = "#";
+      if (onclick) link.setAttribute("onclick", onclick);
+      link.appendChild(document.createTextNode(text));
+      var div = document.createElement("div");
+      div.appendChild(link);
+      return div;      
+    }
+    
+    function loadPeople() {
+      var personList = document.getElementById("personList");
+      
+      var callback = function(people) {
+        for (var i = 0; i < people.length; i++) {
+          personList.appendChild(createLinkRow(
+            people[i].firstName + " " + people[i].lastName, 
+            "editPerson(" + people[i].personId + ")"));
+        } 
+      };
+      
+      clearElement(personList);      
+      Seam.createBean("personSearch").listPeople(callback);
+    }
     
     // A helper function that returns the value of an element
     function getElementValue(elementName) {
       var value = document.getElementById(elementName).value;
       return (value.trim().length > 0) ? value : null; 
-    }
+    }    
     
-    // Fetch the model
-    function fetch() {
-      var fetchActionBean = getElementValue("fetchActionBean");
-      var fetchActionQualifiers = getElementValue("fetchActionQualifiers");
-      var fetchActionMethod = getElementValue("fetchActionMethod");
-      var fetchActionParams = getElementValue("fetchActionParams");      
+    function editPerson(personId) {
+      var action = new Seam.Action()
+        .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
+        .setMethod("editPerson")
+        .addParam(personId);
       
-      var action = null;      
-      
-      if (fetchActionBean) {
-        action = new Seam.Action();
-        action.setBeanType(fetchActionBean);
-        if (fetchActionQualifiers) action.setQualifiers(fetchActionQualifiers);
-        action.setMethod(fetchActionMethod);
-        if (fetchActionParams) {
-          var params = fetchActionParams.split(",");
-          for (var i = 0; i < params.length; i++) {
-            action.addParam(params[i].trim());
-          }
-        }
-      }
-          
       model = new Seam.Model();
-      
-      var alias = getElementValue("valueAlias1");
-      var bean = getElementValue("valueBean1");
-      var property = getElementValue("valueProperty1");            
-      if (alias && bean && property) model.addBeanProperty(alias, bean, property);
-
-      // TODO make this less "hard coded"      
-      alias = getElementValue("valueAlias2");
-      bean = getElementValue("valueBean2");
-      property = getElementValue("valueProperty2");            
-      if (alias && bean && property) model.addBeanProperty(alias, bean, property);
-      
-      alias = getElementValue("valueAlias3");
-      bean = getElementValue("valueBean3");
-      property = getElementValue("valueProperty3");
-      if (alias && bean && property) model.addBeanProperty(alias, bean, property);
-      
-      if (action)
-        model.fetch(action, fetchCallback);
-      else
-        model.fetch(fetchCallback);      
+      model.addBeanProperty("person", "org.jboss.seam.remoting.examples.model.PersonAction", "person");
+      model.fetch(action, fetchCallback);
     }
       
-    function fetchCallback(model) {
-           
-      for (var i = 0; i < model.values.length; i++) {
-
-      }
+    function fetchCallback(model) {           
+      var person = model.getValue("person");
+      document.getElementById("firstName").value = person.getFirstName();
+      document.getElementById("lastName").value = person.getLastName();
+      document.getElementById("dob").value = person.getDateOfBirth();
+      
+      var addressDiv = document.getElementById("addresses");
+      clearElement(addressDiv);      
+      addressDiv.appendChild(createLinkRow("Load addresses", "loadAddresses()"));
+      
+      document.getElementById("applyChanges").disabled = false;
     }
     
-    function renderValueNode(parentNode, value, alias) {
-      var beanType = Seam.getBeanType(value);
-      var meta = Seam.getBeanMetadata(value);
-
-      var valueNode = new xw.controls.TreeNode((alias ? alias + ":" : "") + beanType.__name, false, value);
-      parentNode.add(valueNode);
-
-      for (var j = 0; j < meta.length; j++) {
-        var fieldName = meta[j].field;
-        var fieldType = meta[j].type;
-        var leaf = fieldType != "bag" && fieldType != "map" && fieldType != "bean";
-        var node = new xw.controls.TreeNode(fieldName + ":" + value[fieldName], leaf);
-        if (!leaf) node.canExpand = true;
-        valueNode.add(node);
+    function loadAddresses() {
+      model.expand(model.getValue("person"), "addresses", loadAddressesCallback); 
+    }
+    
+    function loadAddressesCallback() {
+      var addressDiv = document.getElementById("addresses");
+      clearElement(addressDiv); 
+      
+      var addresses = model.getValue("person").getAddresses();
+      if (addresses.length > 0) {
+        var header = document.createElement("div");
+        header.className = "sectionHeader";
+        header.appendChild(document.createTextNode("Addresses"));        
+        addressDiv.appendChild(header);
         
-        if (!leaf && value[fieldName]) renderValueNode(valueNode, value[fieldName]);
-      }      
-    }
-          
-    // Apply changes to the model
-    function apply() {
-      var applyActionBean = getElementValue("applyActionBean");
-      var applyActionQualifiers = getElementValue("applyActionQualifiers");
-      var applyActionMethod = getElementValue("applyActionMethod");
-      var applyActionParams = getElementValue("applyActionParams");      
-      
-      var action = null;      
-      
-      if (applyActionBean) {
-        action = new Seam.Action();
-        action.setBeanType(applyActionBean);
-        if (applyActionQualifiers) action.setQualifiers(applyActionQualifiers);
-        action.setMethod(applyActionMethod);
-        if (applyActionParams) {
-          var params = applyActionParams.split(",");
-          for (var i = 0; i < params.length; i++) {
-            action.addParam(params[i].trim());
-          }
+        for (var i = 0; i < addresses.length; i++) {
+          addressDiv.appendChild(createAddressEditor(addresses[i]));           
         }
+      } else {
+        addressDiv.appendChild(document.createTextNode("No addresses found")); 
       }
-      
-      var callback = function(model) { alert("model updates applied"); };
-      
-      if (action)
-        model.applyUpdates(action, callback);
-      else
-        model.applyUpdates(callback);       
     }
-     
-     /*
-    function expandModel() {
-      var callback = function(model) { alert("Got addresses: " + model.getValue("person").getAddresses().length); };
-      
-      model.expand(model.getValue("person"), "addresses", callback); 
-    }
-    */    
     
+    function createLabel(text) {
+      var lbl = document.createElement("label");
+      lbl.appendChild(document.createTextNode(text));
+      return lbl; 
+    }
+    
+    function createBoundInput(obj, propertyName, className) {
+      var input = document.createElement("input"); 
+      input.type = "text";
+      input.value = obj[propertyName];
+      input.onchange = function(event) { obj[propertyName] = event.target.value;}
+      if (className) input.className = className;
+      return input;
+    }
+    
+    function apply() {      
+      document.getElementById("applyChanges").disabled = true;
+
+      // TODO apply person changes here
+      
+      model.applyUpdates(); 
+    }
+    
+    function createAddressEditor(address) {
+      var addressDiv = document.createElement("div");
+      addressDiv.className = "addressContainer";
+      var row1 = document.createElement("div");
+      var row2 = document.createElement("div");
+      var row3 = document.createElement("div");
+      addressDiv.appendChild(row1);
+      addressDiv.appendChild(row2);
+      addressDiv.appendChild(row3);
+      
+      row1.appendChild(createLabel("Street No"));
+      row1.appendChild(createBoundInput(address, "streetNo", "streetNo"));
+      row1.appendChild(createLabel("Street Name"));
+      row1.appendChild(createBoundInput(address, "streetName"));
+      
+      row2.appendChild(createLabel("Suburb"));
+      row2.appendChild(createBoundInput(address, "suburb"));
+      row2.appendChild(createLabel("Postcode/Zip"));
+      row2.appendChild(createBoundInput(address, "postCode", "postCode"));
+      
+      row3.appendChild(createLabel("Country"));
+      row3.appendChild(createBoundInput(address, "country"));
+     
+      return addressDiv; 
+    }
+        
     // ]]>
   </script>   
   
-  <div class="section">
-    <div class="sectionHeader">Fetch model action</div>
-    <div class="sectionForm">
-      <div class="formRow">
-        <label for="fetchActionBean">Bean</label>
-        <input type="text" id="fetchActionBean" value="org.jboss.seam.remoting.examples.model.PersonAction"/>
-      </div>
-      <div class="formRow">
-        <label for="fetchActionQualifiers">Qualifiers</label>
-        <input type="text" id="fetchActionQualifiers"/>
-      </div>
-      <div class="formRow">
-        <label for="fetchActionMethod">Method</label>
-        <input type="text" id="fetchActionMethod" value="editPerson"/>
-      </div>
-      <div class="formRow">
-        <label for="fetchActionParams">Params</label>
-        <input type="text" id="fetchActionParams" value="1"/>
-      </div>                 
+  <div class="listContainer">
+    <div class="sectionHeader">People</div>
+    
+    <div id="personList"></div>
+    
+    <div>
+      <a href="#" onclick="javascript:alert('new person')">Create new person</a>
+    </div>
+  </div>
+  
+  <div class="personDetail">
+    <div class="sectionHeader">Details</div>
+    
+    <div class="formRow">
+      <label for="firstName">First name</label>
+      <input type="text" id="firstName"/>
     </div>
     
-    <div class="sectionCommand">
-      <button onclick="javascript:fetch()">Fetch</button>
-    </div>        
+    <div class="formRow">
+      <label for="lastName">Last name</label>
+      <input type="text" id="lastName"/>
+    </div>
+      
+    <div class="formRow">
+      <label for="dob">Date of birth</label>
+      <input type="text" id="dob"/>
+    </div>
+    
+    <div id="addresses">
+      
+    </div>
+    
+    <div class="personAction">
+      <button id="applyChanges" onclick="apply()" disabled="true">Apply changes</button>
+    </div>
     
     <br class="clear"/>
   </div>
-  
-  <div class="section">
-    <div class="sectionHeader">Apply model action</div>
-    <div class="sectionForm">
-      <div class="formRow">
-        <label for="applyActionBean">Bean</label>
-        <input type="text" id="applyActionBean" value="org.jboss.seam.remoting.examples.model.PersonAction"/>
-      </div>
-      <div class="formRow">
-        <label for="applyActionQualifiers">Qualifiers</label>
-        <input type="text" id="applyActionQualifiers"/>
-      </div>
-      <div class="formRow">
-        <label for="applyActionMethod">Method</label>
-        <input type="text" id="applyActionMethod" value="savePerson"/>
-      </div>
-      <div class="formRow">
-        <label for="applyActionParams">Params</label>
-        <input type="text" id="applyActionParams"/>
-      </div>          
-    </div>
     
-    <div class="sectionCommand">
-      <button onclick="javascript:apply()">Apply</button>
-    </div> 
-    
-    <br class="clear"/>
-  </div>
-  
-  <div class="section">
-    <div class="sectionHeader">Model properties</div>
-      <table cellspacing="0" cellpadding="0" border="0">
-        <tr>
-          <td>Alias</td>
-          <td>Bean</td>
-          <td>Property</td>
-        </tr>
-        <tr>
-          <td><input type="text" class="short" id="valueAlias1" value="person"/></td>
-          <td><input type="text" class="long" id="valueBean1" value="org.jboss.seam.remoting.examples.model.PersonAction"/></td>
-          <td><input type="text" class="short" id="valueProperty1" value="person"/></td>
-        </tr>
-        <tr>
-          <td><input type="text" class="short" id="valueAlias2"/></td>
-          <td><input type="text" class="long" id="valueBean2"/></td>
-          <td><input type="text" class="short" id="valueProperty2"/></td>
-        </tr>
-        <tr>
-          <td><input type="text" class="short" id="valueAlias3"/></td>
-          <td><input type="text" class="long" id="valueBean3"/></td>
-          <td><input type="text" class="short" id="valueProperty3"/></td>
-        </tr>
-      </table>
-    <br class="clear"/>    
-  </div>
-
-  <div id="treeContainer" style="position:absolute;left:10px;width:450px;height:400px;border:1px solid #999999;overflow:auto"></div>
-
-  <script type="text/javascript">
-    //<![CDATA[
-    var t = new xw.controls.Tree("treeContainer");
-    t.setRootVisible(true);    
-    // ]]>
-  </script> 
-
 </body>
 </html>
 
