@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +21,6 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jboss.seam.remoting.Call;
-import org.jboss.seam.remoting.CallContext;
 import org.jboss.seam.remoting.MarshalUtils;
 import org.jboss.seam.remoting.RequestContext;
 import org.jboss.seam.remoting.RequestHandler;
@@ -226,13 +226,19 @@ public class ModelHandler implements RequestHandler
       {
          model.getCallContext().getInRefs().put("" + i, model.getCallContext().getOutRefs().get(i));
       }
-      
-      CallContext ctx = new CallContext(beanManager);
+            
+      List<Wrapper> newRefs = new ArrayList<Wrapper>();
       
       Element refsElement = modelElement.element("refs");
       for (Element ref : (List<Element>) refsElement.elements("ref"))
       {
-         ctx.createWrapperFromElement(ref);
+         newRefs.add(model.getCallContext().createWrapperFromElement(ref));
+      }
+      
+      // Unmarshal any new ref values
+      for (Wrapper w : newRefs)
+      {
+         w.unmarshal();
       }
       
       Element delta = modelElement.element("delta");
@@ -421,7 +427,14 @@ public class ModelHandler implements RequestHandler
          
          for (int i = 0; i < sourceList.size(); i++)
          {
-            targetList.set(i, sourceList.get(i));
+            if (targetList.size() < i + 1)
+            {
+               targetList.add(i, sourceList.get(i));  
+            }
+            else if (targetList.get(i) != sourceList.get(i))
+            {
+               targetList.set(i, sourceList.get(i));
+            }
          }
          return true;        
       }

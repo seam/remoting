@@ -908,12 +908,13 @@ Seam.Delta = function(model) {
     return null;
   };
 
-  Seam.Delta.prototype.buildRefs = function() {
-    var refs = [];
+  Seam.Delta.prototype.getNewRefs = function() {
+    var nr = [];
     for (var i=0; i<this.refs.elements.length; i++) {
-      if (this.refs.elements[i].value) refs.push(this.refs.elements[i]);
+      var key = this.refs.elements[i].key;
+      if (Seam.getBeanType(key) && this.model.getRefId(key) == -1) nr.push(key);
     }
-    return refs;
+    return nr;
   };
 };
 
@@ -1047,8 +1048,11 @@ Seam.Model = function() {
 
   Seam.Model.prototype.createApplyRequest = function(a, delta, cb) {
     var callId = "" + Seam.__callId++;
+    var refs = [];
+    for (var i=0; i<this.workingRefs.length; i++) {
+      refs[i] = this.workingRefs[i];
+    }
     var d = "<model id=\"" + this.id + "\" operation=\"apply\">";
-    var refs = delta.buildRefs();
     if (a) {
       d += "<action>";
       if (a.beanType) {
@@ -1071,13 +1075,13 @@ Seam.Model = function() {
     for (var i=0; i<delta.refs.elements.length; i++) {
       var k = delta.refs.elements[i].key;
       var v = delta.refs.elements[i].value;
-      var refId = this.getRefId(k);
       if (v) {
+        var refId = this.getRefId(k);        
         d += "<changeset refid=\"" + refId + "\">";
         if (v instanceof Seam.Changeset) {
           for (var j=0; j<v.propertyChange.elements.length; j++) {
             d += "<member name=\"" + v.propertyChange.elements[j].key + "\">";
-            d += Seam.serializeValue(v.propertyChange.elements[j].value, null, this.workingRefs);
+            d += Seam.serializeValue(v.propertyChange.elements[j].value, null, refs);
             d += "</member>";
           }
         } else {
@@ -1087,13 +1091,18 @@ Seam.Model = function() {
       }
     }
     d += "</delta>";
-    if (refs.length > 0) {
+    var newRefs = delta.getNewRefs();    
+    if (newRefs.length > 0) {
       d += "<refs>";
-      var idx = this.workingRefs.length;
-      for (var i=0; i<refs.length; i++) {
-        if (this.getRefId(refs[i]) != -1) {
-          d += "<ref id=\"" + ++idx + "\">" + Seam.serializeType(refs[i], refs) + "</ref>";
+      for (var i=0; i<newRefs.length; i++) {
+        var idx = refs.length;
+        for (var j=0; j<refs.length; j++) {
+          if (refs[j] == newRefs[i]) {
+            idx = j;
+            break;
+          }
         }
+        d += "<ref id=\"" + idx + "\">" + Seam.serializeType(newRefs[i], refs) + "</ref>";
       }
       d += "</refs>";
     }
