@@ -911,7 +911,7 @@ Seam.Delta = function(model) {
   Seam.Delta.prototype.buildRefs = function() {
     var refs = [];
     for (var i=0; i<this.refs.elements.length; i++) {
-      refs.push(this.refs.elements[i]);
+      if (this.refs.elements[i].value) refs.push(this.refs.elements[i]);
     }
     return refs;
   };
@@ -1077,7 +1077,7 @@ Seam.Model = function() {
         if (v instanceof Seam.Changeset) {
           for (var j=0; j<v.propertyChange.elements.length; j++) {
             d += "<member name=\"" + v.propertyChange.elements[j].key + "\">";
-            d += Seam.serializeValue(v.propertyChange.elements[j].value, null, refs);
+            d += Seam.serializeValue(v.propertyChange.elements[j].value, null, this.workingRefs);
             d += "</member>";
           }
         } else {

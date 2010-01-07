@@ -12,7 +12,7 @@
 
   <h1>Seam Remoting - Model Example</h1>
   
-  <script type="text/javascript" src="seam/resource/remoting/resource/remote.js?compress=true"></script>
+  <script type="text/javascript" src="seam/resource/remoting/resource/remote.js"></script>
   <script type="text/javascript" src="seam/resource/remoting/interface.js?personSearch"></script>
   
   <script type="text/javascript">    
@@ -130,6 +130,24 @@
       model.applyUpdates(); 
     }
     
+    function createDeleteAddressLink(address, div) {
+      var link = document.createElement("a");
+      link.href = "#";
+      link.onclick = function() {
+        var addresses = model.getValue("person").addresses;
+        for (var i = 0; i < addresses.length; i++) {
+          if (addresses[i] == address) {
+            addresses.splice(i, 1);
+            break;
+          }
+        };
+        
+        document.getElementById("addresses").removeChild(div);
+      };
+      link.appendChild(document.createTextNode("Delete address"));
+      return link; 
+    }
+    
     function createAddressEditor(address) {
       var addressDiv = document.createElement("div");
       addressDiv.className = "addressContainer";
@@ -152,6 +170,7 @@
       
       row3.appendChild(createLabel("Country"));
       row3.appendChild(createBoundInput(address, "country"));
+      row3.appendChild(createDeleteAddressLink(address, addressDiv));
      
       return addressDiv; 
     }
