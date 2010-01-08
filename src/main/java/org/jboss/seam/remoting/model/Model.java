@@ -3,7 +3,6 @@ package org.jboss.seam.remoting.model;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,9 +16,6 @@ import javax.enterprise.inject.spi.BeanManager;
 import org.jboss.seam.remoting.AnnotationsParser;
 import org.jboss.seam.remoting.Call;
 import org.jboss.seam.remoting.CallContext;
-import org.jboss.seam.remoting.wrapper.BeanWrapper;
-import org.jboss.seam.remoting.wrapper.ConversionException;
-import org.jboss.seam.remoting.wrapper.Wrapper;
 
 /**
  * Manages a model request
