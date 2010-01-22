@@ -233,7 +233,7 @@ public class Remoting extends HttpServlet
 
    public ServletConfig getServletConfig()
    {
-      return null;
+      return servletConfig;
    }
 
    public String getServletInfo()
