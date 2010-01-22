@@ -41,7 +41,7 @@ public class BooleanWrapper extends BaseWrapper implements Wrapper
       return value;
    }
 
-   public ConversionScore conversionScore(Class cls)
+   public ConversionScore conversionScore(Class<?> cls)
    {
       if (cls.equals(Boolean.class) || cls.equals(Boolean.TYPE))
          return ConversionScore.exact;

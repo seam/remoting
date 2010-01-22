@@ -1,6 +1,5 @@
 package org.jboss.seam.remoting;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -20,7 +19,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletResponse;
 
 import org.jboss.seam.remoting.BeanMetadata.BeanType;
 import org.jboss.seam.remoting.annotations.WebRemote;

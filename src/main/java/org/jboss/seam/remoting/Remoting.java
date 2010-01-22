@@ -245,6 +245,21 @@ public class Remoting extends HttpServlet
    {
       this.servletConfig = config;
    }
+   
+   protected ExecutionHandler getExecutionHandler()
+   {
+      return executionHandlerInstance.get();
+   }
+   
+   protected InterfaceGenerator getInterfaceHandler()
+   {
+      return interfaceHandlerInstance.get();
+   }
+   
+   protected ModelHandler getModelHandler()
+   {
+      return modelHandlerInstance.get();
+   }
 
    public void service(HttpServletRequest request, HttpServletResponse response)
          throws ServletException, IOException
@@ -260,15 +275,15 @@ public class Remoting extends HttpServlet
 
          if (REQUEST_PATH_EXECUTE.equals(pathInfo))
          {
-            executionHandlerInstance.get().handle(request, response);
+            getExecutionHandler().handle(request, response);
          }
          else if (REQUEST_PATH_INTERFACE.equals(pathInfo))
          {
-            interfaceHandlerInstance.get().handle(request, response);
+            getInterfaceHandler().handle(request, response);
          }
          else if (REQUEST_PATH_MODEL.equals(pathInfo))
          {
-            modelHandlerInstance.get().handle(request, response);
+            getModelHandler().handle(request, response);
          }
          else
          {
