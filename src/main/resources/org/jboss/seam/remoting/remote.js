@@ -44,6 +44,18 @@ Seam.createGetterMethod = function(fieldName) {
   return function() { return this[fieldName]; }; 
 };
 
+Seam.createBeanFunction = function(methodName, paramCount) {
+  return function() {
+    var p = [];
+    for (var i=0; i<paramCount; i++) {
+      p[i] = arguments[i];
+    }
+    var c = (arguments.length > paramCount) ? arguments[paramCount] : undefined;
+    var eh = (arguments.length > (paramCount + 1)) ? arguments[paramCount + 1] : undefined;
+    return Seam.execute(this, methodName, p, c, eh); 
+  } 
+}
+
 Seam.registerBean = function(name, metadata, methods) {
   if (Seam.isBeanRegistered(name)) return;
   var t = function() {};
@@ -59,16 +71,7 @@ Seam.registerBean = function(name, metadata, methods) {
     t.__metadata = m;
   } else {
     for (var m in methods) {
-      var pc = methods[m];
-      t.prototype[m] = function() {
-        var p = [];
-        for (var i=0; i<pc; i++) {
-          p[i] = arguments[i];
-        }
-        var c = (arguments.length > pc) ? arguments[pc] : undefined;
-        var eh = (arguments.length > (pc + 1)) ? arguments[pc + 1] : undefined;
-        return Seam.execute(this, m, p, c, eh);
-      };
+      t.prototype[m] = Seam.createBeanFunction(m, methods[m]);
     }
   }
   Seam.beans[name] = t;
