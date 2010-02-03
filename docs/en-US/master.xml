@@ -5,10 +5,8 @@
       
    <toc/>
    
-   <part id="1">
-     <title>Seam Remoting</title>      
-     <xi:include href="remoting-general.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-     <xi:include href="remoting-model.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />     
-   </part>
+   <title>Seam Remoting</title>      
+   <xi:include href="remoting-general.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+   <xi:include href="remoting-model.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />     
 
 </book>
