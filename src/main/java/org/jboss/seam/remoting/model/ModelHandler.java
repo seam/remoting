@@ -77,7 +77,9 @@ public class ModelHandler implements RequestHandler
       try
       {         
          // Initialize the conversation context
-         conversationContext = Container.instance().deploymentServices().get(ContextLifecycle.class).getConversationContext();
+         // TODO - this is non-portable, we should at least use the new ConversationManager API once Nik has
+         // written it, and non-portable code should be abstracted out
+         conversationContext = Container.instance().services().get(ContextLifecycle.class).getConversationContext();
          
          if (ctx.getConversationId() != null && !ctx.getConversationId().isEmpty())
          { 
