@@ -83,13 +83,15 @@ public class ModelHandler implements RequestHandler
          
          if (ctx.getConversationId() != null && !ctx.getConversationId().isEmpty())
          { 
-            conversationContext.setBeanStore(new ConversationBeanStore(request.getSession(), ctx.getConversationId()));
+            conversationContext.setBeanStore(new ConversationBeanStore(
+                  request.getSession(), false, ctx.getConversationId()));
             conversationContext.setActive(true);  
             conversationManager.beginOrRestoreConversation(ctx.getConversationId());
          }
          else
          {
-            conversationContext.setBeanStore(new ConversationBeanStore(request.getSession(), 
+            conversationContext.setBeanStore(new ConversationBeanStore(
+                  request.getSession(), false,  
                   ((org.jboss.weld.conversation.ConversationImpl) conversation).getUnderlyingId()));
             conversationContext.setActive(true);
          }

@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.util.Iterator;
 
+import javax.enterprise.context.ContextNotActiveException;
 import javax.enterprise.context.Conversation;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
@@ -76,9 +77,16 @@ public class ExecutionHandler implements RequestHandler
       // Extract the calls from the request
       Call call = unmarshalCall(env);
       call.execute();
-
+      
       // Store the conversation ID in the outgoing context
-      ctx.setConversationId(conversation.getId());
+      try
+      {
+         ctx.setConversationId(conversation.getId());
+      }
+      catch (ContextNotActiveException ex)
+      {
+         // No active conversation context, ignore
+      }
 
       // Package up the response
       marshalResponse(call, ctx, response.getOutputStream());
