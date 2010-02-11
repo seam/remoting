@@ -55,7 +55,8 @@
     <programlisting><![CDATA[  var action = new Seam.Action();]]></programlisting>    
     
     <para>
-      The following table lists the methods used to define the action.
+      The following table lists the methods used to define the action.  Each of the following methods
+      return a reference to the <literal>Seam.Action</literal> object, so methods can be chained.
     </para>
   
     <table>
@@ -381,14 +382,12 @@
     <para>
       To fetch a model, one or more values must first be specified using <literal>addBean()</literal> or
       <literal>addBeanProperty()</literal> before invoking the <literal>fetch()</literal> operation.  
-      Let's work through an example
+      Let's work through an example - here we have an entity bean called <literal>Customer</literal>
+      and a bean called <literal>CustomerAction</literal>.  The <literal>CustomerAction</literal> bean
+      is used to create and edit <literal>Customer</literal> instances.  Since we're only interested in
+      editing a customer right now, the following code only shows the <literal>editCustomer()</literal>
+      method:
     </para>
-    
-    <mediaobject>
-       <imageobject>
-          <imagedata fileref="images/remoting-model-customer-uml-1.png" format="PNG"/> 
-       </imageobject>
-    </mediaobject>    
     
     <programlisting><![CDATA[@Entity Customer implements Serializable {
   private Integer customerId;
@@ -426,11 +425,69 @@ public class CustomerAction {
   @PersistenceContext EntityManager entityManager;
   public Customer customer;
   
-  public void createCustomer() {
-    customer = new Customer();
-    conversation.begin();
+  public void editCustomer(Integer customerId) {
+    conversation.begin();  
+    customer = entityManager.find(Customer.class, customerId);
+  }
+  
+  public void saveCustomer() {
+    entityManager.merge(customer);
+    conversation.end();
   }
 }]]></programlisting>
+
+    <para>
+      In the client section of this example, we wish to make changes to an existing <literal>Customer</literal>
+      instance, so we need to use the <literal>editCustomer()</literal> method of <literal>CustomerAction</literal>
+      to first load the customer entity, after which we can access it via the public <literal>customer</literal>
+      field.  Our model object must therefore be configured to fetch the <literal>CustomerAction.customer</literal>
+      property, and to invoke the <literal>editCustomer()</literal> method when the model is fetched.  We start
+      by using the <literal>addBeanProperty()</literal> method to add a bean property to the model:
+    </para>
+    
+    <programlisting><![CDATA[  var model = new Seam.Model();
+  model.addBeanProperty("customer", "CustomerAction", "customer");]]></programlisting>
+  
+    <para>
+      The first parameter of <literal>addBeanProperty()</literal> is the <emphasis>alias</emphasis> (in this case
+      <literal>customer</literal>), which is used to access the value via the <literal>getValue()</literal> method.
+      The <literal>addBeanProperty()</literal> and <literal>addBean()</literal> methods can be called multiple times
+      to bind multiple values to the model.  An important thing to note is that the values can come from multiple 
+      server-side beans, they don't all need to come from the same bean.
+    </para>
+
+    <mediaobject>
+       <imageobject>
+          <imagedata fileref="images/remoting-model-customer-uml-1.png" format="PNG"/> 
+       </imageobject>
+    </mediaobject>   
+    
+    <para>
+      We also specify the action that we wish to invoke (i.e. the <literal>editCustomer()</literal> method).  
+      In this example we know the value of the <literal>customerId</literal> that we wish to edit, so we can 
+      specify this value as an action method parameter:
+    </para>
+    
+    <programlisting><![CDATA[  var action = new Seam.Action()
+    .setBeanType("CustomerAction")
+    .setMethod("editCustomer")
+    .addParam(123);]]></programlisting>
+    
+    <para>
+      Once we've specified the bean properties we wish to fetch and the action to invoke, we can then fetch the
+      model.  We pass in a reference to the action object as the first parameter of the <literal>fetch()</literal>
+      method.  Also, since this is an asynchronous request we need to provide a callback method to deal with the 
+      response.  The callback method is passed a reference to the model object as a parameter.
+    </para>
+    
+    <programlisting><![CDATA[  var callback = function(model) { alert("Fetched customer: " model.getValue("customer").firstName + 
+    " " + model.getValue("customer").lastName); };
+  model.fetch(action, callback);]]></programlisting>
+  
+    <para>
+      When the server receives a model fetch request, it first invokes the action (if one is specified) before 
+      reading the requested property values and returning them to the client.
+    </para>
   </section>
   
   <section>
