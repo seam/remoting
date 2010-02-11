@@ -52,7 +52,7 @@
       <literal>Seam.Action</literal> takes no parameters:
     </para>
     
-    <programlisting><![CDATA[  var action = new Seam.Action();]]></programlisting>    
+    <programlisting role="XHTML"><![CDATA[  var action = new Seam.Action();]]></programlisting>    
     
     <para>
       The following table lists the methods used to define the action.  Each of the following methods
@@ -165,7 +165,7 @@
       the Model API in JavaScript you must first create a new Model object:
     </para>
     
-    <programlisting><![CDATA[  var model = new Seam.Model();]]></programlisting>    
+    <programlisting role="XHTML"><![CDATA[  var model = new Seam.Model();]]></programlisting>    
     
     <table>
       <title>Seam.Model method reference</title>
@@ -235,6 +235,12 @@
                 Can only be used before the model is fetched.
               </para>
               
+              <para>
+                Example:
+              </para>
+              
+              <programlisting role="XHTML"><![CDATA[  addBeanProperty("account", "AccountAction", "account", "@Qualifier1", "@Qualifier2");]]></programlisting>
+              
               <itemizedlist>
                 <listitem>              
                   <literal>alias</literal> - the local alias for the bean value.
@@ -247,7 +253,8 @@
                   <literal>property</literal> - the name of the bean property.
                 </listitem>
                 <listitem>
-                  <literal>qualifiers</literal> (optional) - a list of bean qualifiers.
+                  <literal>qualifiers</literal> (optional) - a list of bean qualifiers.  This parameter (and any
+                  after it) are treated as bean qualifiers.
                 </listitem>
               </itemizedlist>
             </entry>
@@ -382,44 +389,32 @@
     <para>
       To fetch a model, one or more values must first be specified using <literal>addBean()</literal> or
       <literal>addBeanProperty()</literal> before invoking the <literal>fetch()</literal> operation.  
-      Let's work through an example - here we have an entity bean called <literal>Customer</literal>
-      and a bean called <literal>CustomerAction</literal>.  The <literal>CustomerAction</literal> bean
-      is used to create and edit <literal>Customer</literal> instances.  Since we're only interested in
-      editing a customer right now, the following code only shows the <literal>editCustomer()</literal>
-      method:
+      Let's work through an example - here we have an entity bean called <literal>Customer</literal>:
     </para>
-    
-    <programlisting><![CDATA[@Entity Customer implements Serializable {
+   
+    <programlisting role="JAVA"><![CDATA[@Entity Customer implements Serializable {
   private Integer customerId;
   private String firstName;
   private String lastName;
   
-  @Id @GeneratedValue public Integer getCustomerId() {
-    return customerId;
-  }
+  @Id @GeneratedValue public Integer getCustomerId() { return customerId; }  
+  public void setCustomerId(Integer customerId) { this.customerId = customerId; }
   
-  public void setCustomerId(Integer customerId) {
-    this.customerId = customerId;
-  }
+  public String getFirstName() { return firstName; }  
+  public void setFirstName(String firstName) { this.firstName = firstName; }
   
-  public String getFirstName() {
-    return firstName;
-  }
-  
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
-  
-  public String getLastName() {
-    return lastName;
-  }
-  
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
-  }
+  public String getLastName() { return lastName; }
+  public void setLastName(String lastName) { this.lastName = lastName; }
 }]]></programlisting>
+
+    <para>
+      We also have a bean called <literal>CustomerAction</literal>, which is responsible for creating and editing
+      <literal>Customer</literal> instances.  Since we're only interested in editing a customer right now, the 
+      following code only shows the <literal>editCustomer()</literal> method:
+    </para>
+
     
-    <programlisting><![CDATA[@ConversationScoped @Named
+    <programlisting role="JAVA"><![CDATA[@ConversationScoped @Named
 public class CustomerAction {
   @Inject Conversation conversation;
   @PersistenceContext EntityManager entityManager;
@@ -445,15 +440,15 @@ public class CustomerAction {
       by using the <literal>addBeanProperty()</literal> method to add a bean property to the model:
     </para>
     
-    <programlisting><![CDATA[  var model = new Seam.Model();
+    <programlisting role="XHTML"><![CDATA[  var model = new Seam.Model();
   model.addBeanProperty("customer", "CustomerAction", "customer");]]></programlisting>
   
     <para>
       The first parameter of <literal>addBeanProperty()</literal> is the <emphasis>alias</emphasis> (in this case
       <literal>customer</literal>), which is used to access the value via the <literal>getValue()</literal> method.
       The <literal>addBeanProperty()</literal> and <literal>addBean()</literal> methods can be called multiple times
-      to bind multiple values to the model.  An important thing to note is that the values can come from multiple 
-      server-side beans, they don't all need to come from the same bean.
+      to bind multiple values to the model.  An important thing to note is that the values may come from multiple 
+      server-side beans, they aren't all required to come from the same bean.
     </para>
 
     <mediaobject>
@@ -468,7 +463,7 @@ public class CustomerAction {
       specify this value as an action method parameter:
     </para>
     
-    <programlisting><![CDATA[  var action = new Seam.Action()
+    <programlisting role="XHTML"><![CDATA[  var action = new Seam.Action()
     .setBeanType("CustomerAction")
     .setMethod("editCustomer")
     .addParam(123);]]></programlisting>
@@ -480,7 +475,7 @@ public class CustomerAction {
       response.  The callback method is passed a reference to the model object as a parameter.
     </para>
     
-    <programlisting><![CDATA[  var callback = function(model) { alert("Fetched customer: " model.getValue("customer").firstName + 
+    <programlisting role="XHTML"><![CDATA[  var callback = function(model) { alert("Fetched customer: " model.getValue("customer").firstName + 
     " " + model.getValue("customer").lastName); };
   model.fetch(action, callback);]]></programlisting>
   
@@ -488,11 +483,129 @@ public class CustomerAction {
       When the server receives a model fetch request, it first invokes the action (if one is specified) before 
       reading the requested property values and returning them to the client.
     </para>
+    
+    <section>
+      <title>Fetching a bean value</title>
+      
+      <para>
+        Alternatively, if you don't wish to fetch a bean <emphasis>property</emphasis> but rather a bean itself
+        (such as a value created by a producer method) then the <literal>addBean()</literal> method is used instead.
+        Let's say we have a producer method that returns a qualified <literal>UserSettings</literal> value:
+      </para>
+      
+      <programlisting role="JAVA"><![CDATA[  @Produces @ConversationScoped @Settings UserSettings getUserSettings() {
+    /* snip code */ 
+  }]]></programlisting>
+  
+      <para>
+        We would add this value to our model with the following code:  
+      </para>
+      
+      <programlisting role="XHTML"><![CDATA[  model.addBean("settings", "UserSettings", "@Settings");]]></programlisting>
+      
+      <para>
+        The first parameter is the local alias for the value, the second parameter is the fully qualified
+        class of the bean, and the third (and subsequent) parameter/s are optional bean qualifiers.
+      </para>
+
+    </section>
+  </section>
+  
+  <section>
+    <title>Modifying model values</title>
+    
+    <para>
+      Once a model has been fetched its values may be read using the <literal>getValue()</literal> method.
+      Continuing on with the previous example, we would retrieve the <literal>Customer</literal> object via
+      it's local alias (<literal>customer</literal>) like this:
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  var customer = model.getValue("customer");]]></programlisting>
+    
+    <para>
+      We are then free to read or modify the properties of the value (or any of the other values within its 
+      object graph).
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  alert("Customer name is: " + customer.firstName + " " + customer.lastName);
+  customer.setLastName("Jones"); // was Smith, but Peggy got married on the weekend]]></programlisting>
+    
   </section>
   
   <section>
     <title>Expanding a model</title>
     
+    <para>
+      We can use the Model API's ability to expand a model to load uninitialized branches of the objects in 
+      the model's object graph.  To understand how this works exactly, let's flesh out our example a little 
+      more by adding an <literal>Address</literal> entity class, and creating a one-to-many relationship 
+      between <literal>Customer</literal> and <literal>Address</literal>.
+    </para>
+    
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="images/remoting-model-customer-address-uml.png" format="PNG"/> 
+      </imageobject>
+    </mediaobject>     
+    
+    <programlisting role="JAVA"><![CDATA[@Entity Address implements Serializable {
+  private Integer addressId;
+  private Customer customer;
+  private String unitNumber;
+  private String streetNumber;
+  private String streetName;
+  private String suburb;
+  private String zip;
+  private String state;
+  private String country;
+  
+  @Id @GeneratedValue public Integer getAddressId() {  return addressId; }
+  public void setAddressId(Integer addressId) { this.addressId = addressId; }
+  
+  @ManyToOne public Customer getCustomer() { return customer; }
+  public void setCustomer(Customer customer) { this.customer = customer; }
+  
+  /* Snipped other getter/setter methods */
+  
+}]]></programlisting>
+
+    <para>
+      Here's the new field and methods that we also need to add to the <literal>Customer</literal> class:
+    </para>
+    
+    <programlisting role="JAVA"><![CDATA[  private Collection<Address> addresses;
+
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "customer", cascade = CascadeType.ALL)
+  public Collection<Address> getAddresses() { return addresses; }   
+  public void setAddresses(Collection<Address> addresses) { this.addresses = addresses; }]]></programlisting>  
+  
+    <para>
+      As we can see, the <literal>@OneToMany</literal> annotation on the <literal>getAddresses()</literal>
+      method specifies a <literal>fetch</literal> attribute of <literal>LAZY</literal>, meaning that by 
+      default the customer's addresses won't be loaded automatically when the customer is.  When reading the 
+      <emphasis>uninitialized</emphasis> <literal>addresses</literal> property value from a newly-fetched 
+      <literal>Customer</literal> object in JavaScript, a value of <literal>undefined</literal> will be returned.
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  getValue("customer").addresses == undefined; // returns true]]></programlisting>
+    
+    <para>
+      We can <emphasis>expand</emphasis> the model by making a special request to initialize this uninitialized
+      property value.  The <literal>expand()</literal> operation takes three parameters - the value containing
+      the property to be initialized, the name of the property and an optional callback method.  The following
+      example shows us how the customer's <literal>addresses</literal> property can be initialized:
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  model.expand(model.getValue("customer"), "addresses");]]></programlisting>
+    
+    <para>
+      The <literal>expand()</literal> operation makes an asynchronous request to the server, where the
+      property value is initialized and the value returned to the client.  When the client receives the 
+      response, it reads the initialized value and appends it to the model.
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  // The addresses property now contains an array of address objects
+  alert(model.getValue("customer").addresses.length + " addresses loaded");]]></programlisting>
     
   </section>
   
