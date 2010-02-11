@@ -381,11 +381,14 @@
     <para>
       To fetch a model, one or more values must first be specified using <literal>addBean()</literal> or
       <literal>addBeanProperty()</literal> before invoking the <literal>fetch()</literal> operation.  
+      Let's work through an example
     </para>
     
-    <para>
-      Let's look at an example.  
-    </para>
+    <mediaobject>
+       <imageobject>
+          <imagedata fileref="images/remoting-model-customer-uml-1.png" format="PNG"/> 
+       </imageobject>
+    </mediaobject>    
     
     <programlisting><![CDATA[@Entity Customer implements Serializable {
   private Integer customerId;
@@ -421,11 +424,7 @@
 public class CustomerAction {
   @Inject Conversation conversation;
   @PersistenceContext EntityManager entityManager;
-  private Customer customer;
-  
-  public Customer getCustomer() {
-    return customer; 
-  }
+  public Customer customer;
   
   public void createCustomer() {
     customer = new Customer();
