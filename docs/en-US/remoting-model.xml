@@ -612,7 +612,39 @@ public class CustomerAction {
   <section>
     <title>Applying Changes</title>
     
+    <para>
+      Once you have finished making changes to the values in the model, you can apply them with the 
+      <literal>applyUpdates()</literal> method.  This method scans all of the objects in the model, compares
+      them with their original values and generates a delta which may contain one or more changesets to
+      send to the server.  A changeset is simply a list of property value changes for a single object.
+    </para>
     
+    <para>
+      Like the <literal>fetch()</literal> command you can also specify an action to invoke when applying updates,
+      although the action is invoked <emphasis>after</emphasis> the model updates have been applied.  In a 
+      typical situation the invoked action would do things like commit a database transaction, end the current
+      conversation, etc.
+    </para>
+    
+    <para>
+      Since the <literal>applyUpdates()</literal> method sends an asynchronous request like the 
+      <literal>fetch()</literal> and <literal>expand()</literal> methods, we also need to specify a callback 
+      function if we wish to do something when the operation completes.
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  var action = new Seam.Action();
+    .setBeanType("CustomerAction")
+    .setMethod("saveCustomer");
+    
+  var callback = function() { alert("Customer saved."); };
+     
+  model.applyUpdates(action, callback);]]></programlisting>
+  
+    <para>
+      The <literal>applyUpdates()</literal> method performs a refresh of the model, retrieving the latest
+      state of the objects contained in the model after all updates have been applied and the action method
+      (if specified) invoked.
+    </para>
   </section>
   
 
