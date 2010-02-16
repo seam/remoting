@@ -15,6 +15,7 @@ import org.jboss.seam.remoting.annotations.WebRemote;
 public class PersonAction implements Serializable
 {
    private static final long serialVersionUID = -1923705862231821692L;
+   
    @PersistenceContext EntityManager entityManager;
    @Inject Conversation conversation;
    

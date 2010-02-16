@@ -8,11 +8,11 @@
       <version>3.0.0-SNAPSHOT</version>
    </parent>
    
-   <groupId>org.jboss.seam.remoting.examples</groupId>
-   <artifactId>remoting-helloworld</artifactId>
+   <groupId>org.jboss.seam.remoting</groupId>
+   <artifactId>seam-remoting-helloworld-example</artifactId>
    <packaging>war</packaging>
    <version>1.0.0-SNAPSHOT</version>
-   <name>Seam Remoting Examples: Helloworld</name>
+   <name>Seam Remoting Helloworld Example</name>
      
    <dependencies>
       <!--dependency>
