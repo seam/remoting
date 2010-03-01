@@ -3,7 +3,7 @@
   xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
    <id>bin</id>
    <formats>
-      <format>dir</format>
+      <format>zip</format>
    </formats>
    <includeBaseDirectory>false</includeBaseDirectory>
    <moduleSets>
@@ -12,9 +12,18 @@
             <include>org.jboss.seam.remoting:seam-remoting-core</include>
          </includes>
          <binaries>
-            <outputDirectory>modules/${artifactId}</outputDirectory>
+            <outputDirectory>seam-remoting/lib</outputDirectory>
             <unpack>false</unpack>
          </binaries>
+      </moduleSet>
+      <moduleSet>
+        <includes>
+          <include>org.jboss.seam.remoting:seam-remoting-reference-guide</include>
+        </includes>
+        <binaries>
+          <outputDirectory>seam-remoting/doc/reference</outputDirectory>
+          <unpack>true</unpack>
+        </binaries>
       </moduleSet>
    </moduleSets>
 </assembly>
