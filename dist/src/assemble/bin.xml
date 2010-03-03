@@ -16,6 +16,7 @@
             <unpack>false</unpack>
          </binaries>
       </moduleSet>
+
       <moduleSet>
         <includes>
           <include>org.jboss.seam.remoting:seam-remoting-reference-guide</include>
@@ -25,5 +26,15 @@
           <unpack>true</unpack>
         </binaries>
       </moduleSet>
+
+      <moduleSet>
+        <includes>
+          <include>org.jboss.seam.remoting:seam-remoting-helloworld-example</include>
+        </includes>
+        <sources>
+          <outputDirectory>seam-remoting/examples/helloworld</outputDirectory>
+          <includeModuleDirectory>false</includeModuleDirectory>
+        </sources>
+     </moduleSet>
    </moduleSets>
 </assembly>
