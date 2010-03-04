@@ -21,7 +21,6 @@
       <module>docs</module>
       <module>examples/helloworld</module>
       <module>examples/model</module>
-      <module>dist</module>
    </modules>
    
    <build>
