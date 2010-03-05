@@ -15,7 +15,7 @@ examples/
 
   Seam Remoting Examples
   
-artifacts/
+lib/
 
   Seam Remoting jar files
   
@@ -44,3 +44,6 @@ First beta release of Seam Remoting 3.x, ported from Seam 2.x to CDI.
 * Added new feature - Model API
 * Simplified JavaScript stubs for server-side beans
 * Added option to compress remote.js - add ?compress=true to URL
+* Experimental JMS support (that was present in Seam 2.x) has been removed - this feature will be
+  provided at a later date by a unified AJAX event bus.
+* Support for batch requests has been removed

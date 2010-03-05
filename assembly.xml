@@ -6,16 +6,47 @@
       <format>zip</format>
    </formats>
    <includeBaseDirectory>false</includeBaseDirectory>
+   
+   <fileSets>
+      <fileSet>
+         <directory>core/target/apidocs</directory>
+         <outputDirectory>seam-remoting/doc/apidocs</outputDirectory>
+         <includes>
+            <include>**</include>
+         </includes>
+      </fileSet>
+      
+      <fileSet>
+         <directory>examples</directory>
+         <outputDirectory>seam-remoting/examples</outputDirectory>
+         <useDefaultExcludes>true</useDefaultExcludes>
+         <includes>
+            <include>helloworld/pom.xml</include>
+            <include>helloworld/src/**</include>
+            <include>model/pom.xml</include>
+            <include>model/src/**</include>
+         </includes>
+      </fileSet>
+      
+      <fileSet>
+        <directory>.</directory>
+        <outputDirectory>seam-remoting</outputDirectory>
+        <includes>
+           <include>readme.txt</include>
+           <include>lgpl.txt</include>
+        </includes>
+      </fileSet>
+   </fileSets>
 
    <moduleSets>
       <moduleSet>
          <includes>
-            <include>org.jboss.seam.remoting:seam-remoting-core</include>
+            <include>org.jboss.seam.remoting:seam-remoting-core:jar</include>
          </includes>
          <binaries>
             <outputDirectory>seam-remoting/lib</outputDirectory>
             <unpack>false</unpack>
-         </binaries>
+         </binaries>         
       </moduleSet>
 
       <moduleSet>
@@ -28,14 +59,5 @@
         </binaries>
       </moduleSet>
 
-      <moduleSet>
-        <includes>
-          <include>org.jboss.seam.remoting:seam-remoting-helloworld-example</include>
-        </includes>
-        <sources>
-          <outputDirectory>seam-remoting/examples/helloworld</outputDirectory>
-          <includeModuleDirectory>false</includeModuleDirectory>
-        </sources>
-     </moduleSet>
    </moduleSets>
 </assembly>

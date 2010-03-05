@@ -14,24 +14,7 @@
    <packaging>jar</packaging>   
    <name>Seam Remoting</name>
   
-   <!-- Snapshots repo to get parent -->
-   <repositories>
-      <repository>
-         <id>oss.sonatype.org/jboss-snapshots</id>
-         <name>JBoss (Nexus) Snapshots Repository</name>
-         <url>http://oss.sonatype.org/content/repositories/jboss-snapshots</url>
-         <releases>
-            <enabled>false</enabled>
-         </releases>
-         <snapshots>
-            <enabled>true</enabled>
-            <updatePolicy>never</updatePolicy>
-         </snapshots>
-      </repository>
-   </repositories>
-
    <dependencies>
-
       <dependency>
          <groupId>javax.el</groupId>
          <artifactId>el-api</artifactId>
@@ -94,10 +77,23 @@
       </dependency>
    </dependencies>
 
-   <scm>
-      <connection>scm:svn:http://anonsvn.jboss.org/repos/seam/modules/remoting/trunk</connection>
-      <developerConnection>scm:svn:https://svn.jboss.org/repos/seam/modules/remoting/trunk</developerConnection>
-      <url>http://fisheye.jboss.org/browse/Seam/modules/remoting/trunk</url>
-   </scm>
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>2.6.1</version>
+            <executions>
+               <execution>
+                  <id>javadoc-jar</id>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
 
 </project>
