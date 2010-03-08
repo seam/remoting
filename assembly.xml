@@ -36,6 +36,14 @@
            <include>lgpl.txt</include>
         </includes>
       </fileSet>
+
+      <fileSet>
+         <directory>core/src/main/java</directory>
+         <outputDirectory>seam-remoting/src</outputDirectory>
+         <includes>
+            <include>**</include>
+         </includes>
+      </fileSet>
    </fileSets>
 
    <moduleSets>
