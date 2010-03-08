@@ -32,7 +32,7 @@
   
       <dependency>
          <groupId>org.jboss.seam.remoting</groupId>
-         <artifactId>remoting-core</artifactId>
+         <artifactId>seam-remoting-core</artifactId>
          <version>${project.version}</version>
       </dependency>      
    </dependencies>
