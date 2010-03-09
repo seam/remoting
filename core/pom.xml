@@ -72,7 +72,7 @@
       <dependency>
          <groupId>org.jboss.weld</groupId>
          <artifactId>weld-core</artifactId>
-         <version>1.0.1-SNAPSHOT</version>
+         <version>1.0.1-Final</version>
          <scope>provided</scope>
       </dependency>
    </dependencies>
