@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN" "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+
+<chapter id="remoting-general">
+  <title>Seam Remoting</title>
+  
+  <para>Seam provides a convenient method of remotely accessing CDI beans from a web page, using AJAX (Asynchronous
+    Javascript and XML). The framework for this functionality is provided with almost no up-front development effort -
+    your beans only require simple annotating to become accessible via AJAX. This chapter describes the steps
+    required to build an AJAX-enabled web page, then goes on to explain the features of the Seam Remoting framework in
+    more detail. </para>
+
+  <section>
+    <title>Configuration</title>
+    <para>To use remoting, the Seam Remoting servlet must first be configured in your <literal>web.xml</literal> file: </para>
+
+    <programlisting role="XML"><![CDATA[<servlet>
+   <servlet-name>Remoting Servlet</servlet-name>
+   <servlet-class>org.jboss.seam.remoting.Remoting</servlet-class>
+   <load-on-startup>1</load-on-startup>
+</servlet>
+
+<servlet-mapping>
+   <servlet-name>Remoting Servlet</servlet-name>
+   <url-pattern>/seam/resource/remoting/*</url-pattern>
+</servlet-mapping>]]></programlisting>
+
+    <para>The next step is to import the necessary Javascript into your web page. There are a minimum of two scripts
+      that must be imported. The first one contains all the client-side framework code that enables remoting
+      functionality:</para>
+
+    <programlisting role="XHTML"><![CDATA[<script type="text/javascript" src="seam/resource/remoting/resource/remote.js"></script>]]></programlisting>
+    
+    <para>For a production environment, you may wish to use a compressed version of <literal>remote.js</literal>.  
+      To do this, simply add the <literal>compress=true</literal> parameter to the end of the url:</para>
+      
+    <programlisting role="XHTML"><![CDATA[<script type="text/javascript" src="seam/resource/remoting/resource/remote.js?compress=true"></script>]]></programlisting>
+    
+    <para>The compressed version has its white space compacted and JavaScript comments removed.  For development and
+      debugging purposes it is recommended that you use the non-compacted version.</para>
+
+    <para>The second script that you need contains the stubs and type definitions for the beans you wish to call. It is
+      generated dynamically based on the method signatures of your beans, and includes type definitions for all of
+      the classes that can be used to call its remotable methods. The name of the script reflects the
+      name of your bean. For example, if you have a named bean annotated with <literal>@Named</literal>, then your script 
+      tag should look like this (for a bean class called <literal>CustomerAction</literal>): </para>
+
+    <programlisting role="XHTML"><![CDATA[<script type="text/javascript" 
+          src="seam/resource/remoting/interface.js?customerAction"></script>]]></programlisting>
+          
+    <para>Otherwise, you can simply specify the fully qualified class name of the bean:</para>
+    
+    <programlisting role="XHTML"><![CDATA[<script type="text/javascript" 
+          src="seam/resource/remoting/interface.js?com.acme.myapp.CustomerAction"></script>]]></programlisting>
+
+    <para>If you wish to access more than one bean from the same page, then include them all as parameters of your
+      script tag: </para>
+
+    <programlisting role="XHTML"><![CDATA[<script type="text/javascript" 
+        src="seam/resource/remoting/interface.js?customerAction&accountAction"></script>]]></programlisting>
+        
+    <section>
+      <title>Dynamic type loading</title>
+      
+      <para>If you forget to import a bean or other class that is required by your bean, don't worry.  Seam Remoting has
+        a dynamic type loading feature that automatically loads any JavaScript stubs for bean types that it doesn't
+        recognize.</para>
+    </section>
+
+  </section>
+
+  <section>
+    <title>The "Seam" object</title>
+
+    <para>Client-side interaction with your beans is all performed via the <literal>Seam</literal> Javascript
+      object. This object is defined in <literal>remote.js</literal>, and you'll be using it to make asynchronous calls
+      against your bean.  It contains methods for creating client-side bean objects and also methods for executing remote
+      requests. The easiest way to become familiar with this object is to start with a simple example.</para>
+
+    <section>
+      <title>A Hello World example</title>
+
+      <para>Let's step through a simple example to see how the <literal>Seam</literal> object works. First of all,
+        let's create a new bean called <literal>helloAction</literal>:</para>
+
+      <programlisting role="JAVA"><![CDATA[@Named
+public class HelloAction implements HelloLocal {
+    @WebRemote public String sayHello(String name) {
+        return "Hello, " + name;
+    }
+}]]></programlisting>
+
+      <para>Take note of the <literal>@WebRemote</literal> annotation on the <literal>sayHello()</literal> method in the 
+        above listing. This annotation makes the method accessible via the Remoting API.  Besides this annotation, there's
+        nothing else required on your bean to enable it for remoting.</para>
+
+      <!--note>
+         <para>If you are performing a persistence operation in the method marked <literal>@WebRemote</literal> you will
+         also need to add a <literal>@Transactional</literal> annotation to the method. Otherwise, your method would
+         execute outside of a transaction without this extra hint.That's because unlike a JSF request, Seam does not
+         wrap the remoting request in a transaction automatically.</para>
+      </note-->
+      
+      <para>Now for our web page - create a new JSF page and import the <literal>helloAction</literal> bean:</para>
+
+      <programlisting role="XHTML"><![CDATA[<script type="text/javascript" 
+        src="seam/resource/remoting/interface.js?helloAction]]></programlisting>
+
+      <para>To make this a fully interactive user experience, let's add a button to our page:</para>
+
+      <programlisting role="XHTML"><![CDATA[<button onclick="javascript:sayHello()">Say Hello</button>]]></programlisting>
+
+      <para>We'll also need to add some more script to make our button actually do something when it's clicked: </para>
+
+      <programlisting role="XHTML"><![CDATA[<script type="text/javascript">
+  //<![CDATA[
+
+  function sayHello() {
+    var name = prompt("What is your name?");
+    Seam.createBean("helloAction").sayHello(name, sayHelloCallback);
+  }
+
+  function sayHelloCallback(result) {
+    alert(result);
+  }
+
+   // ]]>]]&gt;<![CDATA[
+</script>]]></programlisting>
+
+      <para>We're done! Deploy your application and open the page in a web browser. Click the button, and enter a name when
+        prompted. A message box will display the hello message confirming that the call was successful. If you want to
+        save some time, you'll find the full source code for this Hello World example in the 
+        <literal>/examples/helloworld</literal> directory.</para>
+
+      <para>So what does the code of our script actually do? Let's break it down into smaller pieces. To start with,
+        you can see from the Javascript code listing that we have implemented two methods - the first method is
+        responsible for prompting the user for their name and then making a remote request. Take a look at the following
+        line:</para>
+
+      <programlisting role="XHTML">Seam.createBean("helloAction").sayHello(name, sayHelloCallback);</programlisting>
+
+      <para>The first section of this line, <literal>Seam.createBean("helloAction")</literal> returns a
+        proxy, or "stub" for our <literal>helloAction</literal> bean. We can invoke the methods of our bean
+        against this stub, which is exactly what happens with the remainder of the line: 
+        <literal>sayHello(name, sayHelloCallback);</literal>. </para>
+
+      <para>What this line of code in its completeness does, is invoke the <literal>sayHello</literal> method of our
+        bean, passing in <literal>name</literal> as a parameter. The second parameter,
+        <literal>sayHelloCallback</literal> isn't a parameter of our bean's <literal>sayHello</literal> method,
+        instead it tells the Seam Remoting framework that once it receives the response to our request, it should pass
+        it to the <literal>sayHelloCallback</literal> Javascript method. This callback parameter is entirely optional,
+        so feel free to leave it out if you're calling a method with a <literal>void</literal> return type or if you
+        don't care about the result. </para>
+
+      <para>The <literal>sayHelloCallback</literal> method, once receiving the response to our remote request then pops
+        up an alert message displaying the result of our method call. </para>
+    </section>
+
+    <section>
+      <title>Seam.createBean</title>
+
+      <para> The <literal>Seam.createBean</literal> JavaScript method is used to create client-side instances of both
+        action and "state" beans.  For action beans (which are those that contain one or more methods annotated with
+        <literal>@WebRemote</literal>), the stub object provides all of the remotable methods exposed by the bean. 
+        For "state" beans (i.e. beans that simply carry state, for example Entity beans) the stub object provides all
+        the same accessible properties as its server-side equivalent.  Each property also has a corresponding
+        getter/setter method so you can work with the object in JavaScript in much the same way as you would in Java.</para>
+    </section>
+
+  </section>
+  
+  <section>
+    <title>The Context</title>
+
+    <para>The Seam Remoting Context contains additional information which is sent and received as part of a remoting
+      request/response cycle. It currently contains the conversation ID and Call ID, and may be expanded to include other
+      properties in the future. </para>
+
+    <section>
+      <title>Setting and reading the Conversation ID</title>
+
+      <para> If you intend on using remote calls within the scope of a conversation then you need to be able to read or
+        set the conversation ID in the Seam Remoting Context. To read the conversation ID after making a remote request
+        call <literal>Seam.context.getConversationId()</literal>. To set the conversation ID before making a
+        request, call <literal>Seam.context.setConversationId()</literal>. </para>
+
+      <para>If the conversation ID hasn't been explicitly set with
+        <literal>Seam.context.setConversationId()</literal>, then it will be automatically assigned the
+        first valid conversation ID that is returned by any remoting call. If you are working with multiple conversations
+        within your page, then you may need to explicitly set the conversation ID before each call. If you are working
+        with just a single conversation, then you don't need to do anything special. </para>
+    </section>      
+    
+    <section>
+      <title>Remote calls within the current conversation scope</title>
+      
+      <para>In some circumstances it may be required to make a remote call within the scope of the
+        current view's conversation.  To do this, you must explicitly set the conversation ID to that
+        of the view before making the remote call.  This small snippet of JavaScript will set the
+        conversation ID that is used for remoting calls to the current view's conversation ID: </para>
+        
+      <programlisting role="XHTML"><![CDATA[Seam.context.setConversationId( #{conversation.id} );]]></programlisting>
+    </section>
+  </section>
+
+  <section>
+    <title>Working with Data types</title>
+
+    <section>
+      <title>Primitives / Basic Types</title>
+
+      <para>This section describes the support for basic data types. On the server side these values as a rule are
+        compatible with either their primitive type or their corresponding wrapper class. </para>
+
+      <section>
+        <title>String</title>
+
+        <para>Simply use Javascript String objects when setting String parameter values. </para>
+      </section>
+
+      <section>
+        <title>Number</title>
+
+        <para>There is support for all number types supported by Java. On the client side, number values are always
+          serialized as their String representation and then on the server side they are converted to the correct
+          destination type. Conversion into either a primitive or wrapper type is supported for <literal>Byte</literal>,
+          <literal>Double</literal>, <literal>Float</literal>, <literal>Integer</literal>, <literal>Long</literal> and
+          <literal>Short</literal> types. </para>
+      </section>
+
+      <section>
+        <title>Boolean</title>
+
+        <para>Booleans are represented client side by Javascript Boolean values, and server side by a Java boolean.
+        </para>
+      </section>
+    </section>
+
+    <section>
+      <title>JavaBeans</title>
+
+      <para> In general these will be either entity beans or JavaBean classes, or some other non-bean class. Use
+        <literal>Seam.createBean()</literal> to create a new instance of the object. </para>
+    </section>
+
+    <section>
+      <title>Dates and Times</title>
+
+      <para>Date values are serialized into a String representation that is accurate to the millisecond. On the client
+        side, use a JavaScript <literal>Date</literal> object to work with date values. On the server side, use any
+        <literal>java.util.Date</literal> (or descendent, such as <literal>java.sql.Date</literal> or
+        <literal>java.sql.Timestamp</literal> class. </para>
+    </section>
+
+    <section>
+      <title>Enums</title>
+
+      <para> On the client side, enums are treated the same as <literal>String</literal>s. When setting the value for an enum parameter,
+        simply use the <literal>String</literal> representation of the enum. Take the following bean as an example: </para>
+
+      <programlisting role="JAVA">@Named
+public class paintAction {
+  public enum Color {red, green, blue, yellow, orange, purple};
+
+  public void paint(Color color) {
+    // code
+  }    
+} </programlisting>
+
+      <para> To call the <literal>paint()</literal> method with the color <literal>red</literal>, pass the parameter
+        value as a <literal>String</literal> literal: </para>
+
+      <programlisting role="XHTML">Seam.createBean("paintAction").paint("red");</programlisting>
+
+      <para> The inverse is also true - that is, if a bean method returns an enum parameter (or contains an enum
+        field anywhere in the returned object graph) then on the client-side it will be converted to a <literal>String</literal>. </para>
+    </section>
+
+    <section>
+      <title>Collections</title>
+
+      <section>
+        <title>Bags</title>
+
+        <para>Bags cover all collection types including arrays, collections, lists, sets, (but excluding Maps - see the
+          next section for those), and are implemented client-side as a JavaScript array. When calling a bean
+          method that accepts one of these types as a parameter, your parameter should be a JavaScript array. If a
+          bean method returns one of these types, then the return value will also be a JavaScript array. The
+          remoting framework is clever enough on the server side to convert the bag to an appropriate type (including
+          sophisticated support for generics) for the bean method call.</para>
+      </section>
+
+      <section>
+        <title>Maps</title>
+
+        <para> As there is no native support for Maps within JavaScript, a simple Map implementation is provided with
+          the Seam Remoting framework. To create a Map which can be used as a parameter to a remote call, create a new
+            <literal>Seam.Map</literal> object: </para>
+
+        <programlisting role="XHTML">var map = new Seam.Map();</programlisting>
+
+        <para> This JavaScript implementation provides basic methods for working with Maps: <literal>size()</literal>,
+            <literal>isEmpty()</literal>, <literal>keySet()</literal>, <literal>values()</literal>,
+          <literal>get(key)</literal>, <literal>put(key, value)</literal>, <literal>remove(key)</literal> and
+            <literal>contains(key)</literal>. Each of these methods are equivalent to their Java counterpart. Where the
+          method returns a collection, such as <literal>keySet()</literal> and <literal>values()</literal>, a JavaScript
+          Array object will be returned that contains the key or value objects (respectively). </para>
+      </section>
+    </section>
+  </section>
+
+  <section>
+    <title>Debugging</title>
+
+    <para> To aid in tracking down bugs, it is possible to enable a debug mode which will display the contents of all
+      the packets send back and forth between the client and server in a popup window. To enable debug mode, set the
+      <literal>Seam.debug</literal> property to <literal>true</literal> in Javascript: </para>
+
+    <programlisting role="XHTML">Seam.debug = true;</programlisting>
+
+    <para>If you want to write your own messages to the debug log, call 
+      <literal>Seam.log(message)</literal>. </para>
+  </section>
+  
+  <section>
+    <title>Handling Exceptions</title>
+    
+    <para>
+      When invoking a remote bean method, it is possible to specify an exception handler which will process
+      the response in the event of an exception during bean invocation.  To specify an exception handler function, 
+      include a reference to it after the callback parameter in your JavaScript:
+    </para>
+    
+    <programlisting><![CDATA[var callback = function(result) { alert(result); };
+var exceptionHandler = function(ex) { alert("An exception occurred: " + ex.getMessage()); };
+Seam.createBean("helloAction").sayHello(name, callback, exceptionHandler);]]></programlisting>
+    
+    <para>
+      If you do not have a callback handler defined, you must specify <literal>null</literal> in its place:
+    </para>
+    
+    <programlisting><![CDATA[var exceptionHandler = function(ex) { alert("An exception occurred: " + ex.getMessage()); };
+Seam.createBean("helloAction").sayHello(name, null, exceptionHandler);]]></programlisting>    
+    
+    <para>
+      The exception object that is passed to the exception handler exposes one method, <literal>getMessage()</literal>
+      that returns the exception message which is produced by the exception thrown by the <literal>@WebRemote</literal>
+      method.
+    </para>
+    
+  </section>
+
+  <section>
+    <title>The Loading Message</title>
+
+    <para> The default loading message that appears in the top right corner of the screen can be modified, its rendering
+      customised or even turned off completely. </para>
+
+    <section>
+      <title>Changing the message</title>
+
+      <para> To change the message from the default "Please Wait..." to something different, set the value of
+          <literal>Seam.loadingMessage</literal>: </para>
+
+      <programlisting role="XHTML">Seam.loadingMessage = "Loading..."; </programlisting>
+    </section>
+
+    <section>
+      <title>Hiding the loading message</title>
+
+      <para> To completely suppress the display of the loading message, override the implementation of
+          <literal>displayLoadingMessage()</literal> and <literal>hideLoadingMessage()</literal> with functions that
+        instead do nothing: </para>
+
+      <programlisting role="XHTML">// don't display the loading indicator
+Seam.displayLoadingMessage = function() {};
+Seam.hideLoadingMessage = function() {};</programlisting>
+    </section>
+
+    <section>
+      <title>A Custom Loading Indicator</title>
+
+      <para> It is also possible to override the loading indicator to display an animated icon, or anything else that
+        you want. To do this override the <literal>displayLoadingMessage()</literal> and
+        <literal>hideLoadingMessage()</literal> messages with your own implementation: </para>
+
+      <programlisting role="XHTML">  Seam.displayLoadingMessage = function() {
+    // Write code here to display the indicator
+  };
+  
+  Seam.hideLoadingMessage = function() {
+    // Write code here to hide the indicator
+  };</programlisting>
+    </section>
+  </section>
+
+  <section>
+    <title>Controlling what data is returned</title>
+
+    <para> When a remote method is executed, the result is serialized into an XML response that is returned to the
+      client. This response is then unmarshaled by the client into a JavaScript object. For complex types (i.e.
+      Javabeans) that include references to other objects, all of these referenced objects are also serialized as part
+      of the response. These objects may reference other objects, which may reference other objects, and so forth. If
+      left unchecked, this object "graph" could potentially be enormous, depending on what relationships exist between
+      your objects. And as a side issue (besides the potential verbosity of the response), you might also wish to
+      prevent sensitive information from being exposed to the client. </para>
+
+    <para> Seam Remoting provides a simple means to "constrain" the object graph, by specifying the
+      <literal>exclude</literal> field of the remote method's <literal>@WebRemote</literal> annotation. This field
+      accepts a String array containing one or more paths specified using dot notation. When invoking a remote method,
+      the objects in the result's object graph that match these paths are excluded from the serialized result packet. </para>
+
+    <para> For all our examples, we'll use the following <literal>Widget</literal> class: </para>
+
+    <programlisting role="JAVA">public class Widget
+{
+  private String value;
+  private String secret;
+  private Widget child;
+  private Map&lt;String,Widget&gt; widgetMap;
+  private List&lt;Widget&gt; widgetList;
+  
+  // getters and setters for all fields
+}</programlisting>
+
+    <section>
+      <title>Constraining normal fields</title>
+
+      <para> If your remote method returns an instance of <literal>Widget</literal>, but you don't want to expose the
+          <literal>secret</literal> field because it contains sensitive information, you would constrain it like this: </para>
+
+      <programlisting role="JAVA">@WebRemote(exclude = {"secret"})
+public Widget getWidget(); </programlisting>
+
+      <para> The value "secret" refers to the <literal>secret</literal> field of the returned object. Now, suppose that
+        we don't care about exposing this particular field to the client. Instead, notice that the
+        <literal>Widget</literal> value that is returned has a field <literal>child</literal> that is also a
+          <literal>Widget</literal>. What if we want to hide the <literal>child</literal>'s <literal>secret</literal>
+        value instead? We can do this by using dot notation to specify this field's path within the result's object
+        graph: </para>
+
+      <programlisting role="JAVA">@WebRemote(exclude = {"child.secret"})
+public Widget getWidget();</programlisting>
+
+    </section>
+
+    <section>
+      <title>Constraining Maps and Collections</title>
+
+      <para> The other place that objects can exist within an object graph are within a <literal>Map</literal> or some
+        kind of collection (<literal>List</literal>, <literal>Set</literal>, <literal>Array</literal>, etc). Collections
+        are easy, and are treated like any other field. For example, if our <literal>Widget</literal> contained a list
+        of other <literal>Widget</literal>s in its <literal>widgetList</literal> field, to constrain the
+        <literal>secret</literal> field of the <literal>Widget</literal>s in this list the annotation would look like
+        this: </para>
+
+      <programlisting role="JAVA">@WebRemote(exclude = {"widgetList.secret"})
+public Widget getWidget();</programlisting>
+
+      <para> To constrain a <literal>Map</literal>'s key or value, the notation is slightly different. Appending
+          <literal>[key]</literal> after the <literal>Map</literal>'s field name will constrain the
+        <literal>Map</literal>'s key object values, while <literal>[value]</literal> will constrain the value object
+        values. The following example demonstrates how the values of the <literal>widgetMap</literal> field have their
+          <literal>secret</literal> field constrained: </para>
+
+      <programlisting role="JAVA">@WebRemote(exclude = {"widgetMap[value].secret"})
+public Widget getWidget(); </programlisting>
+    </section>
+
+    <section>
+      <title>Constraining objects of a specific type</title>
+
+      <para> There is one last notation that can be used to constrain the fields of a type of object no matter where in
+        the result's object graph it appears. This notation uses either the name of the bean (if the object is a
+        named bean) or the fully qualified class name (only if the object is not a named bean) and is expressed
+        using square brackets: </para>
+
+      <programlisting role="JAVA">@WebRemote(exclude = {"[widget].secret"})
+public Widget getWidget(); </programlisting>
+
+    </section>
+
+    <section>
+      <title>Combining Constraints</title>
+
+      <para> Constraints can also be combined, to filter objects from multiple paths within the object graph: </para>
+
+      <programlisting role="JAVA">@WebRemote(exclude = {"widgetList.secret", "widgetMap[value].secret"})
+public Widget getWidget();</programlisting>
+    </section>
+
+  </section>
+  
+  <!--section>
+    <title>Transactional Requests</title>
+    
+    <para>
+      By default there is no active transaction during a remoting request, so if you wish to perform database updates 
+      during a remoting request, you need to annotate the <literal>@WebRemote</literal> method with 
+      <literal>@Transactional</literal>, like so:
+    </para>
+    
+    <programlisting><![CDATA[  @WebRemote @Transactional(TransactionPropagationType.REQUIRED)
+  public void updateOrder(Order order) {
+    entityManager.merge(order);
+  }]]></programlisting>
+  </section-->
+
+</chapter>

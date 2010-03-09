@@ -1,0 +1,651 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN" "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+
+<chapter id="remoting-model">
+  <title>Seam Remoting - Model API</title>
+  
+  <section>
+    <title>Introduction</title>
+    <para>
+      The Model API builds on top of Seam Remoting's object serialization features to provide a 
+      <emphasis>component-based</emphasis> approach to working with a server-side object model, as 
+      opposed to the <emphasis>RPC-based</emphasis> approach provided by the standard Remoting API.  
+      This allows a client-side representation of a server-side object graph to be modified ad hoc
+      by the client, after which the changes made to the objects in the graph can be 
+      <emphasis>applied</emphasis> to the corresponding server-side objects.  When applying the 
+      changes the client determines exactly which objects have been modified by recursively walking 
+      the client-side object tree and generating a delta by comparing the original property values 
+      of the objects with their new property values.
+    </para>
+    
+    <para>
+      This approach, when used in conjunction with the extended persistence context provided by Seam 
+      elegantly solves a number of problems faced by AJAX developers when working remotely with 
+      persistent objects.  A persistent, managed object graph can be loaded at the start of
+      a new conversation, and then across multiple requests (and within the same transaction) the client
+      can fetch the objects, make changes to them and apply those changes to the same managed objects after
+      which the long-running transaction can be committed when the conversation ends.
+    </para>
+    
+    <para>
+      One other useful feature of the Model API is its ability to <emphasis>expand</emphasis> a model.
+      For example, if you are working with entities with lazy-loaded associations it is usually not a good idea
+      to blindly fetch the associated objects (which may in turn themselves contain associations 
+      to other entities, ad nauseum), as you may inadvertently end up fetching the bulk of your database.
+      Seam Remoting already knows how to deal with lazy-loaded associations by automatically excluding
+      them when marshalling instances of entity beans, and assigning them a client-side value of
+      <literal>undefined</literal> (which is a special JavaScript value, distinct from <literal>null</literal>).  
+      The Model API goes one step further by giving the client the option of manipulating the associated objects 
+      also.  By providing an <emphasis>expand</emphasis> operation, it allows for the initialization of a 
+      previously-uninitialized object property (such as a lazy-loaded collection), by dynamically "grafting" 
+      the initialized value onto the object graph.  By <emphasis>expanding</emphasis> the model in this way, 
+      we have at our disposal a powerful tool for building dynamic client interfaces.
+    </para>
+  </section>
+  
+  <section>
+    <title>Model Operations</title>
+    
+    <para>
+      For the methods of the Model API that accept action parameters, an instance of 
+      <literal>Seam.Action</literal> should be used. The constructor for 
+      <literal>Seam.Action</literal> takes no parameters:
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  var action = new Seam.Action();]]></programlisting>    
+    
+    <para>
+      The following table lists the methods used to define the action.  Each of the following methods
+      return a reference to the <literal>Seam.Action</literal> object, so methods can be chained.
+    </para>
+  
+    <table>
+      <title>Seam.Action method reference</title>
+      
+      <tgroup cols="2">
+        <colspec colnum="1" colwidth="2*" />
+        <colspec colnum="2" colwidth="3*" />
+
+        <thead>
+          <row>
+            <entry align="center">
+              <para>Method</para>
+            </entry>
+            <entry align="center">
+              <para>Description</para>
+            </entry>
+          </row>
+        </thead>
+
+        <tbody>
+          <row>
+            <entry>
+              <para>
+                <literal>setBeanType(beanType)</literal>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                Sets the class name of the bean to be invoked.
+              </para>
+              
+              <itemizedlist>
+                <listitem>              
+                  <literal>beanType</literal> - the fully qualified class name of the bean type to be invoked.
+                </listitem>
+              </itemizedlist>
+            </entry>
+          </row>          
+          
+          <row>
+            <entry>
+              <para>
+                <literal>setQualifiers(qualifiers)</literal>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                Sets the qualifiers for the bean to be invoked.
+              </para>
+              
+              <itemizedlist>
+                <listitem>              
+                  <literal>qualifiers</literal> - a comma-separated list of bean qualifier names.  
+                  The names may either be the simple or fully qualified names of the qualifier classes.
+                </listitem>
+              </itemizedlist>
+            </entry>
+          </row>             
+          
+          <row>
+            <entry>
+              <para>
+                <literal>setMethod(method)</literal>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                Sets the name of the bean method.
+              </para>
+
+              <itemizedlist>
+                <listitem>              
+                  <literal>method</literal> - the name of the bean method to invoke.
+                </listitem>
+              </itemizedlist>              
+            </entry>
+          </row>   
+          
+          <row>
+            <entry>
+              <para>
+                <literal>addParam(param)</literal>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                Adds a parameter value for the action method.  This method should be called once for
+                each parameter value to be added, in the correct parameter order.                
+              </para>
+              
+              <itemizedlist>
+                <listitem>              
+                  <literal>param</literal> - the parameter value to add.
+                </listitem>
+              </itemizedlist>              
+            </entry>
+          </row>                            
+          
+        </tbody>
+      </tgroup>
+    </table>
+        
+    <para>
+      The following table describes the methods provided by the <literal>Seam.Model</literal> object.  To work with
+      the Model API in JavaScript you must first create a new Model object:
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  var model = new Seam.Model();]]></programlisting>    
+    
+    <table>
+      <title>Seam.Model method reference</title>
+      
+      <tgroup cols="2">
+        <colspec colnum="1" colwidth="2*" />
+        <colspec colnum="2" colwidth="3*" />
+
+        <thead>
+          <row>
+            <entry align="center">
+              <para>Method</para>
+            </entry>
+            <entry align="center">
+              <para>Description</para>
+            </entry>
+          </row>
+        </thead>
+
+        <tbody>
+          <row>
+            <entry>
+              <para>
+                <literal>addBean(alias, bean, qualifiers)</literal>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                Adds a bean value to the model.  When the model is fetched, the value of the specified bean
+                will be read and placed into the model, where it may be accessed by using the 
+                <literal>getValue()</literal> method with the specified alias.
+              </para>
+              
+              <para>
+                Can only be used before the model is fetched.
+              </para>
+              
+              <itemizedlist>
+                <listitem>              
+                  <literal>alias</literal> - the local alias for the bean value.
+                </listitem>
+                <listitem>              
+                  <literal>bean</literal> - the name of the bean, either specified by the <literal>@Named</literal>
+                  annotation or the fully qualified class name.
+                </listitem>
+                <listitem>
+                  <literal>qualifiers</literal> (optional) - a list of bean qualifiers.
+                </listitem>
+              </itemizedlist>
+            </entry>
+          </row>
+          
+          <row>
+            <entry>
+              <para>
+                <literal>addBeanProperty(alias, bean, property, qualifiers)</literal>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                Adds a bean property value to the model.  When the model is fetched, the value of the specified 
+                property on the specified bean will be read and placed into the model, where it may be accessed 
+                by using the <literal>getValue()</literal> method with the specified alias.
+              </para>
+              
+              <para>
+                Can only be used before the model is fetched.
+              </para>
+              
+              <para>
+                Example:
+              </para>
+              
+              <programlisting role="XHTML"><![CDATA[  addBeanProperty("account", "AccountAction", "account", "@Qualifier1", "@Qualifier2");]]></programlisting>
+              
+              <itemizedlist>
+                <listitem>              
+                  <literal>alias</literal> - the local alias for the bean value.
+                </listitem>
+                <listitem>              
+                  <literal>bean</literal> - the name of the bean, either specified by the <literal>@Named</literal>
+                  annotation or the fully qualified class name.
+                </listitem>
+                <listitem>              
+                  <literal>property</literal> - the name of the bean property.
+                </listitem>
+                <listitem>
+                  <literal>qualifiers</literal> (optional) - a list of bean qualifiers.  This parameter (and any
+                  after it) are treated as bean qualifiers.
+                </listitem>
+              </itemizedlist>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>
+                <literal>fetch(action, callback)</literal>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                Fetches the model - this operation causes an asynchronous request to be sent to the server.
+                The request contains a list of the beans and bean properties (set by calling the 
+                <literal>addBean()</literal> and <literal>addBeanProperty()</literal> methods) for which values 
+                will be returned. Once the response is received, the callback method (if specified) will be 
+                invoked, passing in a reference to the model as a parameter.
+              </para>
+              
+              <para>
+                A model should only be fetched once.
+              </para>
+                            
+              <itemizedlist>
+                <listitem>              
+                  <literal>action</literal> (optional) - a <literal>Seam.Action</literal> instance representing
+                  the bean action to invoke before the model values are read and stored in the model.                  
+                </listitem>
+                <listitem>              
+                  <literal>callback</literal> (optional) - a reference to a JavaScript function that will be
+                  invoked after the model has been fetched.  A reference to the model instance is passed to
+                  the callback method as a parameter.
+                </listitem>
+              </itemizedlist>
+            </entry>
+          </row>   
+
+          <row>
+            <entry>
+              <para>
+                <literal>getValue(alias)</literal>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                This method returns the value of the object with the specified alias.
+              </para>
+              
+              <itemizedlist>
+                <listitem>              
+                  <literal>alias</literal> - the alias of the value to return.
+                </listitem>
+              </itemizedlist>
+            </entry>
+          </row>             
+          
+          <row>
+            <entry>
+              <para>
+                <literal>expand(value, property, callback)</literal>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                Expands the model by initializing a property value that was previously uninitialized.  This 
+                operation causes an asynchronous request to be sent to the server, where the uninitialized
+                property value (such as a lazy-loaded collection within an entity bean association) is
+                initialized and the resulting value is returned to the client.  Once the response is received, 
+                the callback method (if specified) will be invoked, passing in a reference to the model as a 
+                parameter.
+              </para>
+                            
+              <itemizedlist>
+                <listitem>              
+                  <literal>value</literal> - a reference to the value containing the uninitialized property
+                  to fetch.  This can be any value within the model, and does not need to be a "root" value
+                  (i.e. it doesn't need to be a value specified by <literal>addBean()</literal> or
+                  <literal>addBeanProperty()</literal>, it can exist anywhere within the object graph.
+                </listitem>
+                <listitem>
+                  <literal>property</literal> - the name of the uninitialized property to be initialized.
+                </listitem>                
+                <listitem>              
+                  <literal>callback</literal> (optional) - a reference to a JavaScript function that will be
+                  invoked after the model has been expanded.  A reference to the model instance is passed to
+                  the callback method as a parameter.
+                </listitem>
+              </itemizedlist>
+            </entry>
+          </row>          
+          
+          <row>
+            <entry>
+              <para>
+                <literal>applyUpdates(action, callback)</literal>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                Applies the changes made to the objects contained in the model.  This method causes an 
+                asynchronous request to be sent to the server containing a delta consisting of
+                a list of the changes made to the client-side objects.
+              </para>
+                            
+              <itemizedlist>
+                <listitem>              
+                  <literal>action</literal> (optional) - a <literal>Seam.Action</literal> instance representing 
+                  a bean method to be invoked after the client-side model changes have been applied to their 
+                  corresponding server-side objects.
+                </listitem>         
+                <listitem>              
+                  <literal>callback</literal> (optional) - a reference to a JavaScript function that will be
+                  invoked after the updates have been applied. A reference to the model instance is passed to
+                  the callback method as a parameter.
+                </listitem>
+              </itemizedlist>
+            </entry>
+          </row>                   
+        </tbody>
+      </tgroup>
+      
+    </table>
+    
+    <para>
+      
+    </para>
+  </section>
+  
+  <section>
+    <title>Fetching a model</title>
+    
+    <para>
+      To fetch a model, one or more values must first be specified using <literal>addBean()</literal> or
+      <literal>addBeanProperty()</literal> before invoking the <literal>fetch()</literal> operation.  
+      Let's work through an example - here we have an entity bean called <literal>Customer</literal>:
+    </para>
+   
+    <programlisting role="JAVA"><![CDATA[@Entity Customer implements Serializable {
+  private Integer customerId;
+  private String firstName;
+  private String lastName;
+  
+  @Id @GeneratedValue public Integer getCustomerId() { return customerId; }  
+  public void setCustomerId(Integer customerId) { this.customerId = customerId; }
+  
+  public String getFirstName() { return firstName; }  
+  public void setFirstName(String firstName) { this.firstName = firstName; }
+  
+  public String getLastName() { return lastName; }
+  public void setLastName(String lastName) { this.lastName = lastName; }
+}]]></programlisting>
+
+    <para>
+      We also have a bean called <literal>CustomerAction</literal>, which is responsible for creating and editing
+      <literal>Customer</literal> instances.  Since we're only interested in editing a customer right now, the 
+      following code only shows the <literal>editCustomer()</literal> method:
+    </para>
+
+    
+    <programlisting role="JAVA"><![CDATA[@ConversationScoped @Named
+public class CustomerAction {
+  @Inject Conversation conversation;
+  @PersistenceContext EntityManager entityManager;
+  public Customer customer;
+  
+  public void editCustomer(Integer customerId) {
+    conversation.begin();  
+    customer = entityManager.find(Customer.class, customerId);
+  }
+  
+  public void saveCustomer() {
+    entityManager.merge(customer);
+    conversation.end();
+  }
+}]]></programlisting>
+
+    <para>
+      In the client section of this example, we wish to make changes to an existing <literal>Customer</literal>
+      instance, so we need to use the <literal>editCustomer()</literal> method of <literal>CustomerAction</literal>
+      to first load the customer entity, after which we can access it via the public <literal>customer</literal>
+      field.  Our model object must therefore be configured to fetch the <literal>CustomerAction.customer</literal>
+      property, and to invoke the <literal>editCustomer()</literal> method when the model is fetched.  We start
+      by using the <literal>addBeanProperty()</literal> method to add a bean property to the model:
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  var model = new Seam.Model();
+  model.addBeanProperty("customer", "CustomerAction", "customer");]]></programlisting>
+  
+    <para>
+      The first parameter of <literal>addBeanProperty()</literal> is the <emphasis>alias</emphasis> (in this case
+      <literal>customer</literal>), which is used to access the value via the <literal>getValue()</literal> method.
+      The <literal>addBeanProperty()</literal> and <literal>addBean()</literal> methods can be called multiple times
+      to bind multiple values to the model.  An important thing to note is that the values may come from multiple 
+      server-side beans, they aren't all required to come from the same bean.
+    </para>
+
+    <mediaobject>
+       <imageobject>
+          <imagedata fileref="images/remoting-model-customer-uml-1.png" format="PNG"/> 
+       </imageobject>
+    </mediaobject>   
+    
+    <para>
+      We also specify the action that we wish to invoke (i.e. the <literal>editCustomer()</literal> method).  
+      In this example we know the value of the <literal>customerId</literal> that we wish to edit, so we can 
+      specify this value as an action method parameter:
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  var action = new Seam.Action()
+    .setBeanType("CustomerAction")
+    .setMethod("editCustomer")
+    .addParam(123);]]></programlisting>
+    
+    <para>
+      Once we've specified the bean properties we wish to fetch and the action to invoke, we can then fetch the
+      model.  We pass in a reference to the action object as the first parameter of the <literal>fetch()</literal>
+      method.  Also, since this is an asynchronous request we need to provide a callback method to deal with the 
+      response.  The callback method is passed a reference to the model object as a parameter.
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  var callback = function(model) { alert("Fetched customer: " model.getValue("customer").firstName + 
+    " " + model.getValue("customer").lastName); };
+  model.fetch(action, callback);]]></programlisting>
+  
+    <para>
+      When the server receives a model fetch request, it first invokes the action (if one is specified) before 
+      reading the requested property values and returning them to the client.
+    </para>
+    
+    <section>
+      <title>Fetching a bean value</title>
+      
+      <para>
+        Alternatively, if you don't wish to fetch a bean <emphasis>property</emphasis> but rather a bean itself
+        (such as a value created by a producer method) then the <literal>addBean()</literal> method is used instead.
+        Let's say we have a producer method that returns a qualified <literal>UserSettings</literal> value:
+      </para>
+      
+      <programlisting role="JAVA"><![CDATA[  @Produces @ConversationScoped @Settings UserSettings getUserSettings() {
+    /* snip code */ 
+  }]]></programlisting>
+  
+      <para>
+        We would add this value to our model with the following code:  
+      </para>
+      
+      <programlisting role="XHTML"><![CDATA[  model.addBean("settings", "UserSettings", "@Settings");]]></programlisting>
+      
+      <para>
+        The first parameter is the local alias for the value, the second parameter is the fully qualified
+        class of the bean, and the third (and subsequent) parameter/s are optional bean qualifiers.
+      </para>
+
+    </section>
+  </section>
+  
+  <section>
+    <title>Modifying model values</title>
+    
+    <para>
+      Once a model has been fetched its values may be read using the <literal>getValue()</literal> method.
+      Continuing on with the previous example, we would retrieve the <literal>Customer</literal> object via
+      it's local alias (<literal>customer</literal>) like this:
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  var customer = model.getValue("customer");]]></programlisting>
+    
+    <para>
+      We are then free to read or modify the properties of the value (or any of the other values within its 
+      object graph).
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  alert("Customer name is: " + customer.firstName + " " + customer.lastName);
+  customer.setLastName("Jones"); // was Smith, but Peggy got married on the weekend]]></programlisting>
+    
+  </section>
+  
+  <section>
+    <title>Expanding a model</title>
+    
+    <para>
+      We can use the Model API's ability to expand a model to load uninitialized branches of the objects in 
+      the model's object graph.  To understand how this works exactly, let's flesh out our example a little 
+      more by adding an <literal>Address</literal> entity class, and creating a one-to-many relationship 
+      between <literal>Customer</literal> and <literal>Address</literal>.
+    </para>
+    
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="images/remoting-model-customer-address-uml.png" format="PNG"/> 
+      </imageobject>
+    </mediaobject>     
+    
+    <programlisting role="JAVA"><![CDATA[@Entity Address implements Serializable {
+  private Integer addressId;
+  private Customer customer;
+  private String unitNumber;
+  private String streetNumber;
+  private String streetName;
+  private String suburb;
+  private String zip;
+  private String state;
+  private String country;
+  
+  @Id @GeneratedValue public Integer getAddressId() {  return addressId; }
+  public void setAddressId(Integer addressId) { this.addressId = addressId; }
+  
+  @ManyToOne public Customer getCustomer() { return customer; }
+  public void setCustomer(Customer customer) { this.customer = customer; }
+  
+  /* Snipped other getter/setter methods */
+  
+}]]></programlisting>
+
+    <para>
+      Here's the new field and methods that we also need to add to the <literal>Customer</literal> class:
+    </para>
+    
+    <programlisting role="JAVA"><![CDATA[  private Collection<Address> addresses;
+
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "customer", cascade = CascadeType.ALL)
+  public Collection<Address> getAddresses() { return addresses; }   
+  public void setAddresses(Collection<Address> addresses) { this.addresses = addresses; }]]></programlisting>  
+  
+    <para>
+      As we can see, the <literal>@OneToMany</literal> annotation on the <literal>getAddresses()</literal>
+      method specifies a <literal>fetch</literal> attribute of <literal>LAZY</literal>, meaning that by 
+      default the customer's addresses won't be loaded automatically when the customer is.  When reading the 
+      <emphasis>uninitialized</emphasis> <literal>addresses</literal> property value from a newly-fetched 
+      <literal>Customer</literal> object in JavaScript, a value of <literal>undefined</literal> will be returned.
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  getValue("customer").addresses == undefined; // returns true]]></programlisting>
+    
+    <para>
+      We can <emphasis>expand</emphasis> the model by making a special request to initialize this uninitialized
+      property value.  The <literal>expand()</literal> operation takes three parameters - the value containing
+      the property to be initialized, the name of the property and an optional callback method.  The following
+      example shows us how the customer's <literal>addresses</literal> property can be initialized:
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  model.expand(model.getValue("customer"), "addresses");]]></programlisting>
+    
+    <para>
+      The <literal>expand()</literal> operation makes an asynchronous request to the server, where the
+      property value is initialized and the value returned to the client.  When the client receives the 
+      response, it reads the initialized value and appends it to the model.
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  // The addresses property now contains an array of address objects
+  alert(model.getValue("customer").addresses.length + " addresses loaded");]]></programlisting>
+    
+  </section>
+  
+  <section>
+    <title>Applying Changes</title>
+    
+    <para>
+      Once you have finished making changes to the values in the model, you can apply them with the 
+      <literal>applyUpdates()</literal> method.  This method scans all of the objects in the model, compares
+      them with their original values and generates a delta which may contain one or more changesets to
+      send to the server.  A changeset is simply a list of property value changes for a single object.
+    </para>
+    
+    <para>
+      Like the <literal>fetch()</literal> command you can also specify an action to invoke when applying updates,
+      although the action is invoked <emphasis>after</emphasis> the model updates have been applied.  In a 
+      typical situation the invoked action would do things like commit a database transaction, end the current
+      conversation, etc.
+    </para>
+    
+    <para>
+      Since the <literal>applyUpdates()</literal> method sends an asynchronous request like the 
+      <literal>fetch()</literal> and <literal>expand()</literal> methods, we also need to specify a callback 
+      function if we wish to do something when the operation completes.
+    </para>
+    
+    <programlisting role="XHTML"><![CDATA[  var action = new Seam.Action();
+    .setBeanType("CustomerAction")
+    .setMethod("saveCustomer");
+    
+  var callback = function() { alert("Customer saved."); };
+     
+  model.applyUpdates(action, callback);]]></programlisting>
+  
+    <para>
+      The <literal>applyUpdates()</literal> method performs a refresh of the model, retrieving the latest
+      state of the objects contained in the model after all updates have been applied and the action method
+      (if specified) invoked.
+    </para>
+  </section>
+  
+
+</chapter>
