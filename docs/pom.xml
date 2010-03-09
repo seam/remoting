@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
    
    <parent>
@@ -9,7 +10,7 @@
 
    <groupId>org.jboss.seam.remoting</groupId>
    <artifactId>seam-remoting-reference-guide</artifactId>
-   <version>3.0.0-Beta1</version>
+   <version>3.0.0-SNAPSHOT</version>
    <packaging>jdocbook</packaging>
    <name>Seam Remoting Reference Guide</name>
    
@@ -120,9 +121,9 @@
 
 
    <scm>
-      <connection>scm:svn:http://anonsvn.jboss.org/repos/seam/modules/remoting/tags/3.0.0-Beta1/docs</connection>
-      <developerConnection>scm:svn:https://svn.jboss.org/repos/seam/modules/remoting/tags/3.0.0-Beta1/docs</developerConnection>
-      <url>http://fisheye.jboss.org/browse/seam/modules/remoting/docs/tags/3.0.0-Beta1/docs</url>
+      <connection>scm:svn:http://anonsvn.jboss.org/repos/seam/modules/remoting/trunk/docs</connection>
+      <developerConnection>scm:svn:https://svn.jboss.org/repos/seam/modules/remoting/trunk/docs</developerConnection>
+      <url>http://fisheye.jboss.org/browse/seam/modules/remoting/docs</url>
    </scm>
    
 </project>
