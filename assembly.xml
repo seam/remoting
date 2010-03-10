@@ -9,7 +9,7 @@
    
    <fileSets>
       <fileSet>
-         <directory>core/target/apidocs</directory>
+         <directory>core/target/site/apidocs</directory>
          <outputDirectory>seam-remoting/doc/apidocs</outputDirectory>
          <includes>
             <include>**</include>
@@ -39,7 +39,7 @@
 
       <fileSet>
          <directory>core/src/main/java</directory>
-         <outputDirectory>seam-remoting/src</outputDirectory>
+         <outputDirectory>seam-remoting/source</outputDirectory>
          <includes>
             <include>**</include>
          </includes>
