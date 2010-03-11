@@ -47,3 +47,24 @@ First beta release of Seam Remoting 3.x, ported from Seam 2.x to CDI.
 * Experimental JMS support (that was present in Seam 2.x) has been removed - this feature will be
   provided at a later date by a unified AJAX event bus.
 * Support for batch requests has been removed
+
+* If using Maven, some artifacts may only be available in the JBoss Repository. To allow Seam Remoting to correctly function, add the JBoss Repository to Maven. Edit your ~/.m2/settings.xml, and add the following entry:
+
+      <profile>
+         <id>jboss.repository</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+         </activation>
+         <repositories>
+            <repository>
+               <id>repository.jboss.org</id>
+               <url>http://repository.jboss.org/maven2</url>
+               <releases>
+                  <enabled>true</enabled>
+               </releases>
+               <snapshots>
+                  <enabled>false</enabled>
+               </snapshots>
+            </repository>
+         </repositories>
+      </profile>
