@@ -5,7 +5,7 @@
    <groupId>org.jboss.seam.remoting</groupId>
    <artifactId>remoting-helloworld-example</artifactId>
    <packaging>war</packaging>
-   <version>3.0.0-Beta1</version>
+   <version>3.0.0-SNAPSHOT</version>
    <name>Seam Remoting Helloworld Example</name>
      
    <dependencies>
