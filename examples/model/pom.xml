@@ -5,7 +5,7 @@
    <groupId>org.jboss.seam.remoting</groupId>
    <artifactId>seam-remoting-model-example</artifactId>
    <packaging>war</packaging>
-   <version>3.0.0-Beta1</version>
+   <version>3.0.0-SNAPSHOT</version>
    <name>Seam Remoting Model Example</name>
    
    <dependencies>
@@ -26,7 +26,7 @@
       <dependency>
          <groupId>org.jboss.seam.remoting</groupId>
          <artifactId>seam-remoting-core</artifactId>
-         <version>3.0.0-Beta1</version>
+         <version>3.0.0-SNAPSHOT</version>
       </dependency>
 
       <dependency>
