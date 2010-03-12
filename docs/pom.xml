@@ -37,6 +37,13 @@
       <defaultGoal>process-classes</defaultGoal>
       <plugins>
          <plugin>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <configuration>
+               <skip>true</skip>
+            </configuration>
+         </plugin>
+
+         <plugin>
             <groupId>org.jboss.maven.plugins</groupId>
             <artifactId>maven-jdocbook-plugin</artifactId>
          </plugin>
