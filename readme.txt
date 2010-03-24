@@ -32,7 +32,7 @@ Seam Framework Home Page:      http://www.seamframework.org
 Downloads:                     http://www.seamframework.org/Download/SeamDownloads
 Forums:                        http://www.seamframework.org/Community/SeamUsers
 Source Code:                   http://anonsvn.jboss.org/repos/seam/modules/remoting/
-Issue Tracking:                http://jira.jboss.org/jira/browse/JBSEAM
+Issue Tracking:                http://jira.jboss.org/jira/browse/SEAMREMOTING
 
 Release Notes
 =============

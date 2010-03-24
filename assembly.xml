@@ -10,7 +10,7 @@
    <fileSets>
       <fileSet>
          <directory>core/target/site/apidocs</directory>
-         <outputDirectory>seam-remoting/doc/apidocs</outputDirectory>
+         <outputDirectory>seam-remoting/doc/api</outputDirectory>
          <includes>
             <include>**</include>
          </includes>
