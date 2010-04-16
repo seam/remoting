@@ -24,6 +24,7 @@ import org.jboss.seam.remoting.Call;
 import org.jboss.seam.remoting.MarshalUtils;
 import org.jboss.seam.remoting.RequestContext;
 import org.jboss.seam.remoting.RequestHandler;
+import org.jboss.seam.remoting.util.Strings;
 import org.jboss.seam.remoting.wrapper.BagWrapper;
 import org.jboss.seam.remoting.wrapper.BeanWrapper;
 import org.jboss.seam.remoting.wrapper.MapWrapper;
@@ -81,7 +82,7 @@ public class ModelHandler implements RequestHandler
          // written it, and non-portable code should be abstracted out
          conversationContext = Container.instance().services().get(ContextLifecycle.class).getConversationContext();
          
-         if (ctx.getConversationId() != null && !ctx.getConversationId().isEmpty())
+         if (ctx.getConversationId() != null && !Strings.isEmpty(ctx.getConversationId()))
          { 
             conversationContext.setBeanStore(new ConversationBeanStore(
                   request.getSession(), false, ctx.getConversationId()));

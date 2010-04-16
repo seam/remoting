@@ -16,6 +16,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import org.jboss.seam.remoting.AnnotationsParser;
 import org.jboss.seam.remoting.Call;
 import org.jboss.seam.remoting.CallContext;
+import org.jboss.seam.remoting.util.Strings;
 
 /**
  * Manages a model request
@@ -156,7 +157,7 @@ public class Model implements Serializable
          {
             Class<?> beanType = Class.forName(beanName);
             
-            Annotation[] q = qualifiers != null && !qualifiers.isEmpty() ? 
+            Annotation[] q = qualifiers != null && !Strings.isEmpty(qualifiers) ? 
                   new AnnotationsParser(beanType, qualifiers, beanManager).getAnnotations() : 
                      Call.EMPTY_ANNOTATIONS;
 

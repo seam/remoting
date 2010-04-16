@@ -17,6 +17,7 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.jboss.seam.remoting.annotations.WebRemote;
+import org.jboss.seam.remoting.util.Strings;
 import org.jboss.seam.remoting.wrapper.ConversionException;
 import org.jboss.seam.remoting.wrapper.ConversionScore;
 import org.jboss.seam.remoting.wrapper.Wrapper;
@@ -58,7 +59,7 @@ public class Call
          {
             Class<?> beanType = Class.forName(beanName);
             
-            Annotation[] q = qualifiers != null && !qualifiers.isEmpty() ? 
+            Annotation[] q = qualifiers != null && !Strings.isEmpty(qualifiers) ? 
                   new AnnotationsParser(beanType, qualifiers, beanManager).getAnnotations() : 
                      EMPTY_ANNOTATIONS;
 

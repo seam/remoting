@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.jboss.seam.remoting.util.Strings;
 import org.jboss.seam.remoting.wrapper.Wrapper;
 import org.jboss.weld.conversation.ConversationManager;
 import org.slf4j.Logger;
@@ -68,7 +69,7 @@ public class ExecutionHandler implements RequestHandler
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
       
-      if (ctx.getConversationId() != null && !ctx.getConversationId().isEmpty())
+      if (ctx.getConversationId() != null && !Strings.isEmpty(ctx.getConversationId()))
       { 
          // this is non portable ;/
          conversationManager.beginOrRestoreConversation(ctx.getConversationId());
