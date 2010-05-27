@@ -1,0 +1,71 @@
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+   <id>bin</id>
+   <formats>
+      <format>zip</format>
+   </formats>
+   <includeBaseDirectory>false</includeBaseDirectory>
+   
+   <fileSets>
+      <fileSet>
+         <directory>core/target/site/apidocs</directory>
+         <outputDirectory>seam-remoting/doc/api</outputDirectory>
+         <includes>
+            <include>**</include>
+         </includes>
+      </fileSet>
+      
+      <fileSet>
+         <directory>examples</directory>
+         <outputDirectory>seam-remoting/examples</outputDirectory>
+         <useDefaultExcludes>true</useDefaultExcludes>
+         <includes>
+            <include>helloworld/pom.xml</include>
+            <include>helloworld/src/**</include>
+            <include>model/pom.xml</include>
+            <include>model/src/**</include>
+         </includes>
+      </fileSet>
+      
+      <fileSet>
+        <directory>.</directory>
+        <outputDirectory>seam-remoting</outputDirectory>
+        <includes>
+           <include>readme.txt</include>
+           <include>lgpl.txt</include>
+        </includes>
+      </fileSet>
+
+      <fileSet>
+         <directory>core/src/main/java</directory>
+         <outputDirectory>seam-remoting/source</outputDirectory>
+         <includes>
+            <include>**</include>
+         </includes>
+      </fileSet>
+   </fileSets>
+
+   <moduleSets>
+      <moduleSet>
+         <includes>
+            <include>org.jboss.seam.remoting:seam-remoting-core:jar</include>
+         </includes>
+         <binaries>
+            <outputDirectory>seam-remoting/lib</outputDirectory>
+            <unpack>false</unpack>
+         </binaries>         
+      </moduleSet>
+
+      <moduleSet>
+        <includes>
+          <include>org.jboss.seam.remoting:seam-remoting-reference-guide</include>
+        </includes>
+        <binaries>
+          <outputDirectory>seam-remoting/doc/reference</outputDirectory>
+          <unpack>true</unpack>
+        </binaries>
+      </moduleSet>
+
+   </moduleSets>
+</assembly>
