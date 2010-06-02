@@ -17,8 +17,6 @@
    <modules>
       <module>core</module>
       <module>docs</module>
-      <module>examples/helloworld</module>
-      <module>examples/model</module>
    </modules>
 
    <properties>
@@ -27,7 +25,7 @@
 
    <dependencyManagement>
       <dependencies>
-         
+
          <dependency>
             <groupId>org.jboss.seam</groupId>
             <artifactId>seam</artifactId>
@@ -35,17 +33,34 @@
             <type>pom</type>
             <scope>import</scope>
          </dependency>
-         
-         
+
+
          <!-- Override sub-module versions from org.jboss.seam:seam -->
          <dependency>
             <groupId>org.jboss.seam.remoting</groupId>
             <artifactId>seam-remoting-core</artifactId>
             <version>${project.version}</version>
          </dependency>
-         
+
       </dependencies>
    </dependencyManagement>
+
+   <profiles>
+      <profile>
+         <id>distribution</id>
+         <activation>
+            <property>
+               <name>dist</name>
+            </property>
+         </activation>
+         <modules>
+            <module>dist</module>
+            <module>docs</module>
+            <module>examples/helloworld</module>
+            <module>examples/model</module>
+         </modules>
+      </profile>
+   </profiles>
 
    <scm>
       <connection>scm:svn:http://anonsvn.jboss.org/repos/seam/modules/remoting/trunk</connection>
