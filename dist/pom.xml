@@ -11,8 +11,8 @@
    </parent>
 
    <artifactId>seam-remoting-distribution</artifactId>
-   <name>Seam Faces Distribution</name>
-   <description>Builds a Seam Faces release distribution</description>
+   <name>Seam Remoting Distribution</name>
+   <description>Builds a Seam Remoting release distribution</description>
    <packaging>pom</packaging>
 
    <properties>
