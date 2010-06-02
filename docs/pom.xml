@@ -2,9 +2,10 @@
    <modelVersion>4.0.0</modelVersion>
    
    <parent>
-      <groupId>org.jboss.weld</groupId>
-      <artifactId>weld-parent</artifactId>
-      <version>8</version>
+      <groupId>org.jboss.seam.remoting</groupId>
+      <artifactId>seam-remoting-parent</artifactId>
+      <version>3.0.0-SNAPSHOT</version>
+      <relativePath>../pom.xml</relativePath>
    </parent>
 
    <groupId>org.jboss.seam.remoting</groupId>
@@ -12,21 +13,6 @@
    <version>3.0.0-SNAPSHOT</version>
    <packaging>jdocbook</packaging>
    <name>Seam Remoting Reference Guide</name>
-   
-   <pluginRepositories>
-      <pluginRepository>
-         <id>repository.jboss.org</id>
-         <name>JBoss Repository</name>
-         <url>http://repository.jboss.org/maven2</url>
-      </pluginRepository>
-   </pluginRepositories>
-   <repositories>
-      <repository>
-         <id>repository.jboss.org</id>
-         <name>JBoss Repository</name>
-         <url>http://repository.jboss.org/maven2</url>
-      </repository>
-   </repositories>
 
    <properties>
       <pdf.name>remoting-reference.pdf</pdf.name>
@@ -37,56 +23,33 @@
       <defaultGoal>process-classes</defaultGoal>
       <plugins>
          <plugin>
-            <artifactId>maven-deploy-plugin</artifactId>
-            <configuration>
-               <skip>true</skip>
-            </configuration>
-         </plugin>
-
-         <plugin>
             <groupId>org.jboss.maven.plugins</groupId>
             <artifactId>maven-jdocbook-plugin</artifactId>
          </plugin>
+         <!-- Attach docs as a war so dist can retrieve them -->
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>attach-zip</id>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>attach-artifact</goal>
+                  </goals>
+                  <configuration>
+                     <artifacts>
+                        <artifact>
+                           <file>${project.build.outputDirectory}/${project.artifactId}-${project.version}.war</file>
+                           <type>war</type>
+                        </artifact>
+                     </artifacts>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
       </plugins>
    </build>
-
-   <profiles>
-
-      <profile>
-         <id>translations</id>
-         <build>
-            <plugins>
-               <plugin>
-                  <groupId>org.jboss.maven.plugins</groupId>
-                  <artifactId>maven-jdocbook-plugin</artifactId>
-
-                  <executions>
-                     <execution>
-                        <phase>process-resources</phase>
-                        <goals>
-                           <goal>translate</goal>
-                        </goals>
-                     </execution>
-                  </executions>
-
-                  <configuration>
-                     <translations>
-                        <!--translation>it-IT</translation>
-                        <translation>zh-CN</translation>
-                        <translation>zh-TW</translation>
-                        <translation>es-ES</translation>
-                        <translation>ko-KR</translation>
-
-                        <translation>de-DE</translation>
-                        <translation>pt-BR</translation-->
-                     </translations>
-                  </configuration>
-               </plugin>
-            </plugins>
-         </build>
-      </profile>
-
-   </profiles>
 
 
    <scm>
