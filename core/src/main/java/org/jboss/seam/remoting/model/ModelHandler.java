@@ -29,11 +29,8 @@ import org.jboss.seam.remoting.wrapper.BagWrapper;
 import org.jboss.seam.remoting.wrapper.BeanWrapper;
 import org.jboss.seam.remoting.wrapper.MapWrapper;
 import org.jboss.seam.remoting.wrapper.Wrapper;
-import org.jboss.weld.Container;
-import org.jboss.weld.context.ContextLifecycle;
-import org.jboss.weld.context.ConversationContext;
-import org.jboss.weld.conversation.ConversationManager;
-import org.jboss.weld.servlet.ConversationBeanStore;
+import org.jboss.weld.conversation.ConversationManager2;
+import org.jboss.weld.servlet.BeanProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +44,6 @@ public class ModelHandler implements RequestHandler
    private static final Logger log = LoggerFactory.getLogger(ModelHandler.class); 
    
    @Inject BeanManager beanManager;
-   @Inject ConversationManager conversationManager;
    @Inject ModelRegistry registry;
    @Inject Conversation conversation;
    
@@ -74,74 +70,48 @@ public class ModelHandler implements RequestHandler
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
             
-      ConversationContext conversationContext = null;
-      try
-      {         
-         // Initialize the conversation context
-         // TODO - this is non-portable, we should at least use the new ConversationManager API once Nik has
-         // written it, and non-portable code should be abstracted out
-         conversationContext = Container.instance().services().get(ContextLifecycle.class).getConversationContext();
-         
-         if (ctx.getConversationId() != null && !Strings.isEmpty(ctx.getConversationId()))
-         { 
-            conversationContext.setBeanStore(new ConversationBeanStore(
-                  request.getSession(), false, ctx.getConversationId()));
-            conversationContext.setActive(true);  
-            conversationManager.beginOrRestoreConversation(ctx.getConversationId());
-         }
-         else
-         {
-            conversationContext.setBeanStore(new ConversationBeanStore(
-                  request.getSession(), false,  
-                  ((org.jboss.weld.conversation.ConversationImpl) conversation).getUnderlyingId()));
-            conversationContext.setActive(true);
-         }
-         
-         Element modelElement = env.element("body").element("model");
-         String operation = modelElement.attributeValue("operation");
-           
-         if ("expand".equals(operation))
-         {
-            processExpandRequest(modelElement, ctx, response.getOutputStream());  
-         }
-         else
-         {
-            Model model = null;
-            if ("fetch".equals(operation))
-            {
-               model = processFetchRequest(modelElement);
-            }
-            else if ("apply".equals(operation))
-            {
-               model = processApplyRequest(modelElement);
-            }
+      ConversationManager2 conversationManager = BeanProvider.conversationManager(request.getServletContext());
       
-            if (model.getAction() != null && model.getAction().getException() != null)
-            {
-               response.getOutputStream().write(ENVELOPE_TAG_OPEN);
-               response.getOutputStream().write(BODY_TAG_OPEN);         
-               MarshalUtils.marshalException(model.getAction().getException(), 
-                     model.getAction().getContext(), response.getOutputStream());
-               response.getOutputStream().write(BODY_TAG_CLOSE);
-               response.getOutputStream().write(ENVELOPE_TAG_CLOSE);
-               response.getOutputStream().flush();
-               return;
-            }
-            
-            model.evaluate();
-            
-            ctx.setConversationId(conversation.isTransient() ? null : conversation.getId());
-            marshalResponse(model, ctx, response.getOutputStream());            
-         }
+      if (ctx.getConversationId() != null && !Strings.isEmpty(ctx.getConversationId()))
+      {  
+         conversationManager.setupConversation(ctx.getConversationId());
       }
-      finally
+      
+      Element modelElement = env.element("body").element("model");
+      String operation = modelElement.attributeValue("operation");
+        
+      if ("expand".equals(operation))
       {
-         conversationManager.cleanupConversation();
-         if (conversationContext != null)
+         processExpandRequest(modelElement, ctx, response.getOutputStream());  
+      }
+      else
+      {
+         Model model = null;
+         if ("fetch".equals(operation))
          {
-            conversationContext.setBeanStore(null);
-            conversationContext.setActive(false);            
+            model = processFetchRequest(modelElement);
          }
+         else if ("apply".equals(operation))
+         {
+            model = processApplyRequest(modelElement);
+         }
+   
+         if (model.getAction() != null && model.getAction().getException() != null)
+         {
+            response.getOutputStream().write(ENVELOPE_TAG_OPEN);
+            response.getOutputStream().write(BODY_TAG_OPEN);         
+            MarshalUtils.marshalException(model.getAction().getException(), 
+                  model.getAction().getContext(), response.getOutputStream());
+            response.getOutputStream().write(BODY_TAG_CLOSE);
+            response.getOutputStream().write(ENVELOPE_TAG_CLOSE);
+            response.getOutputStream().flush();
+            return;
+         }
+         
+         model.evaluate();
+         
+         ctx.setConversationId(conversation.isTransient() ? null : conversation.getId());
+         marshalResponse(model, ctx, response.getOutputStream());            
       }
    }
    

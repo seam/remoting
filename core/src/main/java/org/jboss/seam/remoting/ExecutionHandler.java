@@ -18,7 +18,8 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jboss.seam.remoting.util.Strings;
 import org.jboss.seam.remoting.wrapper.Wrapper;
-import org.jboss.weld.conversation.ConversationManager;
+import org.jboss.weld.conversation.ConversationManager2;
+import org.jboss.weld.servlet.BeanProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,6 @@ public class ExecutionHandler implements RequestHandler
    private static final Logger log = LoggerFactory.getLogger(ExecutionHandler.class);
 
    @Inject BeanManager beanManager;
-   @Inject ConversationManager conversationManager;
    @Inject Conversation conversation;
 
    /**
@@ -69,10 +69,12 @@ public class ExecutionHandler implements RequestHandler
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
       
+      ConversationManager2 conversationManager = BeanProvider.conversationManager(request.getServletContext());
+
       if (ctx.getConversationId() != null && !Strings.isEmpty(ctx.getConversationId()))
       { 
          // this is non portable ;/
-         conversationManager.beginOrRestoreConversation(ctx.getConversationId());
+         conversationManager.setupConversation(ctx.getConversationId());
       }
 
       // Extract the calls from the request
@@ -82,7 +84,7 @@ public class ExecutionHandler implements RequestHandler
       // Store the conversation ID in the outgoing context
       try
       {
-         ctx.setConversationId(conversation.getId());
+         ctx.setConversationId(conversation.isTransient() ? null : conversation.getId());
       }
       catch (ContextNotActiveException ex)
       {
@@ -118,11 +120,10 @@ public class ExecutionHandler implements RequestHandler
          // First reconstruct all the references
          Element refsNode = callElement.element("refs");
          
-         Iterator iter = refsNode.elementIterator("ref");
+         Iterator<Element> iter = refsNode.elementIterator("ref");
          while (iter.hasNext())
          {
-            call.getContext()
-                  .createWrapperFromElement((Element) iter.next());
+            call.getContext().createWrapperFromElement(iter.next());
          }
 
          // Now unmarshal the ref values

@@ -7,16 +7,16 @@ import javax.enterprise.context.Conversation;
 import javax.enterprise.context.ConversationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
+import org.jboss.seam.persistence.transaction.Transactional;
 import org.jboss.seam.remoting.annotations.WebRemote;
 
-@ConversationScoped
-public class PersonAction implements Serializable
+
+public @ConversationScoped @Transactional class PersonAction implements Serializable
 {
    private static final long serialVersionUID = -1923705862231821692L;
    
-   @PersistenceContext EntityManager entityManager;
+   @Inject EntityManager entityManager;
    @Inject Conversation conversation;
    
    private Person person;
@@ -46,6 +46,10 @@ public class PersonAction implements Serializable
       else
       {
          person = entityManager.merge(person);
+         for (Address address : person.getAddresses())
+         {
+            entityManager.merge(address);
+         }
       }
       
       conversation.end();

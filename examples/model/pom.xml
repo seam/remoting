@@ -31,6 +31,24 @@
       </dependency>
 
       <dependency>
+         <groupId>org.jboss.seam.persistence</groupId>
+         <artifactId>seam-persistence-impl</artifactId>
+         <version>3.0.0-SNAPSHOT</version>
+         <exclusions>
+           <exclusion>
+             <artifactId>junit</artifactId>
+             <groupId>junit</groupId>
+           </exclusion>
+         </exclusions>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.weld</groupId>
+         <artifactId>weld-extensions</artifactId>
+         <version>1.0.0-SNAPSHOT</version>
+      </dependency>
+
+      <dependency>
          <groupId>org.hibernate.javax.persistence</groupId>
          <artifactId>hibernate-jpa-2.0-api</artifactId>
          <scope>provided</scope>

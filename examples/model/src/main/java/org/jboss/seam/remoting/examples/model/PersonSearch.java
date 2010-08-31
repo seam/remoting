@@ -2,9 +2,9 @@ package org.jboss.seam.remoting.examples.model;
 
 import java.util.List;
 
-import javax.inject.Named;
+import javax.enterprise.inject.Model;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.jboss.seam.remoting.annotations.WebRemote;
 
@@ -13,10 +13,9 @@ import org.jboss.seam.remoting.annotations.WebRemote;
  *  
  * @author Shane Bryzak
  */
-@Named("personSearch")
-public class PersonSearch
+public @Model class PersonSearch
 {
-   @PersistenceContext EntityManager entityManager;
+   @Inject EntityManager entityManager;
    
    @WebRemote @SuppressWarnings("unchecked")
    public List<Person> listPeople()

@@ -156,10 +156,9 @@ public class Call
     * 
     * @throws Exception
     */
-   @SuppressWarnings("unchecked")
    public void execute() throws Exception
    {
-      CreationalContext ctx = beanManager.createCreationalContext(targetBean);
+      CreationalContext<?> ctx = beanManager.createCreationalContext(targetBean);
       
       // Get an instance of the component
       Object instance = beanManager.getReference(targetBean, targetBean.getBeanClass(), ctx);;      

@@ -5,7 +5,7 @@
    <parent>
       <artifactId>seam-parent</artifactId>
       <groupId>org.jboss.seam</groupId>
-      <version>1</version>
+      <version>3-SNAPSHOT</version>
    </parent>
 
    <groupId>org.jboss.seam.remoting</groupId>
@@ -44,6 +44,12 @@
             <groupId>org.jboss.seam.remoting</groupId>
             <artifactId>seam-remoting-core</artifactId>
             <version>${project.version}</version>
+         </dependency>
+
+         <dependency>
+            <groupId>org.jboss.weld</groupId>
+            <artifactId>weld-core</artifactId>
+            <version>1.1.0-SNAPSHOT</version>
          </dependency>
 
       </dependencies>

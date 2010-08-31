@@ -13,7 +13,7 @@ import org.jboss.seam.remoting.Remoting;
 import org.jboss.seam.remoting.model.ModelHandler;
 import org.jboss.weld.Container;
 import org.jboss.weld.bootstrap.spi.BeanDeploymentArchive;
-import org.jboss.weld.exceptions.ForbiddenStateException;
+import org.jboss.weld.exceptions.IllegalStateException;
 import org.jboss.weld.manager.BeanManagerImpl;
 import org.jboss.weld.servlet.api.ServletServices;
 
@@ -26,16 +26,17 @@ public class NonInjectionRemoting extends Remoting
       BeanDeploymentArchive war = Container.instance().services().get(ServletServices.class).getBeanDeploymentArchive(ctx);
       if (war == null)
       {
-         throw new ForbiddenStateException(BEAN_DEPLOYMENT_ARCHIVE_MISSING, ctx);
+         throw new IllegalStateException(BEAN_DEPLOYMENT_ARCHIVE_MISSING, ctx);
       }
       BeanManagerImpl beanManager = Container.instance().beanDeploymentArchives().get(war);
       if (beanManager == null)
       {
-         throw new ForbiddenStateException(BEAN_MANAGER_FOR_ARCHIVE_NOT_FOUND, ctx, war);
+         throw new IllegalStateException(BEAN_MANAGER_FOR_ARCHIVE_NOT_FOUND, ctx, war);
       }
       return beanManager;
    }
    
+   @SuppressWarnings("unchecked")
    @Override
    protected ExecutionHandler getExecutionHandler()
    {
@@ -45,6 +46,7 @@ public class NonInjectionRemoting extends Remoting
       return bean.create(beanManager.createCreationalContext(bean));
    }
    
+   @SuppressWarnings("unchecked")
    @Override
    protected InterfaceGenerator getInterfaceHandler()
    {
@@ -54,6 +56,7 @@ public class NonInjectionRemoting extends Remoting
       return bean.create(beanManager.createCreationalContext(bean));
    }
    
+   @SuppressWarnings("unchecked")
    @Override
    protected ModelHandler getModelHandler()
    {

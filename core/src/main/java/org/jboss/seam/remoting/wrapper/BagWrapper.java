@@ -51,7 +51,7 @@ public class BagWrapper extends BaseWrapper implements Wrapper
    {
       try
       {
-         Class cls = Class.forName("org.hibernate.collection.PersistentCollection");
+         Class<?> cls = Class.forName("org.hibernate.collection.PersistentCollection");
          
          // Fix to prevent uninitialized lazy loading in Hibernate
          if (cls.isInstance(value) && !loadLazy)
@@ -116,9 +116,9 @@ public class BagWrapper extends BaseWrapper implements Wrapper
          vals.add(context.createWrapperFromElement((Element) e.elements().get(0)));
       }
 
-      if (type instanceof Class && ((Class) type).isArray())
+      if (type instanceof Class && ((Class<?>) type).isArray())
       {
-         Class arrayType = ((Class) type).getComponentType();
+         Class<?> arrayType = ((Class<?>) type).getComponentType();
          value = Array.newInstance(arrayType, vals.size()); // Fix this
          for (int i = 0; i < vals.size(); i++)
          {
@@ -126,11 +126,11 @@ public class BagWrapper extends BaseWrapper implements Wrapper
          }
       } 
       else if (type instanceof Class && 
-            Collection.class.isAssignableFrom((Class) type))
+            Collection.class.isAssignableFrom((Class<?>) type))
       {
          try
          {
-            value = getConcreteClass((Class) type).newInstance();
+            value = getConcreteClass((Class<?>) type).newInstance();
          } 
          catch (Exception ex)
          {
@@ -144,9 +144,9 @@ public class BagWrapper extends BaseWrapper implements Wrapper
          }
       } 
       else if (type instanceof ParameterizedType && 
-            Collection.class.isAssignableFrom((Class) ((ParameterizedType) type).getRawType()))
+            Collection.class.isAssignableFrom((Class<?>) ((ParameterizedType) type).getRawType()))
       {
-         Class rawType = (Class) ((ParameterizedType) type).getRawType();
+         Class<?> rawType = (Class<?>) ((ParameterizedType) type).getRawType();
          Type genType = Object.class;
 
          for (Type t : ((ParameterizedType) type).getActualTypeArguments())
