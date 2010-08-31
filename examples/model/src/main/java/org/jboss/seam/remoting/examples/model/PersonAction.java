@@ -46,10 +46,6 @@ public @ConversationScoped @Transactional class PersonAction implements Serializ
       else
       {
          person = entityManager.merge(person);
-         for (Address address : person.getAddresses())
-         {
-            entityManager.merge(address);
-         }
       }
       
       conversation.end();
