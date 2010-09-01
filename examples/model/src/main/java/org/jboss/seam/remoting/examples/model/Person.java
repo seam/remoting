@@ -64,7 +64,8 @@ public class Person implements Serializable
       this.dateOfBirth = dateOfBirth;
    }
    
-   @OneToMany(fetch = FetchType.LAZY, mappedBy = "person", cascade = CascadeType.ALL)
+   @OneToMany(fetch = FetchType.LAZY, mappedBy = "person", 
+         cascade = CascadeType.ALL, orphanRemoval = true)
    public Collection<Address> getAddresses()
    {
       return addresses;

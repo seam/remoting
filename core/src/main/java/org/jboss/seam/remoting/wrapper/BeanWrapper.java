@@ -176,8 +176,7 @@ public class BeanWrapper extends BaseWrapper implements Wrapper
       }
       finally
       {
-         if (f != null)
-            f.setAccessible(accessible);
+         if (f != null) f.setAccessible(accessible);
       }      
    }
    

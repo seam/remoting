@@ -188,7 +188,7 @@ public class ModelHandler implements RequestHandler
       }      
    }
    
-   @SuppressWarnings("unchecked")
+   @SuppressWarnings({ "unchecked", "unused" })
    private Model processApplyRequest(Element modelElement)
       throws Exception
    {
@@ -253,7 +253,7 @@ public class ModelHandler implements RequestHandler
                      else
                      {
                         Type t = ((BeanWrapper) target).getBeanPropertyType(name);
-                        if (!cloneBagContents(source.convert(t), ((Wrapper) targetBag).getValue()));
+                        if (!cloneBagContents(source.convert(t), ((Wrapper) targetBag).getValue()))
                         {
                            ((BeanWrapper) target).setBeanProperty(name, source);
                         }
@@ -276,7 +276,8 @@ public class ModelHandler implements RequestHandler
                      else
                      {                        
                         Type t = ((BeanWrapper) target).getBeanPropertyType(name);                        
-                        cloneMapContents((Map) source.convert(t), (Map) targetMap);
+                        cloneMapContents((Map<Object,Object>) source.convert(t), 
+                              (Map<Object,Object>) targetMap);
                      }
                   }                  
                   else
@@ -299,8 +300,8 @@ public class ModelHandler implements RequestHandler
                Wrapper target = model.getCallContext().getOutRefs().get(refId);
                Wrapper source = model.getCallContext().createWrapperFromElement(
                      (Element) changeset.element("map"));
-               cloneMapContents((Map) source.convert(target.getValue().getClass()),
-                     (Map) target.getValue());
+               cloneMapContents((Map<Object,Object>) source.convert(target.getValue().getClass()),
+                     (Map<Object,Object>) target.getValue());
             }
          }
       }
@@ -395,13 +396,10 @@ public class ModelHandler implements RequestHandler
       }
       else if (List.class.isAssignableFrom(cls))
       {
-         List sourceList = (List) sourceBag;
-         List targetList = (List) targetBag;
+         List<Object> sourceList = (List<Object>) sourceBag;
+         List<Object> targetList = (List<Object>) targetBag;
          
-         while (targetList.size() > sourceList.size())
-         {
-            targetList.remove(targetList.size() - 1);
-         }
+         targetList.clear();
          
          for (int i = 0; i < sourceList.size(); i++)
          {
@@ -418,8 +416,8 @@ public class ModelHandler implements RequestHandler
       }
       else if (Set.class.isAssignableFrom(cls))
       {
-         Set sourceSet = (Set) sourceBag;
-         Set targetSet = (Set) targetBag;
+         Set<Object> sourceSet = (Set<Object>) sourceBag;
+         Set<Object> targetSet = (Set<Object>) targetBag;
          
          for (Object e : sourceSet)
          {
@@ -448,8 +446,7 @@ public class ModelHandler implements RequestHandler
     * @param sourceMap
     * @param targetMap
     */
-   @SuppressWarnings("unchecked")
-   private void cloneMapContents(Map sourceMap, Map targetMap)
+   private void cloneMapContents(Map<Object,Object> sourceMap, Map<Object,Object> targetMap)
    {
       for (Object key : sourceMap.keySet())
       {
