@@ -29,8 +29,6 @@ import org.jboss.seam.remoting.wrapper.BagWrapper;
 import org.jboss.seam.remoting.wrapper.BeanWrapper;
 import org.jboss.seam.remoting.wrapper.MapWrapper;
 import org.jboss.seam.remoting.wrapper.Wrapper;
-import org.jboss.weld.conversation.ConversationManager2;
-import org.jboss.weld.servlet.BeanProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,11 +68,11 @@ public class ModelHandler implements RequestHandler
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
             
-      ConversationManager2 conversationManager = BeanProvider.conversationManager(request.getServletContext());
+      //ConversationManager2 conversationManager = BeanProvider.conversationManager(request.getServletContext());
       
       if (ctx.getConversationId() != null && !Strings.isEmpty(ctx.getConversationId()))
       {  
-         conversationManager.setupConversation(ctx.getConversationId());
+         //conversationManager.setupConversation(ctx.getConversationId());
       }
       
       Element modelElement = env.element("body").element("model");

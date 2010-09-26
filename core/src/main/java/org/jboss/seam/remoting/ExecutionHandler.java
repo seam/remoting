@@ -18,8 +18,6 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jboss.seam.remoting.util.Strings;
 import org.jboss.seam.remoting.wrapper.Wrapper;
-import org.jboss.weld.conversation.ConversationManager2;
-import org.jboss.weld.servlet.BeanProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,12 +67,12 @@ public class ExecutionHandler implements RequestHandler
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
       
-      ConversationManager2 conversationManager = BeanProvider.conversationManager(request.getServletContext());
+      //ConversationManager2 conversationManager = BeanProvider.conversationManager(request.getServletContext());
 
       if (ctx.getConversationId() != null && !Strings.isEmpty(ctx.getConversationId()))
       { 
          // this is non portable ;/
-         conversationManager.setupConversation(ctx.getConversationId());
+         //conversationManager.setupConversation(ctx.getConversationId());
       }
 
       // Extract the calls from the request
