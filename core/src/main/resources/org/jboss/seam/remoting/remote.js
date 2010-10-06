@@ -187,6 +187,10 @@ Seam.equals = function(v1, v2) {
 Seam.Map = function() {
   this.elements = [];
 
+  Seam.Map.prototype.clear = function() {
+    this.elements = [];
+  }
+
   Seam.Map.prototype.size = function() {
     return this.elements.length;
   };
