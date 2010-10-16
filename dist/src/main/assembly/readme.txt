@@ -31,7 +31,7 @@ Seam Remoting URLs
 Seam Framework Home Page:      http://www.seamframework.org
 Downloads:                     http://www.seamframework.org/Download/SeamDownloads
 Forums:                        http://www.seamframework.org/Community/SeamUsers
-Source Code:                   http://anonsvn.jboss.org/repos/seam/modules/remoting/
+Source Code:                   git://github.com/seam/js-remoting.git
 Issue Tracking:                http://jira.jboss.org/jira/browse/SEAMREMOTING
 
 Release Notes

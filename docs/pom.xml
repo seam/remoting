@@ -73,9 +73,9 @@
 
 
    <scm>
-      <connection>scm:svn:http://anonsvn.jboss.org/repos/seam/modules/remoting/trunk/docs</connection>
-      <developerConnection>scm:svn:https://svn.jboss.org/repos/seam/modules/remoting/trunk/docs</developerConnection>
-      <url>http://fisheye.jboss.org/browse/seam/modules/remoting/docs</url>
+      <connection>scm:git:git://github.com/seam/js-remoting.git</connection>
+      <developerConnection>scm:git:git@github.com:seam/js-remoting.git</developerConnection>
+      <url>http://github.com/seam/js-remoting</url>
    </scm>
 
 </project>
