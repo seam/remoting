@@ -21,7 +21,9 @@ import javax.jms.TopicConnection;
 @ApplicationScoped
 public class SubscriptionRegistry implements Serializable
 {
-  private String connectionProvider;
+   private static final long serialVersionUID = -3054539610480557675L;
+
+   private String connectionProvider;
 
   private Object monitor = new Object();
 

@@ -13,7 +13,7 @@ public class NonInjectionRemoting extends Remoting
      
    private static BeanManager getBeanManager(ServletContext ctx)
    {
-      return BeanManagerAccessor.getManager();
+      return BeanManagerAccessor.getBeanManager();
    }
    
    @SuppressWarnings("unchecked")

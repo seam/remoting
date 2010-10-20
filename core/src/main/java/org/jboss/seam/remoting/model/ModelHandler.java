@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.jboss.seam.remoting.AbstractRequestHandler;
 import org.jboss.seam.remoting.Call;
 import org.jboss.seam.remoting.MarshalUtils;
 import org.jboss.seam.remoting.RequestContext;
@@ -37,7 +38,7 @@ import org.slf4j.LoggerFactory;
  *  
  * @author Shane Bryzak
  */
-public class ModelHandler implements RequestHandler
+public class ModelHandler extends AbstractRequestHandler implements RequestHandler
 {
    private static final Logger log = LoggerFactory.getLogger(ModelHandler.class); 
    
@@ -67,14 +68,9 @@ public class ModelHandler implements RequestHandler
       Document doc = xmlReader.read(new StringReader(requestData));
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
-            
-      //ConversationManager2 conversationManager = BeanProvider.conversationManager(request.getServletContext());
       
-      if (ctx.getConversationId() != null && !Strings.isEmpty(ctx.getConversationId()))
-      {  
-         //conversationManager.setupConversation(ctx.getConversationId());
-      }
-      
+      activateConversationContext(ctx.getConversationId());
+
       Element modelElement = env.element("body").element("model");
       String operation = modelElement.attributeValue("operation");
         

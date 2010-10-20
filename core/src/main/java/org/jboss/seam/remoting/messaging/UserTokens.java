@@ -11,6 +11,8 @@ import javax.inject.Inject;
 @SessionScoped
 public class UserTokens implements Serializable
 {
+   private static final long serialVersionUID = -6116214194149530630L;
+
    Set<String> tokens = new HashSet<String>();
    
    @Inject SubscriptionRegistry registry;

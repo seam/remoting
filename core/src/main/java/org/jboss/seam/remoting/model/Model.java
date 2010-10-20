@@ -51,8 +51,7 @@ public class Model implements Serializable
          return bean;
       }
       
-      @SuppressWarnings("unchecked")
-      public void evaluate(CreationalContext ctx)
+      public void evaluate(CreationalContext<?> ctx)
       {         
          Object instance = beanManager.getReference(bean, bean.getBeanClass(), ctx);
          

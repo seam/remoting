@@ -72,6 +72,12 @@
          <artifactId>weld-core</artifactId>
          <scope>provided</scope>
       </dependency>
+
+      <dependency>
+         <groupId>org.jboss.weld</groupId>
+         <artifactId>weld-api</artifactId>
+         <scope>provided</scope>
+      </dependency>
       
       <dependency>
          <groupId>org.jboss.weld</groupId>

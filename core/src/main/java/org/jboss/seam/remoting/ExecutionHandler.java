@@ -8,6 +8,8 @@ import java.util.Iterator;
 
 import javax.enterprise.context.ContextNotActiveException;
 import javax.enterprise.context.Conversation;
+import javax.enterprise.context.spi.Context;
+import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +20,8 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jboss.seam.remoting.util.Strings;
 import org.jboss.seam.remoting.wrapper.Wrapper;
+import org.jboss.weld.Container;
+import org.jboss.weld.context.http.HttpConversationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Shane Bryzak
  */
-public class ExecutionHandler implements RequestHandler
+public class ExecutionHandler extends AbstractRequestHandler implements RequestHandler
 {
    private static final Logger log = LoggerFactory.getLogger(ExecutionHandler.class);
 
@@ -67,13 +71,7 @@ public class ExecutionHandler implements RequestHandler
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
       
-      //ConversationManager2 conversationManager = BeanProvider.conversationManager(request.getServletContext());
-
-      if (ctx.getConversationId() != null && !Strings.isEmpty(ctx.getConversationId()))
-      { 
-         // this is non portable ;/
-         //conversationManager.setupConversation(ctx.getConversationId());
-      }
+      activateConversationContext(ctx.getConversationId());
 
       // Extract the calls from the request
       Call call = unmarshalCall(env);
@@ -92,6 +90,8 @@ public class ExecutionHandler implements RequestHandler
       // Package up the response
       marshalResponse(call, ctx, response.getOutputStream());
    }
+   
+
 
    /**
     * Unmarshal the request into a list of Calls.
