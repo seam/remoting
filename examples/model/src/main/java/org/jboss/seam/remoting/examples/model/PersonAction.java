@@ -12,7 +12,7 @@ import org.jboss.seam.persistence.transaction.Transactional;
 import org.jboss.seam.remoting.annotations.WebRemote;
 
 
-public @ConversationScoped @Transactional class PersonAction implements Serializable
+public @ConversationScoped class PersonAction implements Serializable
 {
    private static final long serialVersionUID = -1923705862231821692L;
    
@@ -36,7 +36,7 @@ public @ConversationScoped @Transactional class PersonAction implements Serializ
       person = entityManager.find(Person.class, personId);
    }
    
-   @WebRemote
+   @WebRemote @Transactional
    public void savePerson() throws Exception
    {
       if (person.getPersonId() == null)

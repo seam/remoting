@@ -25,7 +25,6 @@ import org.jboss.seam.remoting.Call;
 import org.jboss.seam.remoting.MarshalUtils;
 import org.jboss.seam.remoting.RequestContext;
 import org.jboss.seam.remoting.RequestHandler;
-import org.jboss.seam.remoting.util.Strings;
 import org.jboss.seam.remoting.wrapper.BagWrapper;
 import org.jboss.seam.remoting.wrapper.BeanWrapper;
 import org.jboss.seam.remoting.wrapper.MapWrapper;
@@ -69,43 +68,50 @@ public class ModelHandler extends AbstractRequestHandler implements RequestHandl
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
       
-      activateConversationContext(ctx.getConversationId());
-
-      Element modelElement = env.element("body").element("model");
-      String operation = modelElement.attributeValue("operation");
-        
-      if ("expand".equals(operation))
+      try
       {
-         processExpandRequest(modelElement, ctx, response.getOutputStream());  
-      }
-      else
-      {
-         Model model = null;
-         if ("fetch".equals(operation))
-         {
-            model = processFetchRequest(modelElement);
-         }
-         else if ("apply".equals(operation))
-         {
-            model = processApplyRequest(modelElement);
-         }
+         activateConversationContext(ctx.getConversationId());
    
-         if (model.getAction() != null && model.getAction().getException() != null)
+         Element modelElement = env.element("body").element("model");
+         String operation = modelElement.attributeValue("operation");
+           
+         if ("expand".equals(operation))
          {
-            response.getOutputStream().write(ENVELOPE_TAG_OPEN);
-            response.getOutputStream().write(BODY_TAG_OPEN);         
-            MarshalUtils.marshalException(model.getAction().getException(), 
-                  model.getAction().getContext(), response.getOutputStream());
-            response.getOutputStream().write(BODY_TAG_CLOSE);
-            response.getOutputStream().write(ENVELOPE_TAG_CLOSE);
-            response.getOutputStream().flush();
-            return;
+            processExpandRequest(modelElement, ctx, response.getOutputStream());  
          }
-         
-         model.evaluate();
-         
-         ctx.setConversationId(conversation.isTransient() ? null : conversation.getId());
-         marshalResponse(model, ctx, response.getOutputStream());            
+         else
+         {
+            Model model = null;
+            if ("fetch".equals(operation))
+            {
+               model = processFetchRequest(modelElement);
+            }
+            else if ("apply".equals(operation))
+            {
+               model = processApplyRequest(modelElement);
+            }
+      
+            if (model.getAction() != null && model.getAction().getException() != null)
+            {
+               response.getOutputStream().write(ENVELOPE_TAG_OPEN);
+               response.getOutputStream().write(BODY_TAG_OPEN);         
+               MarshalUtils.marshalException(model.getAction().getException(), 
+                     model.getAction().getContext(), response.getOutputStream());
+               response.getOutputStream().write(BODY_TAG_CLOSE);
+               response.getOutputStream().write(ENVELOPE_TAG_CLOSE);
+               response.getOutputStream().flush();
+               return;
+            }
+            
+            model.evaluate();
+            
+            ctx.setConversationId(conversation.isTransient() ? null : conversation.getId());
+            marshalResponse(model, ctx, response.getOutputStream());
+         }
+      }
+      finally
+      {
+         deactivateConversationContext();
       }
    }
    

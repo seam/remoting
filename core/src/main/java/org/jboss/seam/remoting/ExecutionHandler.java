@@ -8,8 +8,6 @@ import java.util.Iterator;
 
 import javax.enterprise.context.ContextNotActiveException;
 import javax.enterprise.context.Conversation;
-import javax.enterprise.context.spi.Context;
-import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -18,10 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
-import org.jboss.seam.remoting.util.Strings;
 import org.jboss.seam.remoting.wrapper.Wrapper;
-import org.jboss.weld.Container;
-import org.jboss.weld.context.http.HttpConversationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,24 +66,31 @@ public class ExecutionHandler extends AbstractRequestHandler implements RequestH
       final Element env = doc.getRootElement();
       final RequestContext ctx = new RequestContext(env.element("header"));
       
-      activateConversationContext(ctx.getConversationId());
-
-      // Extract the calls from the request
-      Call call = unmarshalCall(env);
-      call.execute();
-      
-      // Store the conversation ID in the outgoing context
       try
       {
-         ctx.setConversationId(conversation.isTransient() ? null : conversation.getId());
+         activateConversationContext(ctx.getConversationId());
+   
+         // Extract the calls from the request
+         Call call = unmarshalCall(env);
+         call.execute();
+         
+         // Store the conversation ID in the outgoing context
+         try
+         {
+            ctx.setConversationId(conversation.isTransient() ? null : conversation.getId());
+         }
+         catch (ContextNotActiveException ex)
+         {
+            // No active conversation context, ignore
+         }
+   
+         // Package up the response
+         marshalResponse(call, ctx, response.getOutputStream());
       }
-      catch (ContextNotActiveException ex)
+      finally
       {
-         // No active conversation context, ignore
+         deactivateConversationContext();
       }
-
-      // Package up the response
-      marshalResponse(call, ctx, response.getOutputStream());
    }
    
 

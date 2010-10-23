@@ -8,7 +8,9 @@ import org.jboss.weld.Container;
 import org.jboss.weld.context.http.HttpConversationContext;
 
 /**
- * Abstract base class for remoting request handlers
+ * Abstract base class for remoting request handlers. 
+ * 
+ * Currently this class is non-portable
  * 
  * @author Shane Bryzak
  *
@@ -24,6 +26,17 @@ public abstract class AbstractRequestHandler implements RequestHandler
       {
          conversationContext.activate(conversationId);
       }
+      else
+      {
+         conversationContext.activate(null);
+      }
+   }
+   
+   public void deactivateConversationContext()
+   {
+      Instance<Context> instance = instance();
+      HttpConversationContext conversationContext = instance.select(HttpConversationContext.class).get();
+      conversationContext.deactivate();
    }
    
    private static Instance<Context> instance()
