@@ -5,6 +5,7 @@ var Seam = {
   PATH_EXECUTE: "/execute",
   PATH_SUBSCRIPTION: "/subscription",
   PATH_MODEL: "/model",
+  PATH_VALIDATION: "/validate",
   PATH_POLL: "/poll"
 };
 
@@ -18,6 +19,13 @@ Seam.createBean = function(name) {
     }
   }
   return b;
+};
+
+Seam.getBean = function(name) {
+   for (var b in Seam.beans) {
+	 if (Seam.beans[b].__name == name) return Seam.beans[b];
+   }
+  return undefined;
 };
 
 Seam.getBeanType = function(obj) {

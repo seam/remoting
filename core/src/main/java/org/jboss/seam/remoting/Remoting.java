@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.jboss.seam.remoting.model.ModelHandler;
+import org.jboss.seam.remoting.validation.ConstraintTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +37,12 @@ public class Remoting extends HttpServlet
    //private static final String REQUEST_PATH_POLL = "/poll";
    private static final String REQUEST_PATH_INTERFACE = "/interface.js";   
    private static final String REQUEST_PATH_MODEL = "/model";
+   private static final String REQUEST_PATH_VALIDATION = "/validate";
    
    @Inject Instance<ExecutionHandler> executionHandlerInstance;
    @Inject Instance<InterfaceGenerator> interfaceHandlerInstance;
    @Inject Instance<ModelHandler> modelHandlerInstance;
+   @Inject Instance<ConstraintTranslator> translatorInstance;
    
    public static final int DEFAULT_POLL_TIMEOUT = 10; // 10 seconds
    public static final int DEFAULT_POLL_INTERVAL = 1; // 1 second
@@ -260,6 +263,11 @@ public class Remoting extends HttpServlet
    {
       return modelHandlerInstance.get();
    }
+   
+   protected ConstraintTranslator getTranslatorHandler()
+   {
+      return translatorInstance.get();
+   }
 
    public void service(HttpServletRequest request, HttpServletResponse response)
          throws ServletException, IOException
@@ -285,6 +293,9 @@ public class Remoting extends HttpServlet
          {
             getModelHandler().handle(request, response);
          }
+		 else if(REQUEST_PATH_VALIDATION.equals(pathInfo)){
+        	getTranslatorHandler().handle(request, response); 
+         }
          else
          {
             Matcher m = pathPattern.matcher(pathInfo);
@@ -296,11 +307,12 @@ public class Remoting extends HttpServlet
                if (REMOTING_RESOURCE_PATH.equals(path))
                {
                   String compressParam = request.getParameter("compress");
-                  boolean compress = compressParam != null && "true".equals(compressParam);
+                  boolean compress = compressParam != null && "true".equals(compressParam)'
                   
                   writeResource(resource, response, compress);
                   if ("remote.js".equals(resource))
                   {
+					 writeResource("validation.js", response, compress);  
                      appendConfig(response.getOutputStream(), request
                            .getContextPath(), request);
                   }
@@ -313,4 +325,5 @@ public class Remoting extends HttpServlet
          log.error("Error", ex);
       }
    }
+   
 }
