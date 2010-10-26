@@ -307,7 +307,7 @@ public class Remoting extends HttpServlet
                if (REMOTING_RESOURCE_PATH.equals(path))
                {
                   String compressParam = request.getParameter("compress");
-                  boolean compress = compressParam != null && "true".equals(compressParam)'
+                  boolean compress = compressParam != null && "true".equals(compressParam);
                   
                   writeResource(resource, response, compress);
                   if ("remote.js".equals(resource))
@@ -325,5 +325,4 @@ public class Remoting extends HttpServlet
          log.error("Error", ex);
       }
    }
-   
 }
