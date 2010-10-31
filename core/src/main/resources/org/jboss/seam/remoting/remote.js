@@ -62,7 +62,7 @@ Seam.createBeanFunction = function(methodName, paramCount) {
     var eh = (arguments.length > (paramCount + 1)) ? arguments[paramCount + 1] : undefined;
     return Seam.execute(this, methodName, p, c, eh); 
   } 
-}
+};
 
 Seam.registerBean = function(name, metadata, methods) {
   if (Seam.isBeanRegistered(name)) return;
@@ -187,8 +187,8 @@ Seam.Exception = function(msg) {
 
 Seam.equals = function(v1, v2) {
   if (v1 == v2) return true;
-  if (v1 instanceof Date && v2 instanceof Date &&
-      v1.getTime() == v2.getTime()) return true;
+  if (v1 instanceof Date && v2 instanceof Date && v1.getTime() == v2.getTime()) 
+	 return true;
   return false;
 };
 
@@ -197,7 +197,7 @@ Seam.Map = function() {
 
   Seam.Map.prototype.clear = function() {
     this.elements = [];
-  }
+  };
 
   Seam.Map.prototype.size = function() {
     return this.elements.length;

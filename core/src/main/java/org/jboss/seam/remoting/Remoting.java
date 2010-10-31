@@ -185,7 +185,8 @@ public class Remoting extends HttpServlet
       String resource = new String(resourceData);
 
       // Remove comments
-      resource = resource.replaceAll("//[^\\n\\r]*[\\n\\r]", "");
+      resource = resource.replaceAll("/{2,}[^\\n\\r]*[\\n\\r]", "");
+      resource = resource.replaceAll("/\\*([^*]|[\\r\\n]|(\\*+([^*/]|[\\r\\n])))*\\*/", "");
       
       // Remove leading and trailing space and CR/LF's for lines with a statement terminator 
       resource = resource.replaceAll(";\\s*[\\n\\r]+\\s*", ";");
@@ -306,13 +307,16 @@ public class Remoting extends HttpServlet
 
                if (REMOTING_RESOURCE_PATH.equals(path))
                {
-                  String compressParam = request.getParameter("compress");
-                  boolean compress = compressParam != null && "true".equals(compressParam);
+            	  String validationParam = request.getParameter("validation"); 
+                  String compressParam   = request.getParameter("compress");
+                  boolean compress   = compressParam   != null && "true".equals(compressParam);
+                  boolean validation = validationParam != null && "true".equals(validationParam);
                   
                   writeResource(resource, response, compress);
                   if ("remote.js".equals(resource))
                   {
-					 writeResource("validation.js", response, compress);  
+                	 if(validation)  
+					   writeResource("validation.js", response, compress);  
                      appendConfig(response.getOutputStream(), request
                            .getContextPath(), request);
                   }
