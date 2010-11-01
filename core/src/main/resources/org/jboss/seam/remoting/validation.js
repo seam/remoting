@@ -190,45 +190,45 @@ Seam.executeValidation = function(properties , groups) {
 	   for(var j=0;j<keys.length;j++){
 		 var cc = constraints.get(keys[j]);
 		  for(var k=0;k<cc.length;k++){
-			var flag = true;  
-			if(groups || Seam.ValidationGroups != undefined){ ////we need to take account of groups as well  
-			  flag = false;	
-			  if(!groups)
-				groups = Seam.ValidationGroups;
-			  var cgroups = cc[k].groups;
-			  if(cc[k].parent != undefined){
-				cgroups = Seam.findElement(cc[k].parent , cc).groups;  
-			  }
-			  if(cgroups == undefined){  /////Default Group
-				for(var y=0;y<groups.length;y++){
-				  if(Seam.groupExistInHierarchy(metadata , groups[y] , "Default")){
-					flag = true;
-					break;
-				  }	  
-				}
-			  }
-			  else{
-			   for(var y=0;y<groups.length;y++){
-				for(var x=0;x<cgroups.length;x++){
-				  var groupName = Seam.getGroupName(metadata , cgroups[x]);
-				  if(Seam.groupExistInHierarchy(metadata , groups[y] , groupName)){
-					flag = true;
-					break;
-				  }	  
-				 }
-				if(flag) break;
-			   }	   
-			  }
-			  metadata.__groupHierarchy;
+			var flag = false;  
+			if(!groups)
+			  groups = Seam.ValidationGroups;
+			if(groups == undefined)
+			  groups = ["Default"]; ////if no groups provided, will be validated against Default Group
+			else if(typeof groups == "string")
+			   groups = [groups];
+			var cgroups = cc[k].groups;
+			if(cc[k].parent != undefined){
+			  cgroups = Seam.findElement(cc[k].parent , cc).groups;  
 			}
+			if(cgroups == undefined){  /////Default Group
+			  for(var y=0;y<groups.length;y++){
+				 if(Seam.groupExistInHierarchy(metadata , groups[y] , "Default")){
+				   flag = true;
+				   break;
+				 }	  
+			   }
+			}
+			else{
+			  for(var y=0;y<groups.length;y++){
+			   for(var x=0;x<cgroups.length;x++){
+				 var groupName = Seam.getGroupName(metadata , cgroups[x]);
+				 if(Seam.groupExistInHierarchy(metadata , groups[y] , groupName)){
+				   flag = true;
+				   break;
+				 }	  
+				}
+			    if(flag) break;
+			   }	   
+			 }
 			if(flag){
 			  var result = Seam.validateAgainstConstraint(Seam.__validationBeans[i] , keys[j] , cc[k]);  
 			  if(result != -1)
 			    violations.push(result);
 		    } 
-		  }
+		  } 
 	   }
-   }
+    }
   Seam.__validationCallback(violations);  
 };
 
@@ -258,7 +258,7 @@ Seam.groupExistInHierarchy = function(bean , childNode , name){
 		     if(parents != undefined){
 		       for(var i=0;i<parents.length;i++){
 		    	  var parent = parents[i];
-		    	  var pname = parent.name == undefined ? Seam.getGroupName(bean,parent.id) : parent.name;
+		    	  var pname = !parent.name ? Seam.getGroupName(bean,parent.id) : parent.name;
 		    	  if(Seam.groupExistInHierarchy(bean , pname , name))
 		    		return true;  
 		       } 
