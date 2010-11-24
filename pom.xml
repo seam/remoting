@@ -15,7 +15,7 @@
    <name>Seam Remoting Parent</name>
 
    <modules>
-      <module>core</module>
+      <module>impl</module>
       <module>docs</module>
    </modules>
    
