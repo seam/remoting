@@ -11,10 +11,46 @@
 
   <h1>Seam Remoting - Bean Validation Example</h1>
   
-  <script type="text/javascript" src="seam/resource/remoting/resource/remote.js"></script>
-  <!--script type="text/javascript" src="seam/resource/remoting/interface.js?"></script-->
+  <script type="text/javascript" src="seam/resource/remoting/resource/remote.js?validation=true"></script>
+  <script type="text/javascript" src="seam/resource/remoting/interface.js?customerAction"></script>
   
+  <script type="text/javascript">
+    //<![CDATA[
+
+    Seam.debug = true;
+    
+    function validationCallback(violations) {
+      alert("validation failed: " + violations);
+      for (var i = 0; i < violations.length; i++) {
+        alert(violations[i].property + "=" + violations[i].value + 
+              "\n[violation] -> "+violations[i].message);
+      }
+    }
+    
+    function saveCustomer() {       
+       var customer = Seam.createBean("org.jboss.seam.remoting.examples.validation.model.Customer");
+       customer.firstName = document.getElementById("firstName").value;
+       customer.lastName = document.getElementById("lastName").value;       
+       Seam.validateBean(customer, validationCallback);
+    }
+    
+    // ]]>
+  </script> 
   
+  <div>
+    <div class="formRow">
+      <span class="label">First name</span>
+      <input id="firstName" type="text"/>
+    </div>
+
+    <div class="formRow">
+      <span class="label">Last name</span>
+      <input id="lastName" type="text"/>
+    </div>
+
+    <input type="button" onclick="saveCustomer()" value="Save"/>
+  
+  </div>
   
 </body>
 </html>

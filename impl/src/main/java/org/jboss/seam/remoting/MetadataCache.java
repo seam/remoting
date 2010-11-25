@@ -123,11 +123,15 @@ public class MetadataCache
       
       types.add(meta);
    
-      for (Class<?> dependencyClass : getDependencies(beanClass))
+      Set<Class<?>> dependencies = getDependencies(beanClass);
+      if (dependencies != null)
       {
-         if (!types.contains(dependencyClass))
+         for (Class<?> dependencyClass : dependencies)
          {
-            addBeanDependencies(dependencyClass, types);
+            if (!types.contains(dependencyClass))
+            {
+               addBeanDependencies(dependencyClass, types);
+            }
          }
       }
    }
