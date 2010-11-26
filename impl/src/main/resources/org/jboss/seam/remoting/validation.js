@@ -67,7 +67,7 @@ Seam.processMetaData = function(doc , props , vgroups){
          var cc = [];	 
          for(var k=0;k<constraints.length;k++){
            var constraint = function() {};
-           constraint.name = constraints[k].getAttribute("n");
+           constraint.cname = constraints[k].getAttribute("n");
            var parent = constraints[k].getAttribute("parent");
            if(parent != undefined)    ////////////if it is an composed constraint
         	 constraint.parent = parent;  
@@ -76,7 +76,7 @@ Seam.processMetaData = function(doc , props , vgroups){
         	 constraint.params = [];
         	 for(y=0;y<params.length;y++){
         		var param = function() {};
-        		param.name  = params[y].getAttribute("n");
+        		param.pname  = params[y].getAttribute("n");
         		param.value = params[y].getAttribute("v");
         		constraint.params.push(param);
         	  }  
@@ -98,7 +98,7 @@ Seam.processMetaData = function(doc , props , vgroups){
 	   beanMetaData.__groupHierarchy = []; 		 
 	 for(var k=0;k<ghs.length;k++){	 
 	   var groupHierarchy = function() {}; 
-	   groupHierarchy.name = ghs[k].getAttribute("n"); 
+	   groupHierarchy.gname = ghs[k].getAttribute("n"); 
 	   groupHierarchy.id   = ghs[k].getAttribute("id");
 	   var parents = cns(ghs[k] , "gp");
 	   if(parents.length > 0){
@@ -107,7 +107,7 @@ Seam.processMetaData = function(doc , props , vgroups){
 	       var pname = parents[y].getAttribute("n");
 	       var parent = function() {};
 	       if(pname != undefined)
-	        parent.name = pname;
+	        parent.gname = pname;
 	       else
 	    	parent.id = parents[y].getAttribute("id");
 	      groupHierarchy.parents.push(parent);  
@@ -234,7 +234,7 @@ Seam.executeValidation = function(properties , groups) {
 
 Seam.findElement = function(element , array){
 	for(var i=0;i<array.length;i++)
-	  if(array[i].name == element)
+	  if(array[i].cname == element)
 		return array[i];		
   return null; 
 };
@@ -243,7 +243,7 @@ Seam.getGroupName = function(bean , id){
    if(bean.__groupHierarchy != undefined){
 	 for(var i=0;i<bean.__groupHierarchy.length;i++)
 		if(bean.__groupHierarchy[i].id == id)
-	      return bean.__groupHierarchy[i].name;		
+	      return bean.__groupHierarchy[i].gname;		
    }
   return null; 
 };
@@ -253,17 +253,17 @@ Seam.groupExistInHierarchy = function(bean , childNode , name){
 	  return true;	
 	if(bean.__groupHierarchy != undefined){
 	  for(var i=0;i<bean.__groupHierarchy.length;i++){
-		   if(bean.__groupHierarchy[i].name == childNode){
+		   if(bean.__groupHierarchy[i].gname == childNode){
 		     var parents = bean.__groupHierarchy[i].parents;
 		     if(parents != undefined){
-		       for(var i=0;i<parents.length;i++){
-		    	  var parent = parents[i];
-		    	  var pname = !parent.name ? Seam.getGroupName(bean,parent.id) : parent.name;
+		       for(var j=0;j<parents.length;j++){
+		    	  var parent = parents[j];
+		    	  var pname = !parent.gname ? Seam.getGroupName(bean,parent.id) : parent.gname;
 		    	  if(Seam.groupExistInHierarchy(bean , pname , name))
 		    		return true;  
 		       } 
 		     }
-		     
+
 		   }
 		}
 	 }
@@ -278,14 +278,14 @@ Seam.addSubGroup = function(bean , subGroupName , superGroupName){
 	if(metadata.__groupHierarchy != undefined){
 	  var id = -1;	
 	  for(var group in metadata.__groupHierarchy)
-		if(group.name == superGroupName){
+		if(group.gname == superGroupName){
 		 id = group.id;
 		 break;
 		}
 	  if(id == -1)
 		return false;  
 	  hierarchyNode = function() {};
-	  hierarchyNode.name = subGroupName;
+	  hierarchyNode.gname = subGroupName;
 	  hierarchyNode.id   = 50 + id;  /////I can't imagine a situation where there are more than 50 groups...
 	                                ///// and well, if it occurs we are in trouble ;) ,since the whole algorithm sucks for anything more than a dozen groups
 	  hierarchyNode.parents = [function(){}.id = id];
@@ -300,16 +300,16 @@ Seam.addSubGroup = function(bean , subGroupName , superGroupName){
  * all required information about validation failure along with the validation message
  */
 Seam.validateAgainstConstraint = function(bean , property , constraint) {	
-	var validator = Validation.getValidator(constraint.name);
+	var validator = Validation.getValidator(constraint.cname);
 	if(validator == null)
-	  Seam.log("Validator for the requested constraint is not available. ["+constraint.name+"]");
+	  Seam.log("Validator for the requested constraint is not available. ["+constraint.cname+"]");
 	else {	                    //////////////////////get all properties if there is any	
 	  if(validator.properties != null){
 		if(constraint.params != undefined){	
 		  var properties = [];	
 		  for(var i=0;i<constraint.params.length;i++){
 			for(var j=0;j<validator.properties.length;j++){
-			   if(constraint.params[i].name.toLowerCase() == validator.properties[j].toLowerCase()){
+			   if(constraint.params[i].pname.toLowerCase() == validator.properties[j].toLowerCase()){
 				   validator[validator.properties[j]] = constraint.params[i].value; ////////injecting all attributes so they will be available inside validator
 			       properties.push(constraint.params[i]);
 			       break;
@@ -341,14 +341,14 @@ Seam.validateAgainstConstraint = function(bean , property , constraint) {
 };
 
 Seam.getValidationMessage = function(constraint , attrs){
-	var name = constraint.name;
+	var name = constraint.cname;
 	var keys = Seam.__validationMessages.keySet();
 	if(constraint.parent != undefined)
 	  name = constraint.parent; ////if it is an composed constraint, its parent's message will be used instead	
 	else if(attrs != null && attrs.length > 0){
-      name = name + "_["+attrs[0].name+":"+attrs[0].value;
+      name = name + "_["+attrs[0].pname+":"+attrs[0].value;
 	  for(var i=1;i<attrs.length;i++)
-		name += ","+attrs[i].name+":"+attrs[i].value; 
+		name += ","+attrs[i].pname+":"+attrs[i].value; 
 	  name += "]"; 		
 	}	
 	for(var i=0;i<keys.length;i++){
@@ -460,7 +460,7 @@ Validation.registerValidator(new Validator("Pattern" , ["regexp" , "flags"] , fu
 	    regex = new RegExp(this.regexp);
 	  else
 		regex = new RegExp(this.regexp , eval(this.flags));
-	  
+
 	return regex.test(this.currentValue); 
 }) );
 
@@ -483,7 +483,7 @@ Validation.registerValidator(new Validator("CreditCardNumber" , null , function(
 	}
 	if ( digit_sum % 10 == 0 )
 	   return true;
-	
+
 	return false;
 }) );
 

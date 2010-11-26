@@ -51,65 +51,65 @@ public class ConstraintTranslator implements RequestHandler{
 	private static final ValidatorFactory Factory = Validation.buildDefaultValidatorFactory();
 	private static final Logger log = LoggerFactory.getLogger(ConstraintTranslator.class);
 	private static Annotation[] EMPTY_ANNOTATIONS = new Annotation[]{};
-	
+
 	private static final byte[] VALIDATION_TAG_OPEN  = "<validation>".getBytes();
 	private static final byte[] VALIDATION_TAG_CLOSE = "</validation>".getBytes();
-	
+
 	private static final byte[] MESSAGES_TAG_OPEN  = "<messages>".getBytes();
 	private static final byte[] MESSAGES_TAG_CLOSE = "</messages>".getBytes();
-	
+
 	private static final byte[] BEAN_TAG_OPEN_START = "<b n=\"".getBytes();
 	private static final byte[] BEAN_TAG_OPEN_END   = "\">".getBytes();
 	private static final byte[] BEAN_TAG_CLOSE      = "</b>".getBytes();
-	
+
 	private static final byte[] PROPERTY_TAG_OPEN_START = "<p n=\"".getBytes();
 	private static final byte[] PROPERTY_TAG_OPEN_END   = "\">".getBytes();
 	private static final byte[] PROPERTY_TAG_CLOSE      = "</p>".getBytes();
-	
+
 	private static final byte[] CONSTRAINT_TAG_OPEN_START = "<c n=\"".getBytes();
 	private static final byte[] CONSTRAINT_TAG_MIDDLE     = "\" parent=\"".getBytes();
 	private static final byte[] CONSTRAINT_TAG_OPEN_END   = "\">".getBytes();
 	private static final byte[] CONSTRAINT_TAG_CLOSE      = "</c>".getBytes();
-	
+
 	private static final byte[] GROUP_TAG_OPEN  = "<g id=\"".getBytes();
 	private static final byte[] GROUP_TAG_CLOSE = "\" />".getBytes();
-	
+
 	private static final String GROUP_HIERARCHY_TAG_OPEN     = "<gh id=\"";
 	private static final String GROUP_HIERARCHY_TAG_MIDDLE   = "\" n=\"";
 	private static final String GROUP_HIERARCHY_TAG_OPEN_END = "\">";
 	private static final String GROUP_HIERARCHY_CLOSE    = "</gh>";
-	
+
 	private static final String GROUP_PARENT_TAG_OPEN        = "<gp ";
 	private static final String GROUP_PARENT_TAG_MIDDLE_ID   = " id=\"";
 	private static final String GROUP_PARENT_TAG_MIDDLE_NAME = " n=\"";
 	private static final String GROUP_PARENT_TAG_CLOSE       = "\" />";
-	
+
 	private static final byte[] MESSAGE_TAG_OPEN_START  = "<m c=\"".getBytes();
 	private static final byte[] MESSAGE_TAG_OPEN_MIDDLE = "\" msg=\"".getBytes();
 	private static final byte[] MESSAGE_TAG_OPEN_END    = "\" />".getBytes();
-	
+
 	private static final byte[] PARAMETER_TAG_OPEN_START  = "<pm n=\"".getBytes();
 	private static final byte[] PARAMETER_TAG_OPEN_MIDDLE = "\" v=\"".getBytes();
 	private static final byte[] PARAMETER_TAG_OPEN_END    = "\" />".getBytes();
-	
+
 	static ArrayList<String> DEFAULT_ATTRIBUTES = new ArrayList<String>();
 	static {
 		DEFAULT_ATTRIBUTES.add("message");
 		DEFAULT_ATTRIBUTES.add("groups");
 		DEFAULT_ATTRIBUTES.add("payload");
     }
-	
+
 	private HashMap<String , SpecialConsideration> specialConsiderations = new HashMap<String, SpecialConsideration>();
-	
+
 	@Inject BeanManager beanManager;
 	@Inject Conversation conversation;
-	
-	
+
+
 	public ConstraintTranslator(){
 	  specialConsiderations.put("Pattern", new RegexpConsideration());
 	  //////TODO implement a mechanism which would allow developers to add their own SpecialConsiderations dynamically 
 	}
-	
+
 	/*
 	 * handles validation requests by converting Constraint metadata to a client-side readable, XML format
 	 * 
@@ -120,7 +120,7 @@ public class ConstraintTranslator implements RequestHandler{
 	throws Exception 
 	{
 	   response.setContentType("text/xml");
-	   
+
 	   ByteArrayOutputStream out = new ByteArrayOutputStream();
 	   byte[] buffer = new byte[256];
 	   int read = request.getInputStream().read(buffer);
@@ -132,7 +132,7 @@ public class ConstraintTranslator implements RequestHandler{
 
 	   String requestData = new String(out.toByteArray());
 	   log.debug("[ConstraintHandler] Processing remote request: " + requestData);
-	   
+
 	   // Parse the incoming request as XML
 	   SAXReader xmlReader = new SAXReader();
 	   Document doc  = xmlReader.read(new StringReader(requestData));
@@ -145,7 +145,7 @@ public class ConstraintTranslator implements RequestHandler{
 	    }
 	   String[] loadedMsgs = msgs != null ? msgs.getText().split(",,") : null;
 	   Iterator<Element> children = beans.elementIterator();
-	   
+
 	  Locale locale = null; 
 	  try{ 
 	   Bean<Locale> bean = (Bean<Locale>) beanManager.getBeans(Locale.class).iterator().next();
@@ -155,10 +155,10 @@ public class ConstraintTranslator implements RequestHandler{
 	    /////// we cannot get hold of the dynamic Locale instance, so we have to carry on with the server's default one
 		locale = Locale.getDefault();  
 	  }
-	  
+
      this.marshalResponse(children, loadedMsgs, response.getOutputStream(),locale);
     }
-	
+
 	/*
 	 * convert and then write bean's constraint metadata into the response stream,
 	 * it also returns a list of required validation messages
@@ -169,7 +169,7 @@ public class ConstraintTranslator implements RequestHandler{
 	   Bean<?> targetBean = getTargetBean(beanName, qualifiers);
 	   HashMap<String, Object[]> validationMessages = new HashMap<String, Object[]>(32);
 	   HashMap<String , ArrayList<String>> groupHierarechy = new HashMap<String , ArrayList<String>>();
-	   
+
 	   out.write(BEAN_TAG_OPEN_START);
 	   out.write(beanName.getBytes());
 	   out.write(BEAN_TAG_OPEN_END);
@@ -206,10 +206,10 @@ public class ConstraintTranslator implements RequestHandler{
 			}
 		  }
 	      out.write(BEAN_TAG_CLOSE);
-	      
+
 	  return validationMessages;	
 	}  
-	
+
 	/*
 	 * The core functionality 
 	 */
@@ -219,7 +219,7 @@ public class ConstraintTranslator implements RequestHandler{
 			                             String parent)
 	throws IOException
 	{
-		
+
 	   String annotation  = constraint.getAnnotation().annotationType().toString();
 	   annotation = annotation.substring(annotation.lastIndexOf(".")+1); ////I decided not to use the fully-qualified name
 	   Map<String,Object> attrs = constraint.getAttributes();           //// in order to reduce the amount of data that is sent to client 
@@ -284,10 +284,10 @@ public class ConstraintTranslator implements RequestHandler{
 		     builder.deleteCharAt(builder.length()-1);
 			 builder.append("]");
 			 annotation += builder.toString();
-		       
+
 		 }
 		 out.write(CONSTRAINT_TAG_CLOSE);
-		 
+
 		 Set<ConstraintDescriptor<?>> compositeConstraints = constraint.getComposingConstraints();
 		 if(compositeConstraints != null){
 			Iterator<ConstraintDescriptor<?>> composites = compositeConstraints.iterator();
@@ -298,7 +298,7 @@ public class ConstraintTranslator implements RequestHandler{
 		                 ////////// will be overidden by their parent's anyway...   
 	  return parent == null ? new String[] {annotation,(String)attrs.get("message")} : null;
 	}
-	
+
 	/*
 	 * extract the actual Bean
 	 */
@@ -311,7 +311,7 @@ public class ConstraintTranslator implements RequestHandler{
 	         try
 	         {
 	            Class<?> beanType = Class.forName(beanName);
-	            
+
 	            Annotation[] q = qualifiers != null && !Strings.isEmpty(qualifiers) ? 
 	                  new AnnotationsParser(beanType, qualifiers, beanManager).getAnnotations() : 
 	                     EMPTY_ANNOTATIONS;
@@ -322,7 +322,7 @@ public class ConstraintTranslator implements RequestHandler{
 	         {
 	            throw new IllegalArgumentException("Invalid bean class specified: " + beanName);
 	         }
-	                  
+
 	         if (beans.isEmpty())
 	         {
 	            throw new IllegalArgumentException(
@@ -330,7 +330,7 @@ public class ConstraintTranslator implements RequestHandler{
 	                  ", qualifiers [" + qualifiers + "]");         
 	         }         
 	      }  
-	      
+
 	     targetBean = beans.iterator().next();	
 	   return targetBean;  
 	}
@@ -358,14 +358,14 @@ public class ConstraintTranslator implements RequestHandler{
 			 requiredMsgs.putAll(this.translateConstraints(bean.attribute("target").getText(), 
 					                                      qualifier != null ? qualifier.getText() : null ,  
 					                                      out) );
-	 
+
 		  }
-		  
+
 		 out.write(MESSAGES_TAG_OPEN);
 		 if(msgs != null){
 		   for(String msg : msgs)        /////cross-checking already available validation messages with 
 			  requiredMsgs.remove(msg);  ///// the ones we are about to send
-			   
+
 		 }
 		 MessageInterpolator messageHandler = Factory.getMessageInterpolator(); 
 		 for(String key : requiredMsgs.keySet()){
@@ -388,7 +388,7 @@ public class ConstraintTranslator implements RequestHandler{
       out.write(ENVELOPE_TAG_CLOSE);
 	  out.flush();
 	}
-	
+
 	/*
 	 * make the group hierarchy, while ensuring that there is no duplicate entry
 	 */
@@ -416,27 +416,28 @@ public class ConstraintTranslator implements RequestHandler{
 		  name = name.substring(name.lastIndexOf(".")+1);
 		  if(grandParents.length == 0)
 			tags.add(GROUP_PARENT_TAG_OPEN + GROUP_PARENT_TAG_MIDDLE_NAME + name + GROUP_PARENT_TAG_CLOSE);  
-		  else{	
-		   tags.add(GROUP_PARENT_TAG_OPEN + GROUP_PARENT_TAG_MIDDLE_ID + (counter+i+1) + GROUP_PARENT_TAG_CLOSE);	  
-		   BuildGroupHierarchy(parents[i], counter+i+1 , gh);
+		  else{
+		   int temp = BuildGroupHierarchy(parents[i], counter+i+1 , gh);	  
+		   tags.add(GROUP_PARENT_TAG_OPEN + GROUP_PARENT_TAG_MIDDLE_ID + temp + GROUP_PARENT_TAG_CLOSE);	
+
 		  } 
 	   }
 	  gh.put(groupName.substring(groupName.lastIndexOf(".")+1)+":"+counter, tags); 
-	  
+
 	 return counter;  
 	}
-	
+
   /*
    * we need a InterpolatorContext to fetch messages before really validating them. 	
    */
   private final class FakeInterpolatorContext implements MessageInterpolator.Context{
 
 	private ConstraintDescriptor<?> cd;  
-	  
+
     public FakeInterpolatorContext(ConstraintDescriptor<?> descriptor){
     	this.cd = descriptor;
     }
-	  
+
 	public ConstraintDescriptor<?> getConstraintDescriptor() {
 		return this.cd;
 	}
@@ -444,7 +445,8 @@ public class ConstraintTranslator implements RequestHandler{
 	public Object getValidatedValue() {
 		return "?value?"; //////we dont know yet!!
 	}
-	   
+
   }
   
 }
+
