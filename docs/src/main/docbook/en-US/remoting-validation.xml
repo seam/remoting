@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="remoting-validation">
+  <title>Bean Validation</title>
+  
+  <para>Seam Remoting provides integrated support for JSR-303 Bean Validation.</para>
+
+  <section>
+    <title></title>
+    <para></para>
+
+    <programlisting role="XML"><![CDATA[]]></programlisting>
+
+
+
+  </section>
+
+
+
+</chapter>

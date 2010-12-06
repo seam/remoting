@@ -42,7 +42,7 @@
          <!-- Override sub-module versions from org.jboss.seam:seam -->
          <dependency>
             <groupId>org.jboss.seam.remoting</groupId>
-            <artifactId>seam-remoting-core</artifactId>
+            <artifactId>seam-remoting</artifactId>
             <version>${project.version}</version>
          </dependency>
 
