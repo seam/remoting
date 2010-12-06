@@ -307,16 +307,12 @@ public class Remoting extends HttpServlet
 
                if (REMOTING_RESOURCE_PATH.equals(path))
                {
-            	  String validationParam = request.getParameter("validation"); 
-                  String compressParam   = request.getParameter("compress");
-                  boolean compress   = compressParam   != null && "true".equals(compressParam);
-                  boolean validation = validationParam != null && "true".equals(validationParam);
+                  String compressParam = request.getParameter("compress");
+                  boolean compress = !(compressParam != null && "false".equals(compressParam));
                   
                   writeResource(resource, response, compress);
                   if ("remote.js".equals(resource))
                   {
-                	 if(validation)  
-					   writeResource("validation.js", response, compress);  
                      appendConfig(response.getOutputStream(), request
                            .getContextPath(), request);
                   }
