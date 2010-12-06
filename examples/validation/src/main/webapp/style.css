@@ -43,6 +43,11 @@ div.formRow input[type='text'] {
   width: 200px;
 }
 
+.validationError {
+  color: #ff0000;
+  font-weight: bold;
+}
+
 .clear {
 	clear: both;
 	font-size: 0px;

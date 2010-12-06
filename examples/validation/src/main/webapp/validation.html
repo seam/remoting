@@ -20,17 +20,35 @@
     Seam.debug = true;
     
     function validationCallback(violations) {
-      alert("validation failed: " + violations);
-      for (var i = 0; i < violations.length; i++) {
-        alert(violations[i].property + "=" + violations[i].value + 
-              "\n[violation] -> "+violations[i].message);
-      }
+      if (violations.length == 0) {
+        alert("All validations passed!");
+        
+        // Code goes here to save the object
+        
+      } else {                
+        for (var i = 0; i < violations.length; i++) {
+           var span = document.getElementById("validation_" + violations[i].property);
+           span.appendChild(document.createTextNode(violations[i].message));
+        }
+      }      
     }
+           
+    function removeChildren(ctlId) {
+      var ctl = document.getElementById(ctlId);
+      while (ctl.hasChildNodes()) {
+	      ctl.removeChild(ctl.firstChild);
+	    }
+    }    
     
     function saveCustomer() {       
+       removeChildren("validation_firstName");
+       removeChildren("validation_lastName");
+       removeChildren("validation_dateOfBirth");
+    
        var customer = Seam.createBean("org.jboss.seam.remoting.examples.validation.model.Customer");
        customer.firstName = document.getElementById("firstName").value;
-       customer.lastName = document.getElementById("lastName").value;       
+       customer.lastName = document.getElementById("lastName").value;
+       customer.dateOfBirth = new Date(document.getElementById("dateOfBirth").value);
        Seam.validateBean(customer, validationCallback);
     }
     
@@ -41,11 +59,19 @@
     <div class="formRow">
       <span class="label">First name</span>
       <input id="firstName" type="text"/>
+      <span class="validationError" id="validation_firstName"/>
     </div>
 
     <div class="formRow">
       <span class="label">Last name</span>
       <input id="lastName" type="text"/>
+      <span class="validationError" id="validation_lastName"/>      
+    </div>
+    
+    <div class="formRow">
+      <span class="label">Date of Birth (YYYY/MM/DD)</span>
+      <input id="dateOfBirth" type="text"/>
+      <span class="validationError" id="validation_dateOfBirth"/>      
     </div>
 
     <input type="button" onclick="saveCustomer()" value="Save"/>
