@@ -1302,9 +1302,71 @@ Seam.validateProperties = function(bean , properties ,callBack , groups){
 };
 
 Seam.validateBean = function(bean , callBack , groups, properties){
-  var beans = [];
-  beans.push(bean);
-  Seam.validateBeans(beans , callBack , groups , properties );
+	var beans = Seam.getObjectGraph(bean, true, properties);	
+	Seam.validateBeans(beans , callBack , groups , [properties] );
+}
+
+Seam.validatePartialBean = function(bean , callBack , excludedProps , groups){
+	var metaData = Seam.getBeanMetadata(bean);
+	var props = [];
+	var excluded = false;
+	for(var i=0;i<metaData.length;i++){
+	  excluded = false;	
+	  for(var j=0;j<excludedProps.length;j++){
+		 if(excludedProps[j] == metaData[i].field){
+			excluded = true;
+			break;
+		 }	
+	  }
+	  if(!excluded)
+		props.push(metaData[i].field);  
+	}  
+  Seam.validateBean(bean, callBack, groups , props);
+}
+
+Seam.validateSingleBean = function(bean , callBack , groups, properties){
+	var beans = Seam.getObjectGraph(bean , false, properties);
+	Seam.validateBeans(beans , callBack , groups , [properties] );
+}
+
+Seam.getObjectGraph = function(bean, recursive, properties){
+	var beans = [];
+	var meta = [];
+	var metaData = Seam.getBeanMetadata(bean);
+	beans.push(bean);
+	if(recursive){                   
+		if(properties){
+		  for(var i=0;i<properties.length;i++){
+			for(var j=0;j<metaData.length;j++){
+			  if(metaData[j].field == properties[i]){
+				meta.push(metaData[j]);
+				break;
+			   }	
+			 }
+		  }
+		}
+		else{
+		 meta = metaData;	
+		}
+		for(var i=0;i<meta.length;i++){
+		  if(bean[meta[i].field] != undefined){	
+		    if(meta[i].type == "bean"){
+		      beans = beans.concat(Seam.getObjectGraph(bean[meta[i].field] , recursive, null));
+		    }
+		    else{
+		      var values = [];
+		      if(meta[i].type == "bag" && bean[meta[i].field].length > 0)
+		    	values = bean[meta[i].field];
+		      else if(meta[i].type == "map" && bean[meta[i].field].size() > 0)
+		    	values = bean[meta[i].field].values();  
+		      	
+		      for(var k=0;k<values.length;k++)
+		    	beans = beans.concat(Seam.getObjectGraph(values[k], recursive, null));		      
+		    } 
+		  }	  
+		}   
+	} ///////End Of Outer IF
+  return beans;	
 };
 
 Seam.validateBeans = function(beans , callBack , groups, properties){
@@ -1351,12 +1413,21 @@ Seam.repeatValidation = function(properties) {
  */
 Seam.executeValidation = function(properties , groups) {
   var violations = [];
+  properties = properties[0] == undefined ? undefined : properties;
   for (var i=0;i<Seam.__validationBeans.length;i++) {
     var metadata = Seam.getBeanType(Seam.__validationBeans[i]);
     var constraints = metadata.__constraints; // see if we have to validate the whole bean or not...
-    var keys = !properties ? constraints.keySet() : properties;
+    var keys = [];
+    if(properties != undefined && properties.length > i){
+      keys = properties[i];
+    } 
+    else{
+      keys = constraints.keySet();
+    }
     for(var j=0;j<keys.length;j++) {
       var cc = constraints.get(keys[j]);
+      if(cc == undefined)
+    	 continue; 
       for(var k=0;k<cc.length;k++) {
         var flag = false;
         if(!groups) groups = Seam.ValidationGroups;
@@ -1587,7 +1658,12 @@ Validation.registerValidator(new Validator("DecimalMax" , ["value"] , function()
 }) );
 
 Validation.registerValidator(new Validator("Size" , ["min" , "max"] , function() {
-  return  this.currentValue == null || (this.min <= this.currentValue.length && this.currentValue.length <= this.max);
+	if(this.currentValue == null) 
+	  return true;
+	if(this.currentValue instanceof Seam.Map)
+	  return (this.min <= this.currentValue.size() && this.currentValue.size() <= this.max);	
+	
+   return (this.min <= this.currentValue.length && this.currentValue.length <= this.max);
 }) );
 
 Validation.registerValidator(new Validator("Digits" , ["integer" , "fraction"] , function() {
