@@ -1170,11 +1170,22 @@ Seam.Model = function() {
 /*JSR 303 integration with Seam-Remoting Module
  *@author Amir Sadri
  */
+
+Seam.validation_bean     = "bean";
+Seam.validation_props    = "properties";
+Seam.validation_groups   = "groups";
+Seam.validation_traverse = "traverse";
+
 Seam.createValidationRequest = function() {
-  var beans = Seam.__validationBeans;
+  var beans =  Seam.__validationBeans;	
   var b = "<beans>";
   for(var i=0;i<beans.length;i++) {
-    var metaData = Seam.getBeanType(beans[i]);
+	var bean = beans[i][Seam.validation_bean];  
+    var metaData = Seam.getBeanType(bean);
+     if(metaData == undefined){
+    	 Seam.log("Error: Invalid Validation Request [Undefined Bean was provided].");
+    	 continue;
+     }
     b += "<bean target=\"" + metaData.__name + "\"";
     var qualifiers = metaData.__qualifiers;
     if(qualifiers != undefined && qualifiers != null) {
@@ -1207,7 +1218,7 @@ Seam.createValidationRequest = function() {
  * This method parses the response from server and attaches all validation metadata to their corresponding
  * client-side beans.
  */
-Seam.processMetaData = function(doc , props , vgroups) {
+Seam.processMetaData = function(doc) {
   var cn = Seam.Xml.childNode;
   var cns = Seam.Xml.childNodes;
   if (typeof(Seam) == "undefined") return;
@@ -1288,54 +1299,82 @@ Seam.processMetaData = function(doc , props , vgroups) {
       }
     }
   }
-  Seam.executeValidation(props , vgroups);
+  Seam.executeValidation();
 };
 
 Seam.validateProperty = function(bean , property , callBack , groups) {
   var p = [];
   p.push(property);
-  Seam.validateProperties(bean ,p ,callBack , groups);
+  Seam.validateBean(bean, callBack, groups , p);
 };
 
-Seam.validateProperties = function(bean , properties ,callBack , groups){
-  Seam.validateBean(bean, callBack ,groups, properties);
+Seam.validateBean = function(object , callBack , groups, props){
+	Seam.validate([{bean: object,
+		            properties: props ,
+		            traverse: true}] , callBack , groups);
 };
 
-Seam.validateBean = function(bean , callBack , groups, properties){
-	var beans = Seam.getObjectGraph(bean, true, properties);	
-	Seam.validateBeans(beans , callBack , groups , [properties] );
-}
-
-Seam.validatePartialBean = function(bean , callBack , excludedProps , groups){
-	var metaData = Seam.getBeanMetadata(bean);
-	var props = [];
-	var excluded = false;
-	for(var i=0;i<metaData.length;i++){
-	  excluded = false;	
-	  for(var j=0;j<excludedProps.length;j++){
-		 if(excludedProps[j] == metaData[i].field){
-			excluded = true;
-			break;
-		 }	
-	  }
-	  if(!excluded)
-		props.push(metaData[i].field);  
-	}  
-  Seam.validateBean(bean, callBack, groups , props);
-}
-
-Seam.validateSingleBean = function(bean , callBack , groups, properties){
-	var beans = Seam.getObjectGraph(bean , false, properties);
-	Seam.validateBeans(beans , callBack , groups , [properties] );
-}
+Seam.validate = function(beansList , callBack, groups){
+   var flag = false;	
+   var tempList = []; 
+   for(var i=0;i<beansList.length;i++){
+	 var listItem   = beansList[i];  
+	 var bean       = listItem[Seam.validation_bean];  
+	 if(bean == undefined){
+		Seam.log("Error: Invalid Argument [bean must be provided].");
+		continue;
+	 }
+	 if(!listItem[Seam.validation_traverse]) 
+	   listItem[Seam.validation_traverse] = true;	
+	 if(!listItem[Seam.validation_groups] && groups)
+	   listItem[Seam.validation_groups] = groups;
+	 if(listItem[Seam.validation_traverse] == true){  
+	   var properties = listItem[Seam.validation_props];
+	   var beans = Seam.getObjectGraph(bean, true, properties);		
+	    for(var j=0;j<beans.length;j++){	
+	      if(!groups && !listItem[Seam.validation_groups])	
+		    tempList.push({bean: beans[j]});
+	      else{
+	    	var gr = !listItem[Seam.validation_groups] ? groups : listItem[Seam.validation_groups];   
+	    	tempList.push({bean: beans[j] , groups: gr});
+	      }
+	      if(Seam.getBeanType(beans[j]).__constraints == undefined) 
+	    	flag = true;
+	    }
+	 }
+	 if(Seam.getBeanType(bean).__constraints == undefined) 
+	   flag = true;
+   }////End of outer loop
+   
+   beansList = beansList.concat(tempList);
+   if(beansList.length > 0) {
+	 Seam.__validationCallback = callBack;
+	 Seam.__validationBeans    = beansList;
+	   
+     // There is at least one bean for which we need to fetch its metadata from server and then
+     // we will do it for all other beans as well, even if they have got it already...
+     if(flag) {
+       var data = Seam.createValidationRequest();
+       var envelope = Seam.createEnvelope("", data);
+       var processorProcedure = function(doc) { Seam.processMetaData(doc); };
+       Seam.sendAjaxRequest(envelope, Seam.PATH_VALIDATION, processorProcedure , false);
+     } 
+     else {
+       Seam.executeValidation();
+     }
+   } 
+   else{
+	Seam.__validationCallback = undefined;
+	Seam.__validationBeans    = undefined;   
+   }   
+};
 
 Seam.getObjectGraph = function(bean, recursive, properties){
 	var beans = [];
 	var meta = [];
 	var metaData = Seam.getBeanMetadata(bean);
-	beans.push(bean);
 	if(recursive){                   
-		if(properties){
+		if(properties != undefined){
 		  for(var i=0;i<properties.length;i++){
 			for(var j=0;j<metaData.length;j++){
 			  if(metaData[j].field == properties[i]){
@@ -1351,6 +1390,7 @@ Seam.getObjectGraph = function(bean, recursive, properties){
 		for(var i=0;i<meta.length;i++){
 		  if(bean[meta[i].field] != undefined){	
 		    if(meta[i].type == "bean"){
+		      beans.push(bean[meta[i].field]);	
 		      beans = beans.concat(Seam.getObjectGraph(bean[meta[i].field] , recursive, null));
 		    }
 		    else{
@@ -1360,8 +1400,10 @@ Seam.getObjectGraph = function(bean, recursive, properties){
 		      else if(meta[i].type == "map" && bean[meta[i].field].size() > 0)
 		    	values = bean[meta[i].field].values();  
 		      	
-		      for(var k=0;k<values.length;k++)
-		    	beans = beans.concat(Seam.getObjectGraph(values[k], recursive, null));		      
+		      for(var k=0;k<values.length;k++){
+		    	beans.push(values[k]);	  
+		    	beans = beans.concat(Seam.getObjectGraph(values[k], recursive, null));
+		      }
 		    } 
 		  }	  
 		}   
@@ -1369,57 +1411,21 @@ Seam.getObjectGraph = function(bean, recursive, properties){
   return beans;	
 };
 
-Seam.validateBeans = function(beans , callBack , groups, properties){
-  var beanList = [];
-  var flag = false;
-  for(var i=0;i<beans.length;i++) {
-    var beanMetaData = Seam.getBeanType(beans[i]);
-    if(beanMetaData == undefined) continue;
-    if(beanMetaData.__constraints == undefined) flag = true;
-    beanList.push(beans[i]);
-  }
-
-  if(beanList.length > 0) {
-    Seam.__validationCallback = callBack;
-    Seam.__validationBeans    = beanList;
-    // There is at least one bean for which we need to fetch its metadata from server and then
-    // we will do it for all other beans as well, even if they have got it already...
-    if(flag) {
-      var data = Seam.createValidationRequest();
-      var envelope = Seam.createEnvelope("", data);
-      var processorProcedure = function(doc) { Seam.processMetaData(doc , properties , groups); };
-      Seam.sendAjaxRequest(envelope, Seam.PATH_VALIDATION, processorProcedure , false);
-    } else {
-      Seam.executeValidation(properties , groups);
-    }
-  } else {
-    Seam.__validationCallback = undefined;
-    Seam.__validationBeans    = undefined;
-  }
-};
-
-/* it's quite common to validate an object, show validation errors and then
- * do the same validation again after rectifying errors, this function makes things a little bit easier and faster
- */
-Seam.repeatValidation = function(properties) {
-  if (Seam.__validationBeans == undefined || Seam.__validationCallback == undefined) {
-    Seam.log("There is no previous validation state available!! [use validateBean()]");
-  } else {
-    Seam.executeValidation(properties);
-  }
-};
-
 /* this method walks through all constraints and call validateAgainstConstraint method for each one of them.
  */
-Seam.executeValidation = function(properties , groups) {
+Seam.executeValidation = function() {
+  var beansList =  Seam.__validationBeans;	
   var violations = [];
-  properties = properties[0] == undefined ? undefined : properties;
-  for (var i=0;i<Seam.__validationBeans.length;i++) {
-    var metadata = Seam.getBeanType(Seam.__validationBeans[i]);
-    var constraints = metadata.__constraints; // see if we have to validate the whole bean or not...
+  for (var i=0;i<beansList.length;i++) {
+	var listItem = beansList[i];  
+	var bean     = listItem[Seam.validation_bean];
+	var props    = listItem[Seam.validation_props];
+	var groups   = listItem[Seam.validation_groups];
+    var metadata = Seam.getBeanType(bean);
+    var constraints = metadata.__constraints; 
     var keys = [];
-    if(properties != undefined && properties.length > i){
-      keys = properties[i];
+    if(props != undefined){ // see if we have to validate the whole bean or not...
+      keys = props;
     } 
     else{
       keys = constraints.keySet();
@@ -1430,7 +1436,7 @@ Seam.executeValidation = function(properties , groups) {
     	 continue; 
       for(var k=0;k<cc.length;k++) {
         var flag = false;
-        if(!groups) groups = Seam.ValidationGroups;
+        if(groups == undefined) groups = Seam.ValidationGroups;
         if(groups == undefined) {
           groups = ["Default"]; // if no groups provided, will be validated against Default Group
         } else if (typeof groups == "string") {
@@ -1460,7 +1466,7 @@ Seam.executeValidation = function(properties , groups) {
           }
         }
         if(flag) {
-          var result = Seam.validateAgainstConstraint(Seam.__validationBeans[i] , keys[j] , cc[k]);
+          var result = Seam.validateAgainstConstraint(bean , keys[j] , cc[k]);
           if(result != -1) violations.push(result);
         }
       }
