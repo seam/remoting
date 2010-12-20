@@ -1317,6 +1317,8 @@ Seam.validateBean = function(object , callBack , groups, props){
 Seam.validate = function(beansList , callBack, groups){
    var flag = false;	
    var tempList = []; 
+   if(!(beansList instanceof Array))
+	 beansList = [beansList];  
    for(var i=0;i<beansList.length;i++){
 	 var listItem   = beansList[i];  
 	 var bean       = listItem[Seam.validation_bean];  
@@ -1324,7 +1326,7 @@ Seam.validate = function(beansList , callBack, groups){
 		Seam.log("Error: Invalid Argument [bean must be provided].");
 		continue;
 	 }
-	 if(!listItem[Seam.validation_traverse]) 
+	 if(!listItem[Seam.validation_traverse]) ///// default is true
 	   listItem[Seam.validation_traverse] = true;	
 	 if(!listItem[Seam.validation_groups] && groups)
 	   listItem[Seam.validation_groups] = groups;
@@ -1425,7 +1427,10 @@ Seam.executeValidation = function() {
     var constraints = metadata.__constraints; 
     var keys = [];
     if(props != undefined){ // see if we have to validate the whole bean or not...
-      keys = props;
+      if(typeof props == "string")
+    	keys.push(props);
+      else
+        keys = props;
     } 
     else{
       keys = constraints.keySet();
