@@ -43,7 +43,7 @@
     </para>
     
     <para>
-      Here's an example of a bean called <literal>customer</literal> being validated:
+      Here's an example showing how a bean called <literal>customer</literal> is validated:
     </para>
     
     <programlisting language="JavaScript"><![CDATA[  function test() {
@@ -86,7 +86,8 @@
     </para>   
     
     <para>
-      Here's an example of the <literal>firstName</literal> property on a bean called <literal>customer</literal> being validated:
+      Here's an example showing how to validate the <literal>firstName</literal> property of a bean called 
+      <literal>customer</literal>:
     </para>
     
     <programlisting language="JavaScript"><![CDATA[  function test() {
@@ -106,7 +107,9 @@
     <title>Validating multiple objects and/or properties</title>    
     
     <para>
-      It
+      It is also possible to perform multiple validations for beans and bean properties in one go.  This might be useful 
+      for example to perform validation of forms that present data from more than one bean.  
+      The <literal>Seam.validate()</literal> method takes the following parameters:
     </para>
     
     <programlisting role="JavaScript"><![CDATA[
@@ -114,17 +117,22 @@
     ]]></programlisting>    
     
     <para>
-      The <literal>validations</literal> parameter should contain a list of the validations to perform.  The 
-      <literal>callback</literal> parameter should contain a reference to the callback function to invoke once
+      The <literal>validations</literal> parameter should contain a list of the validations to perform.  It may either 
+      be an associative array, or an array of associative arrays which define the validations that should be performed.  
+      We'll look at this parameter more closely in just a moment.
+    </para>
+      
+    </para>The <literal>callback</literal> parameter should contain a reference to the callback function to invoke once
       validation is complete.  The optional <literal>groups</literal> parameter should contain the group name/s
       for which to perform validation.
     </para>
-   
-    <para>
-      The <literal>validations</literal> parameter may either be an associative array, or an array of associative
-      arrays which define the validations that should be performed.  The simplest example, in which we wish to
-      validate a single object would look like this:      
+    
+    <para>The <literal>groups</literal> parameter allows one or more validation groups (specified by providing a 
+      <literal>String</literal> or array of <literal>String</literal> values) to be validated.  The validation groups
+      specified here will be applied to all bean values contained in the <literal>validations</literal> parameter.
     </para>
+    
+    <para>The simplest example, in which we wish to validate a single object would look like this:</para>
     
     <programlisting role="JavaScript"><![CDATA[
       Seam.validate({bean:customer}, validationCallback);
