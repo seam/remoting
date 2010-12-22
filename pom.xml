@@ -61,6 +61,7 @@
          <dependency>
             <groupId>org.jboss.seam.persistence</groupId>
             <artifactId>seam-persistence</artifactId>
+            <version>3.0.0.Beta2</version>
          </dependency>
 
          <dependency>
