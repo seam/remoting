@@ -5,7 +5,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.servlet.ServletContext;
 
 import org.jboss.seam.remoting.model.ModelHandler;
-import org.jboss.weld.extensions.beanManager.BeanManagerAccessor;
+import org.jboss.seam.solder.beanManager.BeanManagerLocator;
 
 public class NonInjectionRemoting extends Remoting
 {
@@ -13,7 +13,7 @@ public class NonInjectionRemoting extends Remoting
      
    private static BeanManager getBeanManager(ServletContext ctx)
    {
-      return BeanManagerAccessor.getBeanManager();
+      return new BeanManagerLocator().getBeanManager();      
    }
    
    @SuppressWarnings("unchecked")
