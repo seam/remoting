@@ -66,7 +66,6 @@
 
   </section>
   
-
   <section>
     <title>Validating a single property</title>
     
@@ -100,8 +99,7 @@
     if (violations.length == 0) alert("All validations passed!");
   }]]></programlisting>     
 
-  </section>  
-  
+  </section>
   
   <section>
     <title>Validating multiple objects and/or properties</title>    
@@ -122,7 +120,7 @@
       We'll look at this parameter more closely in just a moment.
     </para>
       
-    </para>The <literal>callback</literal> parameter should contain a reference to the callback function to invoke once
+    <para>The <literal>callback</literal> parameter should contain a reference to the callback function to invoke once
       validation is complete.  The optional <literal>groups</literal> parameter should contain the group name/s
       for which to perform validation.
     </para>
