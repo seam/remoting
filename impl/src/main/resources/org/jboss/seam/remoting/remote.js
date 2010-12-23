@@ -1332,7 +1332,7 @@ Seam.validate = function(beansList , callBack, groups){
 	   listItem[Seam.validation_groups] = groups;
 	 if(listItem[Seam.validation_traverse] == true){  
 	   var properties = listItem[Seam.validation_props];
-	   var beans = Seam.getObjectGraph(bean, true, properties);		
+	   var beans = Seam.getObjectGraph(bean, true, [] ,properties);		
 	    for(var j=0;j<beans.length;j++){	
 	      if(!groups && !listItem[Seam.validation_groups])	
 		    tempList.push({bean: beans[j]});
@@ -1371,7 +1371,13 @@ Seam.validate = function(beansList , callBack, groups){
    }   
 };
 
-Seam.getObjectGraph = function(bean, recursive, properties){
+Seam.getObjectGraph = function(bean, recursive, graph, properties){
+	if(graph.length > 0){
+	  for(var i=0;i<graph.length;i++)
+		if(graph[i] == bean)
+		  return [];	
+	}
+	graph.push(bean);
 	var beans = [];
 	var meta = [];
 	var metaData = Seam.getBeanMetadata(bean);
@@ -1393,7 +1399,7 @@ Seam.getObjectGraph = function(bean, recursive, properties){
 		  if(bean[meta[i].field] != undefined){	
 		    if(meta[i].type == "bean"){
 		      beans.push(bean[meta[i].field]);	
-		      beans = beans.concat(Seam.getObjectGraph(bean[meta[i].field] , recursive, null));
+		      beans = beans.concat(Seam.getObjectGraph(bean[meta[i].field] , recursive, graph));
 		    }
 		    else{
 		      var values = [];
@@ -1404,7 +1410,7 @@ Seam.getObjectGraph = function(bean, recursive, properties){
 		      	
 		      for(var k=0;k<values.length;k++){
 		    	beans.push(values[k]);	  
-		    	beans = beans.concat(Seam.getObjectGraph(values[k], recursive, null));
+		    	beans = beans.concat(Seam.getObjectGraph(values[k], recursive, graph));
 		      }
 		    } 
 		  }	  
