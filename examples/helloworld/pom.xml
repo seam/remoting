@@ -5,14 +5,14 @@
    <parent>
       <groupId>org.jboss.seam.remoting</groupId>
       <artifactId>seam-remoting-parent</artifactId>
-      <version>3.0.0-SNAPSHOT</version>
+      <version>3.0.0.Beta2</version>
       <relativePath>../../pom.xml</relativePath>
    </parent>
 
    <groupId>org.jboss.seam.remoting</groupId>
    <artifactId>seam-remoting-helloworld-example</artifactId>
    <packaging>war</packaging>
-   <version>3.0.0-SNAPSHOT</version>
+   <version>3.0.0.Beta2</version>
    <name>Seam Remoting Helloworld Example</name>
      
    <dependencies>
