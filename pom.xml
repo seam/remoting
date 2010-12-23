@@ -93,6 +93,7 @@
             <module>docs</module>
             <module>examples/helloworld</module>
             <module>examples/model</module>
+            <module>examples/validation</module>
          </modules>
       </profile>
             <profile>

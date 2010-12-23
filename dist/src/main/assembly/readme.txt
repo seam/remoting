@@ -1,4 +1,4 @@
-Seam Remoting 3.0.0 Beta 1
+Seam Remoting 3.0.0 Beta 2
 ==========================
 
 Seam Remoting is an AJAX remoting API for CDI-based applications.
@@ -36,6 +36,10 @@ Issue Tracking:                http://jira.jboss.org/jira/browse/SEAMREMOTING
 
 Release Notes
 =============
+Version 3.0.0 Beta 2
+--------------------
+* Added new feature - bean validation
+* Updated to use Seam Solder 
 
 Version 3.0.0 Beta 1
 --------------------

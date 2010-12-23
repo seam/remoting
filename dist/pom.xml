@@ -66,6 +66,14 @@
          <optional>true</optional>
       </dependency>
 
+      <dependency>
+         <groupId>org.jboss.seam.remoting</groupId>
+         <artifactId>seam-remoting-validation-example</artifactId>
+         <version>${project.version}</version>
+         <type>zip</type>
+         <optional>true</optional>
+      </dependency>
+
    </dependencies>
 
    <build>
