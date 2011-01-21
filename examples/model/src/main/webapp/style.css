@@ -10,6 +10,10 @@ div.listContainer {
   width: 200px;
 }
 
+div.debugControl {
+	margin-bottom: 10px;
+}
+
 #personList {
   margin-top: 8px;
   margin-bottom: 8px;

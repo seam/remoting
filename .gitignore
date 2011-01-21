@@ -3,3 +3,5 @@ target
 .project
 .settings
 *.sw?
+examples/**/temp-testng-customsuite.xml
+examples/**/test-output

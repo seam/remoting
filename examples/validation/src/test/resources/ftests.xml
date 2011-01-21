@@ -1,0 +1,9 @@
+<!DOCTYPE suite SYSTEM "http://beust.com/testng/testng-1.0.dtd" >
+<suite name="Seam Validation Example" verbose="2" parallel="false">
+   <test name="validation_ftest">
+      <parameter name="example.context.path" value="/validation" />
+      <packages>
+         <package name="org.jboss.seam.remoting.examples.validation.ftest" />
+      </packages>
+   </test>
+</suite>
