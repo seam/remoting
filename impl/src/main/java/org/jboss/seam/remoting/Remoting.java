@@ -98,8 +98,7 @@ public class Remoting extends HttpServlet
     * Appends various configuration options to the remoting javascript client
     * api.
     * 
-    * @param out
-    *           OutputStream
+    * @param out OutputStream
     */
    private void appendConfig(OutputStream out, String contextPath,
          HttpServletRequest request) throws IOException
@@ -277,6 +276,9 @@ public class Remoting extends HttpServlet
       {
          String pathInfo = request.getPathInfo();
          
+         // Nothing to do
+         if (pathInfo == null) response.sendError(404, "No path information provided");
+         
          if (pathInfo.startsWith(servletConfig.getServletContext().getContextPath()))
          {
             pathInfo = pathInfo.substring(servletConfig.getServletContext().getContextPath().length());
@@ -294,8 +296,9 @@ public class Remoting extends HttpServlet
          {
             getModelHandler().handle(request, response);
          }
-		 else if(REQUEST_PATH_VALIDATION.equals(pathInfo)){
-        	getTranslatorHandler().handle(request, response); 
+		   else if (REQUEST_PATH_VALIDATION.equals(pathInfo))
+		   {
+        	   getTranslatorHandler().handle(request, response); 
          }
          else
          {
@@ -320,7 +323,8 @@ public class Remoting extends HttpServlet
                response.getOutputStream().flush();
             }
          }
-      } catch (Exception ex)
+      } 
+      catch (Exception ex)
       {
          log.error("Error", ex);
       }
