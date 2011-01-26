@@ -1,11 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
    <parent>
       <artifactId>seam-parent</artifactId>
       <groupId>org.jboss.seam</groupId>
-      <version>5</version>
+      <version>8</version>
    </parent>
 
    <groupId>org.jboss.seam.remoting</groupId>
@@ -24,7 +23,7 @@
    </prerequisites>
 
    <properties>
-      <seam.version>3.0.0.b04</seam.version>
+      <seam.version>3.0.0.b07</seam.version>
    </properties>
 
    <dependencyManagement>
@@ -55,12 +54,6 @@
             <groupId>org.jboss.weld</groupId>
             <artifactId>weld-api</artifactId>
             <version>1.1.Beta2</version>
-         </dependency>
-
-         <dependency>
-            <groupId>org.jboss.seam.persistence</groupId>
-            <artifactId>seam-persistence</artifactId>
-            <version>3.0.0.Beta2</version>
          </dependency>
 
          <dependency>
