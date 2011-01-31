@@ -16,7 +16,8 @@
          <outputDirectory>.</outputDirectory>
          <includes>
             <include>readme.txt</include>
-            <include>lgpl.txt</include>
+            <include>license.txt</include>
+            <include>notice.txt</include>
          </includes>
       </fileSet>
    </fileSets>
@@ -27,10 +28,14 @@
          <outputDirectory>artifacts</outputDirectory>
          <useProjectArtifact>false</useProjectArtifact>
          <includes>
-            <include>org.jboss.seam.remoting:seam-remoting-core</include>
+            <include>org.jboss.seam.remoting:seam-remoting</include>
          </includes>
+         <excludes>
+            <exclude>org.jboss.seam.remoting:seam-remoting*:jar:javadoc</exclude>
+         </excludes>         
          <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
       </dependencySet>
+      
       <!-- Add necessary dependencies -->
       <dependencySet>
          <outputDirectory>lib</outputDirectory>
@@ -41,17 +46,59 @@
          </excludes>
          <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
       </dependencySet>
-      <!-- Pull in the example projects -->
+
+      <!-- Pull in the example projects -->     
       <dependencySet>
-         <outputDirectory>examples</outputDirectory>
+         <outputDirectory>examples/helloworld</outputDirectory>
+         <unpack>true</unpack>
+         <useProjectArtifact>false</useProjectArtifact>
+         <includes>
+            <include>org.jboss.seam.remoting:seam-remoting-helloworld-example</include>
+         </includes>
+      </dependencySet>
+
+      <dependencySet>
+         <outputDirectory>examples/model</outputDirectory>
          <unpack>true</unpack>
          <useProjectArtifact>false</useProjectArtifact>
          <includes>
             <include>org.jboss.seam.remoting:seam-remoting-model-example</include>
-            <include>org.jboss.seam.remoting:seam-remoting-helloworld-example</include>
-            <include>org.jboss.seam.remoting:seam-remoting-validation-example</include>
          </includes>
       </dependencySet>
+      
+      <dependencySet>
+         <outputDirectory>examples/validation</outputDirectory>
+         <unpack>true</unpack>
+         <useProjectArtifact>false</useProjectArtifact>
+         <includes>
+            <include>org.jboss.seam.remoting:seam-remoting-validation-example</include>
+         </includes>
+      </dependencySet>      
+      
+      <dependencySet>
+         <outputDirectory>examples/helloworld</outputDirectory>
+         <unpack>true</unpack>
+         <useProjectArtifact>false</useProjectArtifact>
+         <includes>
+            <include>org.jboss.seam.remoting:seam-remoting-helloworld-example</include>
+         </includes>
+      </dependencySet>            
+      
+      <!-- Pull in JavaDoc for api -->
+      <dependencySet>
+         <outputDirectory>doc/api</outputDirectory>
+         <unpack>true</unpack>
+         <useProjectArtifact>false</useProjectArtifact>
+         <includes>
+            <include>org.jboss.seam.remoting:seam-remoting:jar:javadoc</include>
+         </includes>
+         <unpackOptions>
+            <excludes>
+               <exclude>META-INF/</exclude>
+            </excludes>
+         </unpackOptions>
+      </dependencySet>      
+      
       <!-- Pull in docbook artifacts -->
       <dependencySet>
          <outputDirectory>doc/reference</outputDirectory>

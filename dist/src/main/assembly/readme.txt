@@ -1,7 +1,8 @@
-Seam Remoting 3.0.0 Beta 2
-==========================
 
-Seam Remoting is an AJAX remoting API for CDI-based applications.
+Seam Remoting ${project.version}
+===================================
+
+Seam Remoting is an AJAX remoting API for Java EE6 applications.
 
 
 Contents of distribution
@@ -17,13 +18,13 @@ examples/
   
 lib/
 
-  Seam Remoting jar files
+  Seam Remoting Jar files
   
 Licensing
 =========
 
-This distribution, as a whole, is licensed under the terms of the GNU Lesser General Public License
-(LGPL) Version 2.1, the text of which is contained in the file lgpl.txt.
+ This distribution, as a whole, is licensed under the terms of the Apache
+ Software License, Version 2.0 (ASL).
 
 Seam Remoting URLs
 ==================
