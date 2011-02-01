@@ -31,13 +31,11 @@
 
     <programlisting role="XHTML"><![CDATA[<script type="text/javascript" src="seam/resource/remoting/resource/remote.js"></script>]]></programlisting>
     
-    <para>For a production environment, you may wish to use a compressed version of <literal>remote.js</literal>.  
-      To do this, simply add the <literal>compress=true</literal> parameter to the end of the url:</para>
+    <para>By default, the client-side JavaScript is served in compressed form, with white space compacted and JavaScript comments
+    removed.  For a development environment, you may wish to use the uncompressed version of <literal>remote.js</literal> for 
+    debugging and testing purposes.  To do this, simply add the <literal>compress=false</literal> parameter to the end of the url:</para>
       
-    <programlisting role="XHTML"><![CDATA[<script type="text/javascript" src="seam/resource/remoting/resource/remote.js?compress=true"></script>]]></programlisting>
-    
-    <para>The compressed version has its white space compacted and JavaScript comments removed.  For development and
-      debugging purposes it is recommended that you use the non-compacted version.</para>
+    <programlisting role="XHTML"><![CDATA[<script type="text/javascript" src="seam/resource/remoting/resource/remote.js?compress=false"></script>]]></programlisting>
 
     <para>The second script that you need contains the stubs and type definitions for the beans you wish to call. It is
       generated dynamically based on the method signatures of your beans, and includes type definitions for all of
