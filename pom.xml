@@ -90,7 +90,7 @@
             <module>examples/validation</module>
          </modules>
       </profile>
-            <profile>
+      <profile>
          <id>jboss-public-repository</id>
          <activation>
             <property>
