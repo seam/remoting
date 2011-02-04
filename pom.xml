@@ -132,9 +132,9 @@
    </profiles>
 
    <scm>
-      <connection>scm:git:git://github.com/seam/js-remoting.git</connection>
-      <developerConnection>scm:git:git@github.com:seam/js-remoting.git</developerConnection>
-      <url>http://github.com/seam/js-remoting</url>
+      <connection>scm:git:git://github.com/seam/remoting.git</connection>
+      <developerConnection>scm:git:git@github.com:seam/remoting.git</developerConnection>
+      <url>http://github.com/seam/remoting</url>
    </scm>
 
 </project>
