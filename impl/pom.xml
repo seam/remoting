@@ -41,12 +41,6 @@
       </dependency>
 
       <dependency>
-         <groupId>javax.jms</groupId>
-         <artifactId>jms</artifactId>
-         <scope>provided</scope>
-      </dependency>
-
-      <dependency>
          <groupId>dom4j</groupId>
          <artifactId>dom4j</artifactId>
          <scope>provided</scope>

@@ -24,7 +24,7 @@
    </prerequisites>
 
    <properties>
-      <seam.version>3.0.0.b07</seam.version>
+      <seam.version>3.0.0.b08</seam.version>
    </properties>
 
    <dependencyManagement>
@@ -61,13 +61,6 @@
             <groupId>javax.el</groupId>
             <artifactId>el-api</artifactId>
             <version>2.2</version>
-            <scope>provided</scope>
-         </dependency>
-
-         <dependency>
-            <groupId>javax.jms</groupId>
-            <artifactId>jms</artifactId>
-            <version>1.1</version>
             <scope>provided</scope>
          </dependency>
 
