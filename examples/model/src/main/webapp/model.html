@@ -18,9 +18,6 @@
   <script type="text/javascript">    
     //<![CDATA[
 
-    // Turn on debug logging so we can see the request and response packets    
-    Seam.debug = true;
-        
     var model = null;        
     
     // Clears all the child elements of the specified element
@@ -32,9 +29,10 @@
     
     // Creates an anchor element inside a div with the specified text
     // and optional onclick event
-    function createLinkRow(text, onclick) {
+    function createLinkRow(text, onclick, className) {
       var link = document.createElement("a");
       link.href = "#";
+      if (className) link.className = className;
       if (onclick) link.setAttribute("onclick", onclick);
       link.appendChild(document.createTextNode(text));
       var div = document.createElement("div");
@@ -93,7 +91,7 @@
       
       var addressDiv = document.getElementById("addresses");
       clearElement(addressDiv);      
-      addressDiv.appendChild(createLinkRow("Load addresses", "loadAddresses()"));
+      addressDiv.appendChild(createLinkRow("Load addresses", "loadAddresses()", "loadAddresses"));
       
       document.getElementById("personDetail").style.display = "block";
       
@@ -122,7 +120,7 @@
         addressDiv.appendChild(document.createTextNode("No addresses found")); 
       }
                 
-      addressDiv.appendChild(createLinkRow("Create new address", "createAddress()"));
+      addressDiv.appendChild(createLinkRow("Create new address", "createAddress()", "createAddress"));
     }
     
     function createAddress() {
@@ -174,6 +172,7 @@
     function createDeleteAddressLink(address, div) {
       var link = document.createElement("a");
       link.href = "#";
+      link.className = "deleteAddress";
       link.onclick = function() {
         var addresses = model.getValue("person").addresses;
         for (var i = 0; i < addresses.length; i++) {
@@ -202,22 +201,40 @@
       row1.appendChild(createLabel("Street No"));
       row1.appendChild(createBoundInput(address, "streetNo", "streetNo"));
       row1.appendChild(createLabel("Street Name"));
-      row1.appendChild(createBoundInput(address, "streetName"));
+      row1.appendChild(createBoundInput(address, "streetName", "streetName"));
       
       row2.appendChild(createLabel("Suburb"));
-      row2.appendChild(createBoundInput(address, "suburb"));
+      row2.appendChild(createBoundInput(address, "suburb", "suburb"));
       row2.appendChild(createLabel("Postcode/Zip"));
       row2.appendChild(createBoundInput(address, "postCode", "postCode"));
       
       row3.appendChild(createLabel("Country"));
-      row3.appendChild(createBoundInput(address, "country"));
+      row3.appendChild(createBoundInput(address, "country", "country"));
       row3.appendChild(createDeleteAddressLink(address, addressDiv));
      
       return addressDiv; 
     }
+
+    function toggleDebug()
+    {
+        if (Seam.debug == true)
+        {
+            Seam.debug = false;
+            document.getElementById("debugButton").innerHTML = "Turn on debugging"
+        }
+        else
+        {
+            Seam.debug = true;
+            document.getElementById("debugButton").innerHTML = "Turn off debugging"
+        }
+    }
         
     // ]]>
   </script>   
+  
+  <div class="debugControl">
+  	<button id="debugButton" onclick="toggleDebug()">Turn on debugging</button>
+  </div>
   
   <div class="listContainer">
     <div class="sectionHeader">People - click to edit</div>
@@ -225,7 +242,7 @@
     <div id="personList"></div>
     
     <div>
-      <a href="#" onclick="createPerson()">Create new person</a>
+      <a href="#" onclick="createPerson()" class="createPerson">Create new person</a>
     </div>
   </div>
   
@@ -252,7 +269,7 @@
     </div>
     
     <div class="personAction">
-      <button id="applyChanges" onclick="apply()">Apply changes</button>
+      <button id="applyChanges" onclick="apply()" class="applyChanges">Apply changes</button>
     </div>
     
     <br class="clear"/>
