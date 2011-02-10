@@ -26,7 +26,8 @@
             <groupId>org.jboss.maven.plugins</groupId>
             <artifactId>maven-jdocbook-plugin</artifactId>
          </plugin>
-         <!-- Attach docs as a war so dist can retrieve them -->
+
+         <!-- Attach docs as a war so module dist can retrieve them -->
          <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
@@ -46,6 +47,20 @@
                      </artifacts>
                   </configuration>
                </execution>
+
+               <execution>
+                 <id>attach-source</id>
+                 <phase>generate-sources</phase>
+                 <goals>
+                   <goal>add-source</goal>
+                 </goals>
+                 <configuration>
+                   <sources>
+                     <source>src/main/docbook/en-US</source>
+                   </sources>
+                 </configuration>
+               </execution>
+               
             </executions>
          </plugin>
       </plugins>
@@ -72,9 +87,9 @@
 
 
    <scm>
-      <connection>scm:git:git://github.com/seam/js-remoting.git</connection>
-      <developerConnection>scm:git:git@github.com:seam/js-remoting.git</developerConnection>
-      <url>http://github.com/seam/js-remoting</url>
+      <connection>scm:git:git://github.com/seam/remoting.git</connection>
+      <developerConnection>scm:git:git@github.com:seam/remoting.git</developerConnection>
+      <url>http://github.com/seam/remoting</url>
    </scm>
 
 </project>
