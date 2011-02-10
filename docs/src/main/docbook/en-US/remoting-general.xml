@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <chapter id="remoting-general">
-  <title>Seam Remoting</title>
+  <title>Seam Remoting - Basic Features</title>
   
   <para>Seam provides a convenient method of remotely accessing CDI beans from a web page, using AJAX (Asynchronous
     Javascript and XML). The framework for this functionality is provided with almost no up-front development effort -
@@ -24,6 +24,11 @@
    <servlet-name>Remoting Servlet</servlet-name>
    <url-pattern>/seam/resource/remoting/*</url-pattern>
 </servlet-mapping>]]></programlisting>
+
+    <note>If your application is running within a Servlet 3.0 (or greater) environment, then the servlet configuration
+      listed above is not necessary as the Seam Remoting JAR library bundles a <literal>web-fragment.xml</literal>
+      that configures the Remoting servlet automatically.
+    </note>
 
     <para>The next step is to import the necessary Javascript into your web page. There are a minimum of two scripts
       that must be imported. The first one contains all the client-side framework code that enables remoting
@@ -92,12 +97,12 @@ public class HelloAction implements HelloLocal {
         above listing. This annotation makes the method accessible via the Remoting API.  Besides this annotation, there's
         nothing else required on your bean to enable it for remoting.</para>
 
-      <!--note>
+      <note>
          <para>If you are performing a persistence operation in the method marked <literal>@WebRemote</literal> you will
          also need to add a <literal>@Transactional</literal> annotation to the method. Otherwise, your method would
          execute outside of a transaction without this extra hint.That's because unlike a JSF request, Seam does not
          wrap the remoting request in a transaction automatically.</para>
-      </note-->
+      </note>
       
       <para>Now for our web page - create a new JSF page and import the <literal>helloAction</literal> bean:</para>
 

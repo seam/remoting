@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <chapter id="remoting-validation">
-  <title>Bean Validation</title>
+  <title>Seam Remoting - Bean Validation</title>
   
   <para>Seam Remoting provides integrated support for JSR-303 Bean Validation, which defines a standard approach for validating
      Java Beans no matter where they are used; web tier or persistence tier, server or client.  Bean validation for remoting 
