@@ -22,9 +22,9 @@
       This approach, when used in conjunction with the extended persistence context provided by Seam 
       elegantly solves a number of problems faced by AJAX developers when working remotely with 
       persistent objects.  A persistent, managed object graph can be loaded at the start of
-      a new conversation, and then across multiple requests (and within the same transaction) the client
-      can fetch the objects, make changes to them and apply those changes to the same managed objects after
-      which the long-running transaction can be committed when the conversation ends.
+      a new conversation, and then across multiple requests the client can fetch the objects, 
+      make incremental changes to them and apply those changes to the same managed objects after
+      which the transaction can be committed, thereby persisting the changes made.
     </para>
     
     <para>
