@@ -64,6 +64,12 @@
             <scope>provided</scope>
          </dependency>
 
+         <dependency>
+            <groupId>org.jboss.seam.conversation</groupId>
+            <artifactId>seam-conversation</artifactId>
+            <version>3.0.0.Beta13.0.0.Beta13.0.0.Beta1</version>
+         </dependency>
+
       </dependencies>
    </dependencyManagement>
 
