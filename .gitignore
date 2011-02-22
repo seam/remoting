@@ -5,3 +5,8 @@ target
 *.sw?
 examples/**/temp-testng-customsuite.xml
 examples/**/test-output
+*.iml
+*.ipr
+*.iws
+.idea
+

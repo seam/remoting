@@ -70,7 +70,7 @@ public class ModelHandler extends AbstractRequestHandler implements RequestHandl
       
       try
       {
-         activateConversationContext(ctx.getConversationId());
+         activateConversationContext(request, ctx.getConversationId());
    
          Element modelElement = env.element("body").element("model");
          String operation = modelElement.attributeValue("operation");
@@ -111,7 +111,7 @@ public class ModelHandler extends AbstractRequestHandler implements RequestHandl
       }
       finally
       {
-         deactivateConversationContext();
+         deactivateConversationContext(request);
       }
    }
    

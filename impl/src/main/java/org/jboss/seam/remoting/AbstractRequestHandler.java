@@ -1,11 +1,9 @@
 package org.jboss.seam.remoting;
 
-import javax.enterprise.context.spi.Context;
-import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
-import org.jboss.seam.remoting.util.Strings;
-import org.jboss.weld.Container;
-import org.jboss.weld.context.http.HttpConversationContext;
+import org.jboss.seam.conversation.spi.SeamConversationContext;
 
 /**
  * Abstract base class for remoting request handlers. 
@@ -13,34 +11,19 @@ import org.jboss.weld.context.http.HttpConversationContext;
  * Currently this class is non-portable
  * 
  * @author Shane Bryzak
- *
+ * @author Ales Justin
  */
 public abstract class AbstractRequestHandler implements RequestHandler
 {
-   public void activateConversationContext(String conversationId)
+   @Inject SeamConversationContext<HttpServletRequest> scc; // = SeamConversationContextFactory.getContext(HttpServletRequest.class);
+
+   public void activateConversationContext(HttpServletRequest request, String conversationId)
    {
-      Instance<Context> instance = instance();
-      HttpConversationContext conversationContext = instance.select(HttpConversationContext.class).get();
-      
-      if (conversationId != null && !Strings.isEmpty(conversationId))
-      {
-         conversationContext.activate(conversationId);
-      }
-      else
-      {
-         conversationContext.activate(null);
-      }
+      scc.associate(request).activate(conversationId);
    }
    
-   public void deactivateConversationContext()
+   public void deactivateConversationContext(HttpServletRequest request)
    {
-      Instance<Context> instance = instance();
-      HttpConversationContext conversationContext = instance.select(HttpConversationContext.class).get();
-      conversationContext.deactivate();
-   }
-   
-   private static Instance<Context> instance()
-   {
-      return Container.instance().deploymentManager().instance().select(Context.class);
+      scc.invalidate().deactivate().dissociate(request);
    }
 }

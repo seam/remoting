@@ -68,7 +68,7 @@ public class ExecutionHandler extends AbstractRequestHandler implements RequestH
       
       try
       {
-         activateConversationContext(ctx.getConversationId());
+         activateConversationContext(request, ctx.getConversationId());
    
          // Extract the calls from the request
          Call call = unmarshalCall(env);
@@ -89,7 +89,7 @@ public class ExecutionHandler extends AbstractRequestHandler implements RequestH
       }
       finally
       {
-         deactivateConversationContext();
+         deactivateConversationContext(request);
       }
    }
    
@@ -101,6 +101,9 @@ public class ExecutionHandler extends AbstractRequestHandler implements RequestH
     * @param env
     *           Element
     * @throws Exception
+    *           for any error
+    * @return
+    *         Call
     */
    @SuppressWarnings("unchecked")
    private Call unmarshalCall(Element env) throws Exception
@@ -138,7 +141,7 @@ public class ExecutionHandler extends AbstractRequestHandler implements RequestH
          iter = paramsNode.elementIterator("param");
          while (iter.hasNext())
          {
-            Element param = (Element) iter.next();
+            Element param = iter.next();
 
             call.addParameter(call.getContext().createWrapperFromElement(
                   (Element) param.elementIterator().next()));
@@ -156,13 +159,16 @@ public class ExecutionHandler extends AbstractRequestHandler implements RequestH
    /**
     * Write the results to the output stream.
     * 
-    * @param calls
+    * @param call
     *           List The list of calls to write
+    * @param ctx
+    *           The current Request Context
     * @param out
     *           OutputStream The stream to write to
     * @throws IOException
+    *           for any I/O error
     */
-   private void marshalResponse(Call call, RequestContext ctx, OutputStream out) 
+   private void marshalResponse(Call call, RequestContext ctx, OutputStream out)
       throws IOException
    {
       out.write(ENVELOPE_TAG_OPEN);
