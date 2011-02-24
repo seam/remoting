@@ -14,6 +14,7 @@
       <fileSet>
          <directory>src/main/assembly</directory>
          <outputDirectory>.</outputDirectory>
+         <filtered>true</filtered>
          <includes>
             <include>readme.txt</include>
             <include>license.txt</include>
@@ -32,6 +33,7 @@
          </includes>
          <excludes>
             <exclude>org.jboss.seam.remoting:seam-remoting*:jar:javadoc</exclude>
+            <exclude>org.jboss.seam.remoting:seam-remoting*:jar:sources</exclude>
          </excludes>         
          <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
       </dependencySet>
@@ -43,46 +45,22 @@
          <useTransitiveDependencies>true</useTransitiveDependencies>
          <excludes>
             <exclude>org.jboss.seam.remoting:*</exclude>
+            <exclude>org.jboss.seam.persistence:seam-persistence</exclude>
          </excludes>
          <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
       </dependencySet>
 
       <!-- Pull in the example projects -->     
       <dependencySet>
-         <outputDirectory>examples/helloworld</outputDirectory>
+         <outputDirectory>examples</outputDirectory>
          <unpack>true</unpack>
          <useProjectArtifact>false</useProjectArtifact>
          <includes>
             <include>org.jboss.seam.remoting:seam-remoting-helloworld-example</include>
-         </includes>
-      </dependencySet>
-
-      <dependencySet>
-         <outputDirectory>examples/model</outputDirectory>
-         <unpack>true</unpack>
-         <useProjectArtifact>false</useProjectArtifact>
-         <includes>
             <include>org.jboss.seam.remoting:seam-remoting-model-example</include>
-         </includes>
-      </dependencySet>
-      
-      <dependencySet>
-         <outputDirectory>examples/validation</outputDirectory>
-         <unpack>true</unpack>
-         <useProjectArtifact>false</useProjectArtifact>
-         <includes>
             <include>org.jboss.seam.remoting:seam-remoting-validation-example</include>
          </includes>
-      </dependencySet>      
-      
-      <dependencySet>
-         <outputDirectory>examples/helloworld</outputDirectory>
-         <unpack>true</unpack>
-         <useProjectArtifact>false</useProjectArtifact>
-         <includes>
-            <include>org.jboss.seam.remoting:seam-remoting-helloworld-example</include>
-         </includes>
-      </dependencySet>            
+      </dependencySet>
       
       <!-- Pull in JavaDoc for api -->
       <dependencySet>
@@ -113,5 +91,20 @@
             </excludes>
          </unpackOptions>
       </dependencySet>
+      
+      <!-- Source code -->
+      <dependencySet>
+         <outputDirectory>source</outputDirectory>
+         <unpack>true</unpack>
+         <useProjectArtifact>false</useProjectArtifact>
+         <includes>
+            <include>org.jboss.seam.remoting:seam-remoting:*:sources</include>
+         </includes>
+         <unpackOptions>
+            <excludes>
+               <exclude>META-INF/</exclude>
+            </excludes>
+         </unpackOptions>
+      </dependencySet>       
    </dependencySets>
 </assembly>

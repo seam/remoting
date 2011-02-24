@@ -8,17 +8,25 @@ Seam Remoting is an AJAX remoting API for Java EE6 applications.
 Contents of distribution
 ========================
 
-doc/
+ artifacts/
+ 
+   Seam Remoting libraries
 
-  API Docs and reference guide.
+ doc/
+
+   API Docs and reference guide.
   
-examples/
+ examples/
 
-  Seam Remoting Examples
+   Seam Remoting Examples
   
-lib/
+ lib/
 
-  Seam Remoting Jar files
+   Libraries for dependencies
+   
+ source/
+ 
+   Source code for this module
   
 Licensing
 =========

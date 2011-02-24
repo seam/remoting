@@ -82,6 +82,16 @@
          <groupId>org.jboss.seam.conversation</groupId>
          <artifactId>seam-conversation-spi</artifactId>
          <scope>compile</scope>
+         <exclusions>
+           <exclusion>
+              <groupId>javax.enterprise</groupId>
+              <artifactId>cdi-api</artifactId>
+           </exclusion>
+           <exclusion>
+              <groupId>javax.servlet</groupId>
+              <artifactId>servlet-api</artifactId>
+           </exclusion>
+         </exclusions>
       </dependency>
    </dependencies>
 
