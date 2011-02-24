@@ -4,13 +4,13 @@
    <parent>
       <groupId>org.jboss.seam.remoting</groupId>
       <artifactId>seam-remoting-parent</artifactId>
-      <version>3.0.0.CR1</version>
+      <version>3.0.1.CR1-SNAPSHOT</version>
       <relativePath>../pom.xml</relativePath>
    </parent>
 
    <groupId>org.jboss.seam.remoting</groupId>
    <artifactId>seam-remoting-reference-guide</artifactId>
-   <version>3.0.0.CR1</version>
+   <version>3.0.1.CR1-SNAPSHOT</version>
    <packaging>jdocbook</packaging>
    <name>Seam Remoting Reference Guide</name>
 
