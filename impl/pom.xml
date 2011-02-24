@@ -60,7 +60,7 @@
       </dependency>
 
       <!-- non portable dependency -->
-      <dependency>
+      <!--dependency>
          <groupId>org.jboss.weld</groupId>
          <artifactId>weld-core</artifactId>
          <scope>provided</scope>
@@ -70,7 +70,7 @@
          <groupId>org.jboss.weld</groupId>
          <artifactId>weld-api</artifactId>
          <scope>provided</scope>
-      </dependency>
+      </dependency-->
    
       <dependency>
          <groupId>org.jboss.seam.solder</groupId>
