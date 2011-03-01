@@ -10,7 +10,7 @@
    </parent>
 
    <groupId>org.jboss.seam.remoting</groupId>
-   <artifactId>seam-remoting-helloworld-example</artifactId>
+   <artifactId>seam-remoting-example-helloworld</artifactId>
    <packaging>war</packaging>
    <version>3.0.0-SNAPSHOT</version>
    <name>Seam Remoting Helloworld Example</name>
@@ -27,7 +27,13 @@
          <groupId>org.jboss.seam.remoting</groupId>
          <artifactId>seam-remoting</artifactId>
          <version>${project.version}</version>
-      </dependency>      
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.seam.conversation</groupId>
+         <artifactId>seam-conversation-weld</artifactId>
+         <version>3.0.0.Beta2</version>
+      </dependency>
   
       <dependency>
          <groupId>org.seleniumhq.selenium.client-drivers</groupId>
@@ -53,7 +59,7 @@
    </dependencies>
    
    <build>
-      <finalName>helloworld</finalName>
+      <finalName>remoting-helloworld</finalName>
       <plugins>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
