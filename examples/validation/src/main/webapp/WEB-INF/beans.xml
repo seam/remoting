@@ -4,7 +4,7 @@
    xmlns:p="urn:java:org.jboss.seam.persistence.transaction"
    xmlns:s="urn:java:ee" 
    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
-      http://java.sun.com/xml/ns/javaee/beans_1_0.xsd">
+      http://jboss.org/schema/cdi/beans_1_0.xsd">
    
    <p:SeSynchronizations>
      <s:modifies/>
