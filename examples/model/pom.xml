@@ -99,7 +99,7 @@
    </dependencies>
    
    <build>
-      <finalName>model</finalName>
+      <finalName>remoting-model</finalName>
       <plugins>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
