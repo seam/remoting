@@ -10,7 +10,7 @@
    </parent>
 
    <groupId>org.jboss.seam.remoting</groupId>
-   <artifactId>seam-remoting-validation-example</artifactId>
+   <artifactId>seam-remoting-example-validation</artifactId>
    <packaging>war</packaging>
    <version>3.0.0-SNAPSHOT</version>
    <name>Seam Remoting Validation Example</name>
