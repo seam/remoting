@@ -51,7 +51,7 @@
 
       <dependency>
          <groupId>org.jboss.seam.remoting</groupId>
-         <artifactId>seam-remoting-helloworld-example</artifactId>
+         <artifactId>seam-remoting-example-helloworld</artifactId>
          <version>${project.version}</version>
          <type>zip</type>
          <optional>true</optional>
@@ -59,7 +59,7 @@
       
       <dependency>
          <groupId>org.jboss.seam.remoting</groupId>
-         <artifactId>seam-remoting-model-example</artifactId>
+         <artifactId>seam-remoting-example-model</artifactId>
          <version>${project.version}</version>
          <type>zip</type>
          <optional>true</optional>
@@ -67,7 +67,7 @@
 
       <dependency>
          <groupId>org.jboss.seam.remoting</groupId>
-         <artifactId>seam-remoting-validation-example</artifactId>
+         <artifactId>seam-remoting-example-validation</artifactId>
          <version>${project.version}</version>
          <type>zip</type>
          <optional>true</optional>
