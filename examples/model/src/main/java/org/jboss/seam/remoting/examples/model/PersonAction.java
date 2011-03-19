@@ -8,7 +8,7 @@ import javax.enterprise.context.ConversationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
-import org.jboss.seam.persistence.transaction.Transactional;
+import org.jboss.seam.transaction.Transactional;
 import org.jboss.seam.remoting.annotations.WebRemote;
 
 

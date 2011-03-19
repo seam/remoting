@@ -52,6 +52,12 @@
             <scope>provided</scope>
          </dependency>
 
+         <dependency>
+            <groupId>org.jboss.seam.conversation</groupId>
+            <artifactId>seam-conversation-weld</artifactId>
+            <version>3.0.0.CR1</version>
+         </dependency>
+
       </dependencies>
    </dependencyManagement>
 
