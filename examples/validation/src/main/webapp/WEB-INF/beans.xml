@@ -11,7 +11,7 @@
    </p:SeSynchronizations> 
    
    <interceptors>
-     <class>org.jboss.seam.persistence.transaction.TransactionInterceptor</class>
+     <class>org.jboss.seam.transaction.TransactionInterceptor</class>
    </interceptors>
 
 </beans>
