@@ -30,12 +30,6 @@
       </dependency>
 
       <dependency>
-         <groupId>org.jboss.seam.conversation</groupId>
-         <artifactId>seam-conversation-weld</artifactId>
-         <version>3.0.0.Beta2</version>
-      </dependency>
-  
-      <dependency>
          <groupId>org.seleniumhq.selenium.client-drivers</groupId>
          <artifactId>selenium-java-client-driver</artifactId>
          <version>${selenium.java.client.version}</version>

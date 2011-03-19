@@ -26,29 +26,11 @@
       <dependency>
          <groupId>org.jboss.seam.conversation</groupId>
          <artifactId>seam-conversation-spi</artifactId>
-         <version>3.0.0.Beta1</version>
-         <exclusions>
-            <exclusion>
-               <groupId>javax.servlet</groupId>
-               <artifactId>servlet-api</artifactId>
-            </exclusion>
-         </exclusions>
       </dependency>
 
       <dependency>
          <groupId>org.jboss.seam.conversation</groupId>
          <artifactId>seam-conversation-weld</artifactId>
-         <version>3.0.0.Beta1</version>
-         <exclusions>
-            <exclusion>
-               <groupId>org.jboss.weld</groupId>
-               <artifactId>weld-api</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.jboss.weld</groupId>
-               <artifactId>weld-core</artifactId>
-            </exclusion>
-         </exclusions>
       </dependency>
 
       <dependency>
