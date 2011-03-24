@@ -20,10 +20,9 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 
+import org.jboss.logging.Logger;
 import org.jboss.seam.remoting.BeanMetadata.BeanType;
 import org.jboss.seam.remoting.annotations.WebRemote;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Caches BeanMetadata instances
@@ -33,7 +32,7 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class MetadataCache
 {
-   private static final Logger log = LoggerFactory.getLogger(MetadataCache.class);
+   private static final Logger log = Logger.getLogger(MetadataCache.class);
    
    private Map<Class<?>,BeanMetadata> metadataCache;
    

@@ -17,10 +17,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.jboss.logging.Logger;
 import org.jboss.seam.remoting.model.ModelHandler;
 import org.jboss.seam.remoting.validation.ConstraintTranslator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Serves JavaScript implementation of Seam Remoting
@@ -63,7 +62,7 @@ public class Remoting extends HttpServlet
    
    private Map<String, byte[]> resourceCache = new HashMap<String, byte[]>();
 
-   private static final Logger log = LoggerFactory.getLogger(Remoting.class);
+   private static final Logger log = Logger.getLogger(Remoting.class);
 
    private static final Pattern pathPattern = Pattern.compile("/(.*?)/([^/]+)");
 

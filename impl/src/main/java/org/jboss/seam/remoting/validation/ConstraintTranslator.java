@@ -32,14 +32,11 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.jboss.logging.Logger;
 import org.jboss.seam.remoting.AnnotationsParser;
 import org.jboss.seam.remoting.RequestHandler;
 import org.jboss.seam.remoting.util.JsConverter;
 import org.jboss.seam.remoting.util.Strings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
 
 /**
  * This class reads constraints metadata from all requested beans, translate them and send them back to client
@@ -49,7 +46,8 @@ import org.slf4j.LoggerFactory;
 public class ConstraintTranslator implements RequestHandler{
                                                    /////////TODO what if client wanted to use a customized ValidatorFactory
 	private static final ValidatorFactory Factory = Validation.buildDefaultValidatorFactory();
-	private static final Logger log = LoggerFactory.getLogger(ConstraintTranslator.class);
+	private static final Logger log = Logger.getLogger(ConstraintTranslator.class);
+	
 	private static Annotation[] EMPTY_ANNOTATIONS = new Annotation[]{};
 
 	private static final byte[] VALIDATION_TAG_OPEN  = "<validation>".getBytes();

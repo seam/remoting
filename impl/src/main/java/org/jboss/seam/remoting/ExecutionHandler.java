@@ -16,9 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.jboss.logging.Logger;
 import org.jboss.seam.remoting.wrapper.Wrapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Unmarshals the calls from an HttpServletRequest, executes them in order and
@@ -28,7 +27,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ExecutionHandler extends AbstractRequestHandler implements RequestHandler
 {
-   private static final Logger log = LoggerFactory.getLogger(ExecutionHandler.class);
+   private static final Logger log = Logger.getLogger(ExecutionHandler.class);
 
    @Inject BeanManager beanManager;
    @Inject Conversation conversation;
