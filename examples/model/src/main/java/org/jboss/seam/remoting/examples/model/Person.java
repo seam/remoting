@@ -10,6 +10,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 @Entity
 public class Person implements Serializable
@@ -54,6 +56,7 @@ public class Person implements Serializable
       this.lastName = lastName;
    }
    
+   @Temporal(TemporalType.DATE)
    public Date getDateOfBirth()
    {
       return dateOfBirth;
