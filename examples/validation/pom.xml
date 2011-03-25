@@ -84,6 +84,22 @@
    
    <profiles>
       <profile>
+         <id>glassfish</id>
+         <dependencies>
+            <dependency>
+               <groupId>dom4j</groupId>
+               <artifactId>dom4j</artifactId>
+            </dependency>
+         </dependencies>
+         <build>
+            <resources>
+               <resource>
+                  <directory>src/main/resources-glassfish</directory>
+               </resource>
+            </resources>
+         </build>
+      </profile>
+      <profile>
          <id>distribution</id>
          <activation>
             <property>
