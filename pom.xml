@@ -19,10 +19,6 @@
       <module>docs</module>
    </modules>
    
-   <prerequisites>
-      <maven>3.0</maven>
-   </prerequisites>
-
    <properties>
       <seam.version>3.0.0.CR8</seam.version>
    </properties>
