@@ -30,19 +30,23 @@ import org.jboss.seam.remoting.validation.ConstraintTranslator;
 public class Remoting extends HttpServlet
 {
    private static final long serialVersionUID = -3911197516105313424L;
-   
+
    private static final String REQUEST_PATH_EXECUTE = "/execute";
-   //private static final String REQUEST_PATH_SUBSCRIPTION = "/subscription";
-   //private static final String REQUEST_PATH_POLL = "/poll";
-   private static final String REQUEST_PATH_INTERFACE = "/interface.js";   
+   // private static final String REQUEST_PATH_SUBSCRIPTION = "/subscription";
+   // private static final String REQUEST_PATH_POLL = "/poll";
+   private static final String REQUEST_PATH_INTERFACE = "/interface.js";
    private static final String REQUEST_PATH_MODEL = "/model";
    private static final String REQUEST_PATH_VALIDATION = "/validate";
-   
-   @Inject Instance<ExecutionHandler> executionHandlerInstance;
-   @Inject Instance<InterfaceGenerator> interfaceHandlerInstance;
-   @Inject Instance<ModelHandler> modelHandlerInstance;
-   @Inject Instance<ConstraintTranslator> translatorInstance;
-   
+
+   @Inject
+   Instance<ExecutionHandler> executionHandlerInstance;
+   @Inject
+   Instance<InterfaceGenerator> interfaceHandlerInstance;
+   @Inject
+   Instance<ModelHandler> modelHandlerInstance;
+   @Inject
+   Instance<ConstraintTranslator> translatorInstance;
+
    public static final int DEFAULT_POLL_TIMEOUT = 10; // 10 seconds
    public static final int DEFAULT_POLL_INTERVAL = 1; // 1 second
 
@@ -59,7 +63,7 @@ public class Remoting extends HttpServlet
     * one context path.
     */
    private Map<String, byte[]> cachedConfig = new HashMap<String, byte[]>();
-   
+
    private Map<String, byte[]> resourceCache = new HashMap<String, byte[]>();
 
    private static final Logger log = Logger.getLogger(Remoting.class);
@@ -68,8 +72,7 @@ public class Remoting extends HttpServlet
 
    private static final String REMOTING_RESOURCE_PATH = "resource";
 
-   private synchronized void initConfig(String contextPath,
-         HttpServletRequest request)
+   private synchronized void initConfig(String contextPath, HttpServletRequest request)
    {
       if (!cachedConfig.containsKey(contextPath))
       {
@@ -82,12 +85,11 @@ public class Remoting extends HttpServlet
          sb.append("\nSeam.debug = ");
          sb.append(getDebug() ? "true" : "false");
          sb.append(";");
-         /*sb.append("\nSeam.pollInterval = ");
-         sb.append(getPollInterval());
-         sb.append(";");
-         sb.append("\nSeam.pollTimeout = ");
-         sb.append(getPollTimeout());
-         sb.append(";");*/
+         /*
+          * sb.append("\nSeam.pollInterval = "); sb.append(getPollInterval());
+          * sb.append(";"); sb.append("\nSeam.pollTimeout = ");
+          * sb.append(getPollTimeout()); sb.append(";");
+          */
 
          cachedConfig.put(contextPath, sb.toString().getBytes());
       }
@@ -99,8 +101,7 @@ public class Remoting extends HttpServlet
     * 
     * @param out OutputStream
     */
-   private void appendConfig(OutputStream out, String contextPath,
-         HttpServletRequest request) throws IOException
+   private void appendConfig(OutputStream out, String contextPath, HttpServletRequest request) throws IOException
    {
       if (!cachedConfig.containsKey(contextPath))
       {
@@ -115,30 +116,27 @@ public class Remoting extends HttpServlet
     * @param resourceName String The name of the resource to serve
     * @param out OutputStream The OutputStream to write the resource to
     */
-   private void writeResource(String resourceName, HttpServletResponse response,
-         boolean compress)
-         throws IOException
+   private void writeResource(String resourceName, HttpServletResponse response, boolean compress) throws IOException
    {
       String cacheKey = resourceName + ":" + Boolean.toString(compress);
       if (!resourceCache.containsKey(cacheKey))
       {
-         synchronized(resourceCache)
+         synchronized (resourceCache)
          {
             if (!resourceCache.containsKey(cacheKey))
             {
                ByteArrayOutputStream out = new ByteArrayOutputStream();
-               
+
                // Only allow resource requests for .js files
                if (resourceName.endsWith(".js"))
                {
-                  InputStream in = this.getClass().getClassLoader().getResourceAsStream(
-                        "org/jboss/seam/remoting/" + resourceName);
+                  InputStream in = this.getClass().getClassLoader().getResourceAsStream("org/jboss/seam/remoting/" + resourceName);
                   try
                   {
                      if (in != null)
                      {
                         response.setContentType("text/javascript");
-      
+
                         byte[] buffer = new byte[1024];
                         int read = in.read(buffer);
                         while (read != -1)
@@ -146,20 +144,20 @@ public class Remoting extends HttpServlet
                            out.write(buffer, 0, read);
                            read = in.read(buffer);
                         }
-                        
-                        resourceCache.put(cacheKey, compress ? 
-                              compressResource(out.toByteArray()) : out.toByteArray());
-                        
+
+                        resourceCache.put(cacheKey, compress ? compressResource(out.toByteArray()) : out.toByteArray());
+
                         response.getOutputStream().write(resourceCache.get(cacheKey));
-                     } 
+                     }
                      else
                      {
                         log.error(String.format("Resource [%s] not found.", resourceName));
                      }
-                  } 
+                  }
                   finally
                   {
-                     if (in != null) in.close();
+                     if (in != null)
+                        in.close();
                   }
                }
             }
@@ -170,7 +168,7 @@ public class Remoting extends HttpServlet
          response.getOutputStream().write(resourceCache.get(cacheKey));
       }
    }
-   
+
    /**
     * Compresses JavaScript resources by removing comments, cr/lf, leading and
     * trailing white space.
@@ -185,16 +183,19 @@ public class Remoting extends HttpServlet
       // Remove comments
       resource = resource.replaceAll("/{2,}[^\\n\\r]*[\\n\\r]", "");
       resource = resource.replaceAll("/\\*([^*]|[\\r\\n]|(\\*+([^*/]|[\\r\\n])))*\\*/", "");
-      
-      // Remove leading and trailing space and CR/LF's for lines with a statement terminator 
+
+      // Remove leading and trailing space and CR/LF's for lines with a
+      // statement terminator
       resource = resource.replaceAll(";\\s*[\\n\\r]+\\s*", ";");
-      
-      // Remove leading and trailing space and CR/LF's for lines with a block terminator 
+
+      // Remove leading and trailing space and CR/LF's for lines with a block
+      // terminator
       resource = resource.replaceAll("}\\s*[\\n\\r]+\\s*", "}");
-      
-      // Replace any remaining leading/trailing space and CR/LF with a single space
+
+      // Replace any remaining leading/trailing space and CR/LF with a single
+      // space
       resource = resource.replaceAll("\\s*[\\n\\r]+\\s*", " ");
-      
+
       return resource.getBytes();
    }
 
@@ -247,41 +248,44 @@ public class Remoting extends HttpServlet
    {
       this.servletConfig = config;
    }
-   
+
    protected ExecutionHandler getExecutionHandler()
    {
       return executionHandlerInstance.get();
    }
-   
+
    protected InterfaceGenerator getInterfaceHandler()
    {
       return interfaceHandlerInstance.get();
    }
-   
+
    protected ModelHandler getModelHandler()
    {
       return modelHandlerInstance.get();
    }
-   
+
    protected ConstraintTranslator getTranslatorHandler()
    {
       return translatorInstance.get();
    }
 
-   public void service(HttpServletRequest request, HttpServletResponse response)
-         throws ServletException, IOException
+   public void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
    {
       try
       {
          String pathInfo = request.getPathInfo();
-         
+
          // Nothing to do
-         if (pathInfo == null) response.sendError(HttpServletResponse.SC_NOT_FOUND, "No path information provided");
-         
+         if (pathInfo == null)
+         {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "No path information provided");
+            return;
+         }
+
          if (pathInfo.startsWith(servletConfig.getServletContext().getContextPath()))
          {
             pathInfo = pathInfo.substring(servletConfig.getServletContext().getContextPath().length());
-         }               
+         }
 
          if (REQUEST_PATH_EXECUTE.equals(pathInfo))
          {
@@ -295,9 +299,9 @@ public class Remoting extends HttpServlet
          {
             getModelHandler().handle(request, response);
          }
-		   else if (REQUEST_PATH_VALIDATION.equals(pathInfo))
-		   {
-        	   getTranslatorHandler().handle(request, response); 
+         else if (REQUEST_PATH_VALIDATION.equals(pathInfo))
+         {
+            getTranslatorHandler().handle(request, response);
          }
          else
          {
@@ -311,18 +315,17 @@ public class Remoting extends HttpServlet
                {
                   String compressParam = request.getParameter("compress");
                   boolean compress = !(compressParam != null && "false".equals(compressParam));
-                  
+
                   writeResource(resource, response, compress);
                   if ("remote.js".equals(resource))
                   {
-                     appendConfig(response.getOutputStream(), request
-                           .getContextPath(), request);
+                     appendConfig(response.getOutputStream(), request.getContextPath(), request);
                   }
                }
                response.getOutputStream().flush();
             }
          }
-      } 
+      }
       catch (Exception ex)
       {
          log.error("Error", ex);
