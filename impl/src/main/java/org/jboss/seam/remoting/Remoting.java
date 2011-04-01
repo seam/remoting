@@ -276,7 +276,7 @@ public class Remoting extends HttpServlet
          String pathInfo = request.getPathInfo();
          
          // Nothing to do
-         if (pathInfo == null) response.sendError(404, "No path information provided");
+         if (pathInfo == null) response.sendError(HttpServletResponse.SC_NOT_FOUND, "No path information provided");
          
          if (pathInfo.startsWith(servletConfig.getServletContext().getContextPath()))
          {
