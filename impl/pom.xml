@@ -1,63 +1,86 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-   <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-   <parent>
-      <artifactId>seam-remoting-parent</artifactId>
-      <groupId>org.jboss.seam.remoting</groupId>
-      <version>3.0.1-SNAPSHOT</version>
-      <relativePath>../pom.xml</relativePath>
-   </parent>
+	<parent>
+		<artifactId>seam-remoting-parent</artifactId>
+		<groupId>org.jboss.seam.remoting</groupId>
+		<version>3.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
 
-   <groupId>org.jboss.seam.remoting</groupId>
-   <artifactId>seam-remoting</artifactId>
-   <version>3.0.1-SNAPSHOT</version>
-   <packaging>jar</packaging>
-   <name>Seam Remoting Implementation</name>
-   <url>${project.parent.url}</url>
+	<groupId>org.jboss.seam.remoting</groupId>
+	<artifactId>seam-remoting</artifactId>
+	<version>3.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	<name>Seam Remoting Implementation</name>
+	<url>${project.parent.url}</url>
 
-   <dependencies>
-   
-      <dependency>
-         <groupId>javax.el</groupId>
-         <artifactId>el-api</artifactId>
-         <optional>true</optional>
-      </dependency>
+	<dependencies>
 
-      <dependency>
-         <groupId>javax.validation</groupId>
-         <artifactId>validation-api</artifactId>
-         <scope>provided</scope>
-      </dependency>
+		<dependency>
+			<groupId>javax.el</groupId>
+			<artifactId>el-api</artifactId>
+			<optional>true</optional>
+		</dependency>
 
-      <dependency>
-         <groupId>javax.enterprise</groupId>
-         <artifactId>cdi-api</artifactId>
-         <scope>provided</scope>
-      </dependency>
+		<dependency>
+			<groupId>javax.validation</groupId>
+			<artifactId>validation-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
 
-      <dependency>
-         <groupId>dom4j</groupId>
-         <artifactId>dom4j</artifactId>
-         <scope>provided</scope>
-      </dependency>
+		<dependency>
+			<groupId>javax.enterprise</groupId>
+			<artifactId>cdi-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
 
-      <dependency>
-         <!-- Required until the Servlet 3.0 API can be resolved in Central -->
-         <groupId>org.jboss.spec.javax.servlet</groupId>
-         <artifactId>jboss-servlet-api_3.0_spec</artifactId>
-         <scope>provided</scope>
-      </dependency>
+		<dependency>
+			<groupId>dom4j</groupId>
+			<artifactId>dom4j</artifactId>
+			<scope>provided</scope>
+		</dependency>
 
-      <dependency>
-         <groupId>org.jboss.seam.solder</groupId>
-         <artifactId>seam-solder</artifactId>
-         <scope>compile</scope>
-      </dependency>   
+		<dependency>
+			<!-- Required until the Servlet 3.0 API can be resolved in Central -->
+			<groupId>org.jboss.spec.javax.servlet</groupId>
+			<artifactId>jboss-servlet-api_3.0_spec</artifactId>
+			<scope>provided</scope>
+		</dependency>
 
-      <dependency>
-         <groupId>org.jboss.seam.conversation</groupId>
-         <artifactId>seam-conversation-spi</artifactId>
-      </dependency>
-   </dependencies>
+		<dependency>
+			<groupId>org.jboss.seam.solder</groupId>
+			<artifactId>seam-solder</artifactId>
+			<scope>compile</scope>
+		</dependency>
 
+		<dependency>
+			<groupId>org.jboss.seam.conversation</groupId>
+			<artifactId>seam-conversation-spi</artifactId>
+		</dependency>
+	</dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>javacc-maven-plugin</artifactId>
+				<version>2.6</version>
+				<executions>
+					<execution>
+						<id>jtb-javacc</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>jtb-javacc</goal>
+						</goals>
+						<configuration>
+							<nodePackage>org.jboss.seam.remoting.annotationparser</nodePackage>
+							<sourceDirectory>src/main/javacc</sourceDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
