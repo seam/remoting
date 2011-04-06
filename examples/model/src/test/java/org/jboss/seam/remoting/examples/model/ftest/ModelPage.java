@@ -9,6 +9,7 @@ import org.jboss.test.selenium.waiting.Wait;
 import org.jboss.test.selenium.waiting.conditions.ElementPresent;
 import org.jboss.test.selenium.waiting.selenium.SeleniumWaiting;
 import static org.jboss.test.selenium.guard.request.RequestTypeGuardFactory.waitXhr;
+import static org.testng.Assert.assertEquals;
 
 public class ModelPage
 {
@@ -98,6 +99,10 @@ public class ModelPage
    public ModelPage applyChanges()
    {
       waitXhr(selenium).click(PERSON_APPLY_CHANGES);
+      if (selenium.isAlertPresent())
+      {
+          assertEquals(selenium.getAlert(), "Changes applied");
+      }
       return this;
    }
 

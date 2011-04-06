@@ -1,11 +1,11 @@
 package org.jboss.seam.remoting.examples.model.ftest;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
 import org.jboss.test.selenium.AbstractTestCase;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 public class PersonTest extends AbstractTestCase
 {
@@ -26,20 +26,6 @@ public class PersonTest extends AbstractTestCase
       assertTrue(page.getBirthdate().length() > 1); // avoid possible problems with locales
    }
    
-   @Test(dependsOnMethods = "testImportedDetails")
-   public void testUpdatingPersonDetails()
-   {
-      page.selectPerson("Shane Bryzak");
-      page.setFirstName("John");
-      page.setSurname("Doe");
-      page.applyChanges();
-      
-      page.selectPerson("John Doe");
-      assertEquals(page.getFirstName(), "John");
-      assertEquals(page.getSurname(), "Doe");
-      assertTrue(page.getBirthdate().length() > 0);
-   }
-   
    @Test
    public void testAddingNewPerson()
    {
@@ -49,11 +35,23 @@ public class PersonTest extends AbstractTestCase
       page.setBirthdate("1901/01/01");
       page.applyChanges();
       
-      assertEquals(page.getSelenium().getAlert(), "Changes applied");
-      
       page.selectPerson("Martin Gencur");
       assertEquals(page.getFirstName(), "Martin");
       assertEquals(page.getSurname(), "Gencur");
       assertTrue(page.getBirthdate().length() > 0);
+   }
+   
+   @Test(dependsOnMethods = "testAddingNewPerson")
+   public void testUpdatingPersonDetails()
+   {
+       page.selectPerson("Martin Gencur");
+       page.setFirstName("John");
+       page.setSurname("Doe");
+       page.applyChanges();
+       
+       page.selectPerson("John Doe");
+       assertEquals(page.getFirstName(), "John");
+       assertEquals(page.getSurname(), "Doe");
+       assertTrue(page.getBirthdate().length() > 0);
    }
 }

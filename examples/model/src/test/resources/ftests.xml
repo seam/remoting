@@ -1,25 +1,13 @@
 <!DOCTYPE suite SYSTEM "http://beust.com/testng/testng-1.0.dtd" >
-<suite name="Seam Remoting Model example" verbose="2" parallel="false">
-	<test name="Model testsuite">
-		<packages>
-			<package name="org.jboss.seam.remoting.examples.model.ftest"/>
-		</packages>
-		
-		<!-- SEAMREMOTING-20 -->
-		<classes>
-			<class name="org.jboss.seam.remoting.examples.model.ftest.PersonTest">
-				<methods>
-					<exclude name="testUpdatingPersonDetails"/>
-				</methods>
-			</class>
-			<class name="org.jboss.seam.remoting.examples.model.ftest.AddressTest">
-				<methods>
-					<exclude name="testUpdatingExistingAddress"/>
-					<exclude name="testAddingNewAddress"/>
-					<exclude name="testRemovingAddress"/>
-				</methods>
-			</class>
-		</classes>
-		
-	</test>
+<suite name="Seam Remoting Model example" verbose="3" parallel="false">
+    <test name="Model Person Test">
+        <classes>
+            <class name="org.jboss.seam.remoting.examples.model.ftest.PersonTest" />
+        </classes>
+    </test>
+    <test name="Model Address Test">
+        <classes>
+            <class name="org.jboss.seam.remoting.examples.model.ftest.AddressTest" />
+        </classes>
+    </test>
 </suite>
