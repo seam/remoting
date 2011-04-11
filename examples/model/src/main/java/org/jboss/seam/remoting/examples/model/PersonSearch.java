@@ -18,7 +18,7 @@ public @Model class PersonSearch
    @Inject EntityManager entityManager;
    
    @WebRemote @SuppressWarnings("unchecked")
-   public List<Person> listPeople()
+   public List<Person> listPeople() throws Exception
    {
       return entityManager.createQuery("select p from Person p").getResultList();
    }
