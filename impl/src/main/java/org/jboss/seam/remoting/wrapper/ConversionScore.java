@@ -1,24 +1,20 @@
 package org.jboss.seam.remoting.wrapper;
 
 /**
- *
  * @author Shane Bryzak
  */
-public enum ConversionScore
-{
-  nomatch(0),
-  compatible(1),
-  exact(2);
+public enum ConversionScore {
+    nomatch(0),
+    compatible(1),
+    exact(2);
 
-  private int score;
+    private int score;
 
-  ConversionScore(int score)
-  {
-    this.score = score;
-  }
+    ConversionScore(int score) {
+        this.score = score;
+    }
 
-  public int getScore()
-  {
-    return score;
-  }
+    public int getScore() {
+        return score;
+    }
 }

@@ -2,15 +2,15 @@
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xsi:schemaLocation="
         http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-fragment_3_0.xsd" version="3.0">
- 
-   <servlet>
-      <servlet-name>Remoting Servlet</servlet-name>
-      <servlet-class>org.jboss.seam.remoting.Remoting</servlet-class>
-      <load-on-startup>1</load-on-startup>
-   </servlet>
 
-   <servlet-mapping>
-      <servlet-name>Remoting Servlet</servlet-name>
-      <url-pattern>/seam/resource/remoting/*</url-pattern>
-   </servlet-mapping>
+    <servlet>
+        <servlet-name>Remoting Servlet</servlet-name>
+        <servlet-class>org.jboss.seam.remoting.Remoting</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Remoting Servlet</servlet-name>
+        <url-pattern>/seam/resource/remoting/*</url-pattern>
+    </servlet-mapping>
 </web-fragment>
