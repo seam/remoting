@@ -2,12 +2,12 @@
 <suite name="Seam Remoting Model example" verbose="3" parallel="false">
     <test name="Model Person Test">
         <classes>
-            <class name="org.jboss.seam.remoting.examples.model.ftest.PersonTest" />
+            <class name="org.jboss.seam.remoting.examples.model.ftest.PersonTest"/>
         </classes>
     </test>
     <test name="Model Address Test">
         <classes>
-            <class name="org.jboss.seam.remoting.examples.model.ftest.AddressTest" />
+            <class name="org.jboss.seam.remoting.examples.model.ftest.AddressTest"/>
         </classes>
     </test>
 </suite>

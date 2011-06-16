@@ -7,42 +7,37 @@ import javax.servlet.ServletContext;
 import org.jboss.seam.remoting.model.ModelHandler;
 import org.jboss.seam.solder.beanManager.BeanManagerLocator;
 
-public class NonInjectionRemoting extends Remoting
-{
-   private static final long serialVersionUID = -8985912269669096603L;
-     
-   private static BeanManager getBeanManager(ServletContext ctx)
-   {
-      return new BeanManagerLocator().getBeanManager();      
-   }
-   
-   @SuppressWarnings("unchecked")
-   @Override
-   protected ExecutionHandler getExecutionHandler()
-   {
-      BeanManager beanManager = getBeanManager(getServletConfig().getServletContext());
-      Bean<ExecutionHandler> bean = (Bean<ExecutionHandler>) beanManager.getBeans(
-            ExecutionHandler.class).iterator().next();
-      return bean.create(beanManager.createCreationalContext(bean));
-   }
-   
-   @SuppressWarnings("unchecked")
-   @Override
-   protected InterfaceGenerator getInterfaceHandler()
-   {
-      BeanManager beanManager = getBeanManager(getServletConfig().getServletContext());
-      Bean<InterfaceGenerator> bean = (Bean<InterfaceGenerator>) beanManager.getBeans(
-            InterfaceGenerator.class).iterator().next();
-      return bean.create(beanManager.createCreationalContext(bean));
-   }
-   
-   @SuppressWarnings("unchecked")
-   @Override
-   protected ModelHandler getModelHandler()
-   {
-      BeanManager beanManager = getBeanManager(getServletConfig().getServletContext());
-      Bean<ModelHandler> bean = (Bean<ModelHandler>) beanManager.getBeans(
-            ModelHandler.class).iterator().next();
-      return bean.create(beanManager.createCreationalContext(bean));
-   }
+public class NonInjectionRemoting extends Remoting {
+    private static final long serialVersionUID = -8985912269669096603L;
+
+    private static BeanManager getBeanManager(ServletContext ctx) {
+        return new BeanManagerLocator().getBeanManager();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected ExecutionHandler getExecutionHandler() {
+        BeanManager beanManager = getBeanManager(getServletConfig().getServletContext());
+        Bean<ExecutionHandler> bean = (Bean<ExecutionHandler>) beanManager.getBeans(
+                ExecutionHandler.class).iterator().next();
+        return bean.create(beanManager.createCreationalContext(bean));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected InterfaceGenerator getInterfaceHandler() {
+        BeanManager beanManager = getBeanManager(getServletConfig().getServletContext());
+        Bean<InterfaceGenerator> bean = (Bean<InterfaceGenerator>) beanManager.getBeans(
+                InterfaceGenerator.class).iterator().next();
+        return bean.create(beanManager.createCreationalContext(bean));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected ModelHandler getModelHandler() {
+        BeanManager beanManager = getBeanManager(getServletConfig().getServletContext());
+        Bean<ModelHandler> bean = (Bean<ModelHandler>) beanManager.getBeans(
+                ModelHandler.class).iterator().next();
+        return bean.create(beanManager.createCreationalContext(bean));
+    }
 }

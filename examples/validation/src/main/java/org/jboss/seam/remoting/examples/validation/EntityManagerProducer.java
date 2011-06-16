@@ -7,11 +7,10 @@ import javax.persistence.PersistenceUnit;
 
 import org.jboss.seam.solder.core.ExtensionManaged;
 
-public class EntityManagerProducer
-{
-   @PersistenceUnit
-   @ConversationScoped
-   @Produces
-   @ExtensionManaged
-   EntityManagerFactory emf;  
+public class EntityManagerProducer {
+    @PersistenceUnit
+    @ConversationScoped
+    @Produces
+    @ExtensionManaged
+    EntityManagerFactory emf;
 }

@@ -2,82 +2,82 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-	<title>Seam Remoting - Bean Validation Example</title>
-	<link href="style.css" rel="stylesheet" type="text/css"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+    <title>Seam Remoting - Bean Validation Example</title>
+    <link href="style.css" rel="stylesheet" type="text/css"/>
 </head>
 
 <body>
 
-  <h1>Seam Remoting - Bean Validation Example</h1>
-  
-  <script type="text/javascript" src="seam/resource/remoting/resource/remote.js"></script>
-  <script type="text/javascript" src="seam/resource/remoting/interface.js?customerAction"></script>
-  
-  <script type="text/javascript">
+<h1>Seam Remoting - Bean Validation Example</h1>
+
+<script type="text/javascript" src="seam/resource/remoting/resource/remote.js"></script>
+<script type="text/javascript" src="seam/resource/remoting/interface.js?customerAction"></script>
+
+<script type="text/javascript">
     //<![CDATA[
 
     Seam.debug = true;
-    
+
     function validationCallback(violations) {
-      if (violations.length == 0) {
-        alert("All validations passed!");
-        
-        // Code goes here to save the object
-        
-      } else {                
-        for (var i = 0; i < violations.length; i++) {
-           var span = document.getElementById("validation_" + violations[i].property);
-           span.appendChild(document.createTextNode(violations[i].message));
+        if (violations.length == 0) {
+            alert("All validations passed!");
+
+            // Code goes here to save the object
+
+        } else {
+            for (var i = 0; i < violations.length; i++) {
+                var span = document.getElementById("validation_" + violations[i].property);
+                span.appendChild(document.createTextNode(violations[i].message));
+            }
         }
-      }      
     }
-           
+
     function removeChildren(ctlId) {
-      var ctl = document.getElementById(ctlId);
-      while (ctl.hasChildNodes()) {
-	      ctl.removeChild(ctl.firstChild);
-	    }
-    }    
-    
-    function saveCustomer() {       
-       removeChildren("validation_firstName");
-       removeChildren("validation_lastName");
-       removeChildren("validation_dateOfBirth");
-    
-       var customer = Seam.createBean("org.jboss.seam.remoting.examples.validation.model.Customer");
-       customer.firstName = document.getElementById("firstName").value;
-       customer.lastName = document.getElementById("lastName").value;
-       customer.dateOfBirth = new Date(document.getElementById("dateOfBirth").value);
-       Seam.validateBean(customer, validationCallback);
+        var ctl = document.getElementById(ctlId);
+        while (ctl.hasChildNodes()) {
+            ctl.removeChild(ctl.firstChild);
+        }
     }
-    
+
+    function saveCustomer() {
+        removeChildren("validation_firstName");
+        removeChildren("validation_lastName");
+        removeChildren("validation_dateOfBirth");
+
+        var customer = Seam.createBean("org.jboss.seam.remoting.examples.validation.model.Customer");
+        customer.firstName = document.getElementById("firstName").value;
+        customer.lastName = document.getElementById("lastName").value;
+        customer.dateOfBirth = new Date(document.getElementById("dateOfBirth").value);
+        Seam.validateBean(customer, validationCallback);
+    }
+
     // ]]>
-  </script> 
-  
-  <div>
+</script>
+
+<div>
     <div class="formRow">
-      <span class="label">First name</span>
-      <input id="firstName" type="text"/>
-      <span class="validationError" id="validation_firstName"/>
+        <span class="label">First name</span>
+        <input id="firstName" type="text"/>
+        <span class="validationError" id="validation_firstName"/>
     </div>
 
     <div class="formRow">
-      <span class="label">Last name</span>
-      <input id="lastName" type="text"/>
-      <span class="validationError" id="validation_lastName"/>      
+        <span class="label">Last name</span>
+        <input id="lastName" type="text"/>
+        <span class="validationError" id="validation_lastName"/>
     </div>
-    
+
     <div class="formRow">
-      <span class="label">Date of Birth (YYYY/MM/DD)</span>
-      <input id="dateOfBirth" type="text"/>
-      <span class="validationError" id="validation_dateOfBirth"/>      
+        <span class="label">Date of Birth (YYYY/MM/DD)</span>
+        <input id="dateOfBirth" type="text"/>
+        <span class="validationError" id="validation_dateOfBirth"/>
     </div>
 
     <input type="button" onclick="saveCustomer()" value="Save"/>
-  
-  </div>
-  
+
+</div>
+
 </body>
 </html>
 

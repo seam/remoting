@@ -2,284 +2,284 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-	<title>Seam Remoting - Model Example</title>
-	<link href="style.css" rel="stylesheet" type="text/css"/>
-	<link href="tree.css" rel="stylesheet" type="text/css"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+    <title>Seam Remoting - Model Example</title>
+    <link href="style.css" rel="stylesheet" type="text/css"/>
+    <link href="tree.css" rel="stylesheet" type="text/css"/>
 </head>
 
 <body onload="loadPeople()">
 
-  <h1>Seam Remoting - Model API Example</h1>
-  
-  <script type="text/javascript" src="seam/resource/remoting/resource/remote.js"></script>
-  <script type="text/javascript" src="seam/resource/remoting/interface.js?personSearch"></script>
-  
-  <script type="text/javascript">    
-    //<![CDATA[
+<h1>Seam Remoting - Model API Example</h1>
 
-    var model = null;        
-    
-    // Clears all the child elements of the specified element
-    function clearElement(e) {
-      while (e.hasChildNodes()) {
+<script type="text/javascript" src="seam/resource/remoting/resource/remote.js"></script>
+<script type="text/javascript" src="seam/resource/remoting/interface.js?personSearch"></script>
+
+<script type="text/javascript">
+//<![CDATA[
+
+var model = null;
+
+// Clears all the child elements of the specified element
+function clearElement(e) {
+    while (e.hasChildNodes()) {
         e.removeChild(e.firstChild);
-      }      
     }
-    
-    // Creates an anchor element inside a div with the specified text
-    // and optional onclick event
-    function createLinkRow(text, onclick, className) {
-      var link = document.createElement("a");
-      link.href = "#";
-      if (className) link.className = className;
-      if (onclick) link.setAttribute("onclick", onclick);
-      link.appendChild(document.createTextNode(text));
-      var div = document.createElement("div");
-      div.appendChild(link);
-      return div;      
-    }
-    
-    // Loads the full list of People entities via a remoting call
-    function loadPeople() {
-      var personList = document.getElementById("personList");
-      
-      var callback = function(people) {
+}
+
+// Creates an anchor element inside a div with the specified text
+// and optional onclick event
+function createLinkRow(text, onclick, className) {
+    var link = document.createElement("a");
+    link.href = "#";
+    if (className) link.className = className;
+    if (onclick) link.setAttribute("onclick", onclick);
+    link.appendChild(document.createTextNode(text));
+    var div = document.createElement("div");
+    div.appendChild(link);
+    return div;
+}
+
+// Loads the full list of People entities via a remoting call
+function loadPeople() {
+    var personList = document.getElementById("personList");
+
+    var callback = function(people) {
         for (var i = 0; i < people.length; i++) {
-          personList.appendChild(createLinkRow(
-            people[i].firstName + " " + people[i].lastName, 
-            "editPerson(" + people[i].personId + ")"));
-        } 
-      };
-      
-      clearElement(personList);      
-      Seam.createBean("personSearch").listPeople(callback);
-    }
-    
-    // A helper function that returns the value of an element
-    function getElementValue(elementName) {
-      var value = document.getElementById(elementName).value;
-      return (value.trim().length > 0) ? value : null; 
-    }   
-    
-    function createPerson() {
-      var action = new Seam.Action()
-        .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
-        .setMethod("createPerson");
-      
-      model = new Seam.Model();
-      model.addBeanProperty("person", "org.jboss.seam.remoting.examples.model.PersonAction", "person");
-      model.fetch(action, fetchCallback);      
-    } 
-        
-    function editPerson(personId) {
-      var action = new Seam.Action()
-        .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
-        .setMethod("editPerson")
-        .addParam(personId);
-      
-      model = new Seam.Model();
-      model.addBeanProperty("person", "org.jboss.seam.remoting.examples.model.PersonAction", "person");
-      model.fetch(action, fetchCallback);
-    }
-      
-    function fetchCallback(model) {           
-      var person = model.getValue("person");
-      document.getElementById("firstName").value = person.getFirstName();
-      document.getElementById("lastName").value = person.getLastName();      
-      document.getElementById("dob").value = dateToString(person.dateOfBirth);
-      
-      var addressDiv = document.getElementById("addresses");
-      clearElement(addressDiv);      
-      addressDiv.appendChild(createLinkRow("Load addresses", "loadAddresses()", "loadAddresses"));
-      
-      document.getElementById("personDetail").style.display = "block";
-      
-      if (person.addresses) loadAddressesCallback();
-    }
-    
-    function dateToString(value) {
-      if (value == null) return "";
-      return value.getFullYear() + "/" + (value.getMonth() + 1) + "/" + value.getDate();
-    }
-    
-    function loadAddresses() {
-      model.expand(model.getValue("person"), "addresses", loadAddressesCallback); 
-    }
-    
-    function loadAddressesCallback() {
-      var addressDiv = document.getElementById("addresses");
-      clearElement(addressDiv); 
-      
-      var addresses = model.getValue("person").getAddresses();
-      if (addresses.length > 0) {
+            personList.appendChild(createLinkRow(
+                    people[i].firstName + " " + people[i].lastName,
+                    "editPerson(" + people[i].personId + ")"));
+        }
+    };
+
+    clearElement(personList);
+    Seam.createBean("personSearch").listPeople(callback);
+}
+
+// A helper function that returns the value of an element
+function getElementValue(elementName) {
+    var value = document.getElementById(elementName).value;
+    return (value.trim().length > 0) ? value : null;
+}
+
+function createPerson() {
+    var action = new Seam.Action()
+            .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
+            .setMethod("createPerson");
+
+    model = new Seam.Model();
+    model.addBeanProperty("person", "org.jboss.seam.remoting.examples.model.PersonAction", "person");
+    model.fetch(action, fetchCallback);
+}
+
+function editPerson(personId) {
+    var action = new Seam.Action()
+            .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
+            .setMethod("editPerson")
+            .addParam(personId);
+
+    model = new Seam.Model();
+    model.addBeanProperty("person", "org.jboss.seam.remoting.examples.model.PersonAction", "person");
+    model.fetch(action, fetchCallback);
+}
+
+function fetchCallback(model) {
+    var person = model.getValue("person");
+    document.getElementById("firstName").value = person.getFirstName();
+    document.getElementById("lastName").value = person.getLastName();
+    document.getElementById("dob").value = dateToString(person.dateOfBirth);
+
+    var addressDiv = document.getElementById("addresses");
+    clearElement(addressDiv);
+    addressDiv.appendChild(createLinkRow("Load addresses", "loadAddresses()", "loadAddresses"));
+
+    document.getElementById("personDetail").style.display = "block";
+
+    if (person.addresses) loadAddressesCallback();
+}
+
+function dateToString(value) {
+    if (value == null) return "";
+    return value.getFullYear() + "/" + (value.getMonth() + 1) + "/" + value.getDate();
+}
+
+function loadAddresses() {
+    model.expand(model.getValue("person"), "addresses", loadAddressesCallback);
+}
+
+function loadAddressesCallback() {
+    var addressDiv = document.getElementById("addresses");
+    clearElement(addressDiv);
+
+    var addresses = model.getValue("person").getAddresses();
+    if (addresses.length > 0) {
         var header = document.createElement("div");
         header.className = "sectionHeader";
-        header.appendChild(document.createTextNode("Addresses"));        
+        header.appendChild(document.createTextNode("Addresses"));
         addressDiv.appendChild(header);
-        
+
         for (var i = 0; i < addresses.length; i++) {
-          addressDiv.appendChild(createAddressEditor(addresses[i]));           
+            addressDiv.appendChild(createAddressEditor(addresses[i]));
         }
-      } else {
-        addressDiv.appendChild(document.createTextNode("No addresses found")); 
-      }
-                
-      addressDiv.appendChild(createLinkRow("Create new address", "createAddress()", "createAddress"));
-    }
-    
-    function createAddress() {
-      var address = Seam.createBean("org.jboss.seam.remoting.examples.model.Address");
-      address.person = model.getValue("person");
-      address.streetNo = "";
-      address.streetName = "";
-      address.suburb = "";
-      address.postCode = "";
-      address.country = "";
-      address.person.addresses.push(address);
-      var addressesDiv = document.getElementById("addresses");
-      addressesDiv.insertBefore(createAddressEditor(address), addressesDiv.lastChild); 
-    }
-    
-    function createLabel(text) {
-      var lbl = document.createElement("label");
-      lbl.appendChild(document.createTextNode(text));
-      return lbl; 
-    }
-    
-    function createBoundInput(obj, propertyName, className) {
-      var input = document.createElement("input"); 
-      input.type = "text";
-      input.value = obj[propertyName];
-      input.onchange = function(event) { obj[propertyName] = event.target.value;}
-      if (className) input.className = className;
-      return input;
-    }
-    
-    function apply() {
-      var person = model.getValue("person");
-      person.firstName = document.getElementById("firstName").value;
-      person.lastName = document.getElementById("lastName").value;
-      person.dateOfBirth = new Date(document.getElementById("dob").value);
-      
-      var action = new Seam.Action()
-        .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
-        .setMethod("savePerson");
-      model.applyUpdates(action, applyCallback);
-    }
-    
-    function applyCallback() {
-      loadPeople();       
-      alert("Changes applied");
-      document.getElementById("personDetail").style.display = "none";
-    }
-    
-    function createDeleteAddressLink(address, div) {
-      var link = document.createElement("a");
-      link.href = "#";
-      link.className = "deleteAddress";
-      link.onclick = function() {
-        var addresses = model.getValue("person").addresses;
-        for (var i = 0; i < addresses.length; i++) {
-          if (addresses[i] == address) {
-            addresses.splice(i, 1);
-            break;
-          }
-        };
-        
-        document.getElementById("addresses").removeChild(div);
-      };
-      link.appendChild(document.createTextNode("Delete address"));
-      return link; 
-    }
-    
-    function createAddressEditor(address) {
-      var addressDiv = document.createElement("div");
-      addressDiv.className = "addressContainer";
-      var row1 = document.createElement("div");
-      var row2 = document.createElement("div");
-      var row3 = document.createElement("div");
-      addressDiv.appendChild(row1);
-      addressDiv.appendChild(row2);
-      addressDiv.appendChild(row3);
-      
-      row1.appendChild(createLabel("Street No"));
-      row1.appendChild(createBoundInput(address, "streetNo", "streetNo"));
-      row1.appendChild(createLabel("Street Name"));
-      row1.appendChild(createBoundInput(address, "streetName", "streetName"));
-      
-      row2.appendChild(createLabel("Suburb"));
-      row2.appendChild(createBoundInput(address, "suburb", "suburb"));
-      row2.appendChild(createLabel("Postcode/Zip"));
-      row2.appendChild(createBoundInput(address, "postCode", "postCode"));
-      
-      row3.appendChild(createLabel("Country"));
-      row3.appendChild(createBoundInput(address, "country", "country"));
-      row3.appendChild(createDeleteAddressLink(address, addressDiv));
-     
-      return addressDiv; 
+    } else {
+        addressDiv.appendChild(document.createTextNode("No addresses found"));
     }
 
-    function toggleDebug()
-    {
-        if (Seam.debug == true)
-        {
-            Seam.debug = false;
-            document.getElementById("debugButton").innerHTML = "Turn on debugging"
-        }
-        else
-        {
-            Seam.debug = true;
-            document.getElementById("debugButton").innerHTML = "Turn off debugging"
-        }
+    addressDiv.appendChild(createLinkRow("Create new address", "createAddress()", "createAddress"));
+}
+
+function createAddress() {
+    var address = Seam.createBean("org.jboss.seam.remoting.examples.model.Address");
+    address.person = model.getValue("person");
+    address.streetNo = "";
+    address.streetName = "";
+    address.suburb = "";
+    address.postCode = "";
+    address.country = "";
+    address.person.addresses.push(address);
+    var addressesDiv = document.getElementById("addresses");
+    addressesDiv.insertBefore(createAddressEditor(address), addressesDiv.lastChild);
+}
+
+function createLabel(text) {
+    var lbl = document.createElement("label");
+    lbl.appendChild(document.createTextNode(text));
+    return lbl;
+}
+
+function createBoundInput(obj, propertyName, className) {
+    var input = document.createElement("input");
+    input.type = "text";
+    input.value = obj[propertyName];
+    input.onchange = function(event) {
+        obj[propertyName] = event.target.value;
     }
-        
-    // ]]>
-  </script>   
-  
-  <div class="debugControl">
-  	<button id="debugButton" onclick="toggleDebug()">Turn on debugging</button>
-  </div>
-  
-  <div class="listContainer">
+    if (className) input.className = className;
+    return input;
+}
+
+function apply() {
+    var person = model.getValue("person");
+    person.firstName = document.getElementById("firstName").value;
+    person.lastName = document.getElementById("lastName").value;
+    person.dateOfBirth = new Date(document.getElementById("dob").value);
+
+    var action = new Seam.Action()
+            .setBeanType("org.jboss.seam.remoting.examples.model.PersonAction")
+            .setMethod("savePerson");
+    model.applyUpdates(action, applyCallback);
+}
+
+function applyCallback() {
+    loadPeople();
+    alert("Changes applied");
+    document.getElementById("personDetail").style.display = "none";
+}
+
+function createDeleteAddressLink(address, div) {
+    var link = document.createElement("a");
+    link.href = "#";
+    link.className = "deleteAddress";
+    link.onclick = function() {
+        var addresses = model.getValue("person").addresses;
+        for (var i = 0; i < addresses.length; i++) {
+            if (addresses[i] == address) {
+                addresses.splice(i, 1);
+                break;
+            }
+        }
+        ;
+
+        document.getElementById("addresses").removeChild(div);
+    };
+    link.appendChild(document.createTextNode("Delete address"));
+    return link;
+}
+
+function createAddressEditor(address) {
+    var addressDiv = document.createElement("div");
+    addressDiv.className = "addressContainer";
+    var row1 = document.createElement("div");
+    var row2 = document.createElement("div");
+    var row3 = document.createElement("div");
+    addressDiv.appendChild(row1);
+    addressDiv.appendChild(row2);
+    addressDiv.appendChild(row3);
+
+    row1.appendChild(createLabel("Street No"));
+    row1.appendChild(createBoundInput(address, "streetNo", "streetNo"));
+    row1.appendChild(createLabel("Street Name"));
+    row1.appendChild(createBoundInput(address, "streetName", "streetName"));
+
+    row2.appendChild(createLabel("Suburb"));
+    row2.appendChild(createBoundInput(address, "suburb", "suburb"));
+    row2.appendChild(createLabel("Postcode/Zip"));
+    row2.appendChild(createBoundInput(address, "postCode", "postCode"));
+
+    row3.appendChild(createLabel("Country"));
+    row3.appendChild(createBoundInput(address, "country", "country"));
+    row3.appendChild(createDeleteAddressLink(address, addressDiv));
+
+    return addressDiv;
+}
+
+function toggleDebug() {
+    if (Seam.debug == true) {
+        Seam.debug = false;
+        document.getElementById("debugButton").innerHTML = "Turn on debugging"
+    }
+    else {
+        Seam.debug = true;
+        document.getElementById("debugButton").innerHTML = "Turn off debugging"
+    }
+}
+
+// ]]>
+</script>
+
+<div class="debugControl">
+    <button id="debugButton" onclick="toggleDebug()">Turn on debugging</button>
+</div>
+
+<div class="listContainer">
     <div class="sectionHeader">People - click to edit</div>
-    
+
     <div id="personList"></div>
-    
+
     <div>
-      <a href="#" onclick="createPerson()" class="createPerson">Create new person</a>
+        <a href="#" onclick="createPerson()" class="createPerson">Create new person</a>
     </div>
-  </div>
-  
-  <div id="personDetail" style="display:none">
+</div>
+
+<div id="personDetail" style="display:none">
     <div class="sectionHeader">Details</div>
-    
+
     <div class="formRow">
-      <label for="firstName">First name</label>
-      <input type="text" id="firstName"/>
+        <label for="firstName">First name</label>
+        <input type="text" id="firstName"/>
     </div>
-    
+
     <div class="formRow">
-      <label for="lastName">Last name</label>
-      <input type="text" id="lastName"/>
+        <label for="lastName">Last name</label>
+        <input type="text" id="lastName"/>
     </div>
-      
+
     <div class="formRow">
-      <label for="dob">Date of birth</label>
-      <input type="text" id="dob"/><span> (yyyy/mm/dd)</span>
+        <label for="dob">Date of birth</label>
+        <input type="text" id="dob"/><span> (yyyy/mm/dd)</span>
     </div>
-    
+
     <div id="addresses">
-      
+
     </div>
-    
+
     <div class="personAction">
-      <button id="applyChanges" onclick="apply()" class="applyChanges">Apply changes</button>
+        <button id="applyChanges" onclick="apply()" class="applyChanges">Apply changes</button>
     </div>
-    
+
     <br class="clear"/>
-  </div>
-    
+</div>
+
 </body>
 </html>
 
