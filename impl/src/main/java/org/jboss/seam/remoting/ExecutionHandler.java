@@ -73,6 +73,10 @@ public class ExecutionHandler extends AbstractRequestHandler implements RequestH
          Call call = unmarshalCall(env);
          call.execute();
          
+         if (call.getException() != null) {
+             log.error("Error while executing call", call.getException());
+         }
+         
          // Store the conversation ID in the outgoing context
          try
          {
@@ -85,7 +89,7 @@ public class ExecutionHandler extends AbstractRequestHandler implements RequestH
    
          // Package up the response
          marshalResponse(call, ctx, response.getOutputStream());
-      }
+      }      
       finally
       {
          deactivateConversationContext(request);
