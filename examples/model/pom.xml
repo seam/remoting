@@ -98,10 +98,6 @@
          <id>glassfish</id>
          <dependencies>
             <dependency>
-               <groupId>dom4j</groupId>
-               <artifactId>dom4j</artifactId>
-            </dependency>
-            <dependency>
                 <groupId>javax</groupId>
                 <artifactId>javaee-api</artifactId>
                 <version>6.0</version>
@@ -134,6 +130,35 @@
                     </executions>
                   </plugin>
             </plugins>
+         </build>
+      </profile>
+      <profile>
+         <id>jboss6</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+         </activation>
+         <dependencies>
+            <dependency>
+               <groupId>org.jboss.seam.remoting</groupId>
+               <artifactId>seam-remoting</artifactId>
+               <version>${project.version}</version>
+               <exclusions>
+                  <exclusion>
+                     <groupId>dom4j</groupId>
+                     <artifactId>dom4j</artifactId>
+                  </exclusion>
+               </exclusions>
+            </dependency>
+         </dependencies>
+      </profile>
+      <profile>
+         <id>jboss7</id>
+         <build>
+            <resources>
+               <resource>
+                  <directory>src/jboss7/resources</directory>
+               </resource>
+            </resources>
          </build>
       </profile>
       <profile>
