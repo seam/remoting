@@ -67,6 +67,31 @@
    
    <profiles>
       <profile>
+         <id>glassfish</id>
+      </profile>
+      <profile>
+         <id>jboss6</id>
+         <activation>
+             <activeByDefault>true</activeByDefault>
+         </activation>
+         <dependencies>
+            <dependency>
+               <groupId>org.jboss.seam.remoting</groupId>
+               <artifactId>seam-remoting</artifactId>
+               <version>${project.version}</version>
+               <exclusions>
+                  <exclusion>
+                     <groupId>dom4j</groupId>
+                     <artifactId>dom4j</artifactId>
+                  </exclusion>
+               </exclusions>
+            </dependency>
+         </dependencies>
+      </profile>
+      <profile>
+         <id>jboss7</id>
+      </profile>
+      <profile>
          <id>distribution</id>
          <activation>
             <property>
@@ -85,17 +110,6 @@
       <profile>
          <id>ftest</id>
       </profile>
-
-      <profile>
-         <id>glassfish</id>
-         <dependencies>
-            <dependency>
-               <groupId>dom4j</groupId>
-               <artifactId>dom4j</artifactId>
-            </dependency>
-         </dependencies>
-      </profile>
-
    </profiles>
    
 </project>
