@@ -45,6 +45,11 @@
       </dependency>
 
       <dependency>
+         <groupId>org.jboss.seam.servlet</groupId>
+         <artifactId>seam-servlet</artifactId>
+      </dependency>
+
+      <dependency>
          <groupId>org.hibernate.javax.persistence</groupId>
          <artifactId>hibernate-jpa-2.0-api</artifactId>
          <scope>provided</scope>
@@ -96,47 +101,23 @@
    <profiles>
       <profile>
          <id>glassfish</id>
-         <dependencies>
-            <dependency>
-                <groupId>javax</groupId>
-                <artifactId>javaee-api</artifactId>
-                <version>6.0</version>
-                <scope>provided</scope>
-            </dependency>
-         </dependencies>
          <build>
             <resources>
                <resource>
                   <directory>src/glassfish/resources</directory>
                </resource>
             </resources>
-            <plugins>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>build-helper-maven-plugin</artifactId>
-                    <executions>
-                        <execution>
-                            <id>add-source</id>
-                            <phase>generate-sources</phase>
-                            <goals>
-                                <goal>add-source</goal>
-                            </goals>
-                            <configuration>
-                                <sources>
-                                    <source>src/glassfish/java</source>
-                                </sources>
-                            </configuration>
-                        </execution>
-                    </executions>
-                  </plugin>
-            </plugins>
          </build>
       </profile>
       <profile>
          <id>jboss6</id>
-         <activation>
-            <activeByDefault>true</activeByDefault>
-         </activation>
+         <build>
+            <resources>
+               <resource>
+                  <directory>src/jboss6/resources</directory>
+               </resource>
+            </resources>
+         </build>
          <dependencies>
             <dependency>
                <groupId>org.jboss.seam.remoting</groupId>
@@ -153,6 +134,9 @@
       </profile>
       <profile>
          <id>jboss7</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+         </activation>
          <build>
             <resources>
                <resource>
