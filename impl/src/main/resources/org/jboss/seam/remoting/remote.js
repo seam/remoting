@@ -22,9 +22,9 @@ Seam.createBean = function(name) {
 };
 
 Seam.getBean = function(name) {
-   for (var b in Seam.beans) {
-	 if (Seam.beans[b].__name == name) return Seam.beans[b];
-   }
+  for (var b in Seam.beans) {
+	  if (Seam.beans[b].__name == name) return Seam.beans[b];
+  }
   return undefined;
 };
 
