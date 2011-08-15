@@ -1,25 +1,22 @@
 package org.jboss.seam.remoting.examples.model;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
-import javax.annotation.PostConstruct;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
+import javax.enterprise.event.Observes;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
+
+import org.jboss.seam.servlet.WebApplication;
+import org.jboss.seam.servlet.event.Initialized;
+import org.jboss.seam.transaction.Transactional;
 
 /**
- * Populate a database for Glassfish with data. This class is not necessary
- * when using JBoss AS due to use of Hibernate JPA provider in conjunction
- * with import.sql file. Hibernate will then populate the database
- * automatically right after deploying the application.
+ * Populate a database with data. 
  *
  * @author Martin Gencur
  */
-@Singleton
-@Startup
 public class PopulateDatabase {
     @PersistenceContext
     private EntityManager entityManager;
@@ -28,14 +25,8 @@ public class PopulateDatabase {
     private Address a;
     private final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
-    @PostConstruct
-    public void startup() throws Exception {
-        Query q = entityManager.createNativeQuery("DELETE from ADDRESS");
-        q.executeUpdate();
-        q = entityManager.createNativeQuery("DELETE from PERSON");
-        q.executeUpdate();
-        entityManager.flush();
-
+    @Transactional
+    public void loadData(@Observes @Initialized WebApplication webapp) throws ParseException { 
         p = new Person();
         p.setFirstName("Shane");
         p.setLastName("Bryzak");
@@ -60,7 +51,6 @@ public class PopulateDatabase {
         a.setCountry("Australia");
         p.getAddresses().add(a);
         entityManager.persist(p);
-        entityManager.flush();
 
         p = new Person();
         p.setFirstName("Jozef");
@@ -77,6 +67,5 @@ public class PopulateDatabase {
         a.setCountry("Czech republic");
         p.getAddresses().add(a);
         entityManager.persist(p);
-        entityManager.flush();
     }
 }
