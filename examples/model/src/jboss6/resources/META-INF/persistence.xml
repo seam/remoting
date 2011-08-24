@@ -4,7 +4,7 @@
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
              version="1.0">
     <persistence-unit name="model">
-        <jta-data-source>modelDatasource</jta-data-source>
+        <jta-data-source>java:/DefaultDS</jta-data-source>
         <class>org.jboss.seam.remoting.examples.model.Person</class>
         <class>org.jboss.seam.remoting.examples.model.Address</class>
         <properties>
