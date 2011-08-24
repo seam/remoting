@@ -32,7 +32,7 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
-import org.jboss.seam.solder.logging.Logger;
+import org.jboss.seam.logging.Logger;
 import org.jboss.seam.remoting.AnnotationsParser;
 import org.jboss.seam.remoting.RequestHandler;
 import org.jboss.seam.remoting.util.JsConverter;
