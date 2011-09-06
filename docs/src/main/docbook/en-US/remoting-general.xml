@@ -346,13 +346,36 @@ Seam.createBean("helloAction").sayHello(name, callback, exceptionHandler);]]></p
 Seam.createBean("helloAction").sayHello(name, null, exceptionHandler);]]></programlisting>    
     
     <para>
-      The exception object that is passed to the exception handler exposes one method, <literal>getMessage()</literal>
-      that returns the exception message which is produced by the exception thrown by the <literal>@WebRemote</literal>
-      method.
+      The exception object that is passed to the exception handler exposes two methods, <literal>getExceptionClass()</literal> 
+      which returns the name of the exception class that was thrown, and <literal>getMessage()</literal>, which 
+      returns the exception message which is produced by the exception thrown by the <literal>@WebRemote</literal> method.
     </para>
     
-  </section>
+    <para>
+      It is also possible to register a global exception handler, which will be invoked if there is no exception handler
+      defined for an individual invocation.  By default, the global exception handler will display an alert message
+      notifying the user that there was an exception - here's what the default exception handler looks like:
+    </para>
+    
+    <programlisting><![CDATA[Seam.defaultExceptionHandler = function(exception) {
+  alert("An exception has occurred while executing a remote request: " + exception.getExceptionClass() + ":" + exception.getMessage());
+};]]></programlisting>
 
+    <para>
+      If you would like to provide your own global exception handler, then simply override the value of
+      <literal>Seam.exceptionHandler</literal> with your own custom exception handler, as in the following example:
+    </para>
+    
+    <programlisting><![CDATA[
+  function customExceptionHandler(exception) {
+    alert("Uh oh, something bad has happened! [" + exception.getExceptionClass() + ":" + exception.getMessage() + "]");
+  }    
+  
+  Seam.exceptionHandler = customExceptionHandler;
+    ]]></programlisting>
+    
+  </section>
+  
   <section>
     <title>The Loading Message</title>
 
