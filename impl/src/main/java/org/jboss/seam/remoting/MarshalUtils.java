@@ -29,6 +29,9 @@ public class MarshalUtils {
     private static final byte[] EXCEPTION_TAG_OPEN = "<exception>".getBytes();
     private static final byte[] EXCEPTION_TAG_CLOSE = "</exception>".getBytes();
 
+    private static final byte[] EXCEPTION_CLASS_TAG_OPEN = "<class>".getBytes();
+    private static final byte[] EXCEPTION_CLASS_TAG_CLOSE = "</class>".getBytes();
+    
     private static final byte[] MESSAGE_TAG_OPEN = "<message>".getBytes();
     private static final byte[] MESSAGE_TAG_CLOSE = "</message>".getBytes();
 
@@ -55,9 +58,15 @@ public class MarshalUtils {
     public static void marshalException(Throwable exception, CallContext ctx, OutputStream out)
             throws IOException {
         out.write(EXCEPTION_TAG_OPEN);
+        
+        out.write(EXCEPTION_CLASS_TAG_OPEN);
+        ctx.createWrapperFromObject(exception.getClass().getName(), "").marshal(out);
+        out.write(EXCEPTION_CLASS_TAG_CLOSE);
+        
         out.write(MESSAGE_TAG_OPEN);
         ctx.createWrapperFromObject(exception.getMessage(), "").marshal(out);
         out.write(MESSAGE_TAG_CLOSE);
+        
         out.write(EXCEPTION_TAG_CLOSE);
     }
 

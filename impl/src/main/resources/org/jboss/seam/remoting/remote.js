@@ -9,6 +9,12 @@ var Seam = {
   PATH_POLL: "/poll"
 };
 
+Seam.defaultExceptionHandler = function(exception) {
+  alert("An exception has occurred while executing a remote request: " + exception.getExceptionClass() + ":" + exception.getMessage());
+};
+
+Seam.exceptionHandler = Seam.defaultExceptionHandler;
+
 Seam.createBean = function(name) {
   if (!Seam.beans[name]) return null;
   var b = new Seam.beans[name];
@@ -178,10 +184,14 @@ Seam.Context = function() {
 };
 Seam.context = new Seam.Context();
 
-Seam.Exception = function(msg) {
+Seam.Exception = function(exceptionClass, msg) {
+  this.exceptionClass = exceptionClass;
   this.message = msg;
   Seam.Exception.prototype.getMessage = function() {
-    return this.message;
+    return this.message;    
+  }
+  Seam.Exception.prototype.getExceptionClass = function() {
+    return this.exceptionClass;
   }
 };
 
@@ -371,7 +381,10 @@ Seam.createCall = function(component, methodName, params, callback, exceptionHan
     d += "<ref id=\"" + i + "\">" + Seam.serializeType(refs[i], refs) + "</ref>";
   }
   d += "</refs></call>";
-  return {data: d, id: callId, callback: callback, exceptionHandler: exceptionHandler, handler: Seam.preProcessCallResponse};
+  
+  var handler = (exceptionHandler !== null && exceptionHandler != undefined) ? exceptionHandler : Seam.exceptionHandler;
+  
+  return {data: d, id: callId, callback: callback, exceptionHandler: handler, handler: Seam.preProcessCallResponse};
 };
 
 Seam.createHeader = function(callId, ctx) {
@@ -478,9 +491,11 @@ Seam.processImportBeansResponse = function(call) {
   var valueNode = cn(n, "value");
   var exceptionNode = cn(n, "exception");
   if (exceptionNode != null && call.exceptionHandler != null) {
+    var clsNode = cn(exceptionNode, "class");
+    var exCls = Seam.unmarshalValue(clsNode.firstChild);
     var msgNode = cn(exceptionNode, "message");
-    var msg = Seam.unmarshalValue(msgNode.firstChild);
-    call.exceptionHandler(new Seam.Exception(msg));
+    var msg = Seam.unmarshalValue(msgNode.firstChild);    
+    call.exceptionHandler(new Seam.Exception(exCls, msg));
   } else {
     var refsNode = cn(n, "refs");
     var refs = Seam.unmarshalRefs(refsNode);
@@ -537,9 +552,11 @@ Seam.processCallResponse = function(call) {
   var valueNode = cn(n, "value");
   var exceptionNode = cn(n, "exception");
   if (exceptionNode != null && call.exceptionHandler != null) {
+    var clsNode = cn(exceptionNode, "class");
+    var exCls = Seam.unmarshalValue(clsNode.firstChild);
     var msgNode = cn(exceptionNode, "message");
     var msg = Seam.unmarshalValue(msgNode.firstChild);
-    call.exceptionHandler(new Seam.Exception(msg));
+    call.exceptionHandler(new Seam.Exception(exCls, msg));
   } else if (call.callback != null) {
     var refsNode = cn(n, "refs");
     var refs = Seam.unmarshalRefs(refsNode);
