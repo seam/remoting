@@ -2,15 +2,15 @@ package org.jboss.seam.remoting.examples.model.ftest;
 
 import java.net.URL;
 
-import org.jboss.test.selenium.framework.AjaxSelenium;
-import org.jboss.test.selenium.locator.JQueryLocator;
-import org.jboss.test.selenium.waiting.Wait;
-import org.jboss.test.selenium.waiting.conditions.ElementPresent;
-import org.jboss.test.selenium.waiting.selenium.SeleniumWaiting;
+import org.jboss.arquillian.ajocado.framework.AjaxSelenium;
+import org.jboss.arquillian.ajocado.locator.JQueryLocator;
+import org.jboss.arquillian.ajocado.waiting.Wait;
+import org.jboss.arquillian.ajocado.waiting.conditions.ElementPresent;
+import org.jboss.arquillian.ajocado.waiting.selenium.SeleniumWaiting;
 
-import static org.jboss.test.selenium.guard.request.RequestTypeGuardFactory.waitXhr;
-import static org.jboss.test.selenium.locator.LocatorFactory.jq;
-import static org.testng.Assert.assertEquals;
+import static org.jboss.arquillian.ajocado.Ajocado.waitForXhr;
+import static org.jboss.arquillian.ajocado.locator.LocatorFactory.jq;
+import static org.junit.Assert.assertEquals;
 
 public class ModelPage {
     private static final JQueryLocator PERSON_LIST = jq("#personList");
@@ -30,7 +30,7 @@ public class ModelPage {
 
     private AjaxSelenium selenium;
     private ElementPresent elementPresent = ElementPresent.getInstance();
-    private SeleniumWaiting wait = Wait.waitSelenium().interval(WAIT_INTERVAL).timeout(WAIT_TIMEOUT);
+    private SeleniumWaiting wait = Wait.waitSelenium.interval(WAIT_INTERVAL).timeout(WAIT_TIMEOUT);
     private URL contextPath;
 
     public ModelPage(AjaxSelenium selenium, URL contextPath) {
@@ -41,12 +41,12 @@ public class ModelPage {
     }
 
     public ModelPage selectPerson(String name) {
-        waitXhr(selenium).click(PERSON_BY_NAME.format(name));
+        waitForXhr(selenium).click(PERSON_BY_NAME.format(name));
         return this;
     }
 
     public ModelPage createPerson() {
-        waitXhr(selenium).click(PERSON_CREATE_NEW);
+        waitForXhr(selenium).click(PERSON_CREATE_NEW);
         return this;
     }
 
@@ -74,8 +74,16 @@ public class ModelPage {
         selenium.type(PERSON_BIRTHDATE, value);
     }
 
+    public boolean areAddressesLoaded()
+    {
+        return !selenium.isElementPresent(PERSON_LOAD_ADDRESSES);
+    }
+    
     public ModelPage loadAddresses() {
-        waitXhr(selenium).click(PERSON_LOAD_ADDRESSES);
+        if (!areAddressesLoaded())
+        {
+            waitForXhr(selenium).click(PERSON_LOAD_ADDRESSES);
+        }
         return this;
     }
 
@@ -86,7 +94,7 @@ public class ModelPage {
     }
 
     public ModelPage applyChanges() {
-        waitXhr(selenium).click(PERSON_APPLY_CHANGES);
+        waitForXhr(selenium).click(PERSON_APPLY_CHANGES);
         if (selenium.isAlertPresent()) {
             assertEquals(selenium.getAlert(), "Changes applied");
         }

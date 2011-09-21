@@ -1,18 +1,33 @@
 package org.jboss.seam.remoting.examples.model.ftest;
 
-import org.jboss.test.selenium.AbstractTestCase;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import java.net.URL;
 
-public class PersonTest extends AbstractTestCase {
+import org.jboss.arquillian.ajocado.framework.AjaxSelenium;
+import org.jboss.arquillian.ajocado.utils.URLUtils;
+import org.jboss.arquillian.drone.api.annotation.Drone;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+@RunWith(Arquillian.class)
+public class PersonTest extends AbstractTest {
     private ModelPage page;
 
-    @BeforeMethod
+    @Drone
+    AjaxSelenium selenium;
+
+    @ArquillianResource
+    URL contextPath;
+    
+    @Before
     public void init() {
-        page = new ModelPage(selenium, contextPath);
+        page = new ModelPage(selenium, URLUtils.buildUrl(contextPath, MAIN_PAGE));
     }
 
     @Test
@@ -24,7 +39,7 @@ public class PersonTest extends AbstractTestCase {
     }
 
     @Test
-    public void testAddingNewPerson() {
+    public void testAddingAndUpdatingNewPerson() {
         page.createPerson();
         page.setFirstName("Martin");
         page.setSurname("Gencur");
@@ -35,10 +50,7 @@ public class PersonTest extends AbstractTestCase {
         assertEquals(page.getFirstName(), "Martin");
         assertEquals(page.getSurname(), "Gencur");
         assertTrue(page.getBirthdate().length() > 0);
-    }
-
-    @Test(dependsOnMethods = "testAddingNewPerson")
-    public void testUpdatingPersonDetails() {
+        // update
         page.selectPerson("Martin Gencur");
         page.setFirstName("John");
         page.setSurname("Doe");

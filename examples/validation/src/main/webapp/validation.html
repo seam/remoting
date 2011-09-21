@@ -11,13 +11,11 @@
 
 <h1>Seam Remoting - Bean Validation Example</h1>
 
-<script type="text/javascript" src="seam/resource/remoting/resource/remote.js"></script>
+<script type="text/javascript" src="seam/resource/remoting/resource/remote.js?compress=false"></script>
 <script type="text/javascript" src="seam/resource/remoting/interface.js?customerAction"></script>
 
 <script type="text/javascript">
     //<![CDATA[
-
-    Seam.debug = true;
 
     function validationCallback(violations) {
         if (violations.length == 0) {
@@ -52,8 +50,23 @@
         Seam.validateBean(customer, validationCallback);
     }
 
+    function toggleDebug() {
+        if (Seam.debug == true) {
+            Seam.debug = false;
+            document.getElementById("debugButton").innerHTML = "Turn on debugging"
+        }
+        else {
+            Seam.debug = true;
+            document.getElementById("debugButton").innerHTML = "Turn off debugging"
+        }
+    }
+
     // ]]>
 </script>
+
+<div class="debugControl">
+    <button id="debugButton" onclick="toggleDebug()">Turn on debugging</button>
+</div>
 
 <div>
     <div class="formRow">
