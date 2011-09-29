@@ -14,6 +14,8 @@ import org.jboss.arquillian.ajocado.framework.AjaxSelenium;
 import org.jboss.arquillian.ajocado.locator.IdLocator;
 import org.jboss.arquillian.ajocado.locator.XPathLocator;
 import org.jboss.arquillian.ajocado.utils.URLUtils;
+import org.jboss.arquillian.ajocado.waiting.Wait;
+import org.jboss.arquillian.ajocado.waiting.selenium.SeleniumCondition;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.drone.api.annotation.Drone;
 import org.jboss.arquillian.junit.Arquillian;
@@ -66,12 +68,18 @@ public class ValidationTest {
         selenium.type(LAST_NAME_FIELD, "Gencur");
         selenium.type(BIRTHDAY_FIELD, "1985/04/05");
 
-        waitForXhr(selenium).click(SAVE_BUTTON);
 
+        selenium.click(SAVE_BUTTON);
+        Wait.waitSelenium.timeout(10000).interval(50).until(new SeleniumCondition() {
+            @Override
+            public boolean isTrue() {
+                return selenium.isAlertPresent();
+            }
+        });
+        assertEquals("All validations passed!", selenium.getAlert());
         assertFalse("First Name and Last Name validation should pass", selenium.isTextPresent("size must be between 3 and 40"));
         assertFalse("Date of Birth validation should pass", selenium.isTextPresent("must be in the past"));
         assertFalse("All the fields should be filled in", selenium.isTextPresent("may not be null"));
-        assertEquals("All validations passed!", selenium.getAlert());
     }
 
     @Test

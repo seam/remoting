@@ -1,6 +1,5 @@
 package org.jboss.seam.remoting.examples.helloworld.ftest;
 
-import static org.jboss.arquillian.ajocado.Ajocado.waitForXhr;
 import static org.jboss.arquillian.ajocado.locator.LocatorFactory.xp;
 import static org.junit.Assert.assertEquals;
 
@@ -10,6 +9,8 @@ import java.net.URL;
 import org.jboss.arquillian.ajocado.framework.AjaxSelenium;
 import org.jboss.arquillian.ajocado.locator.XPathLocator;
 import org.jboss.arquillian.ajocado.utils.URLUtils;
+import org.jboss.arquillian.ajocado.waiting.Wait;
+import org.jboss.arquillian.ajocado.waiting.selenium.SeleniumCondition;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.drone.api.annotation.Drone;
 import org.jboss.arquillian.junit.Arquillian;
@@ -62,8 +63,8 @@ public class HelloworldTest {
         selenium.check(FORMALITY_CASUAL);
         selenium.check(LOCAL_ENGLISH);
         selenium.answerOnNextPrompt("Martin");
-        waitForXhr(selenium).click(INVOKE_BUTTON);
-        assertEquals(selenium.getAlert(), "Hi, Martin");
+        selenium.click(INVOKE_BUTTON);
+        assertEquals(waitForAlert(), "Hi, Martin");
     }
 
     @Test
@@ -71,8 +72,8 @@ public class HelloworldTest {
         selenium.check(FORMALITY_CASUAL);
         selenium.check(LOCAL_RUSSIAN);
         selenium.answerOnNextPrompt("Martin");
-        waitForXhr(selenium).click(INVOKE_BUTTON);
-        assertEquals(selenium.getAlert(), "Privyet, Martin");
+        selenium.click(INVOKE_BUTTON);
+        assertEquals(waitForAlert(), "Privyet, Martin");
     }
 
     @Test
@@ -80,8 +81,8 @@ public class HelloworldTest {
         selenium.check(FORMALITY_FORMAL);
         selenium.check(LOCAL_ENGLISH);
         selenium.answerOnNextPrompt("Martin");
-        waitForXhr(selenium).click(INVOKE_BUTTON);
-        assertEquals(selenium.getAlert(), "Hello, Martin");
+        selenium.click(INVOKE_BUTTON);
+        assertEquals(waitForAlert(), "Hello, Martin");
     }
 
     @Test
@@ -89,7 +90,21 @@ public class HelloworldTest {
         selenium.check(FORMALITY_FORMAL);
         selenium.check(LOCAL_RUSSIAN);
         selenium.answerOnNextPrompt("Martin");
-        waitForXhr(selenium).click(INVOKE_BUTTON);
-        assertEquals(selenium.getAlert(), "Zdravstvuite, Martin");
+        selenium.click(INVOKE_BUTTON);
+        assertEquals(waitForAlert(), "Zdravstvuite, Martin");
+    }
+    
+    /**
+     * The method waits for confirmation to appear, consumes the confirmation and then waits until the condition passed as a
+     * method parameter to become satisfied.
+     */
+    private String waitForAlert() {
+        Wait.waitSelenium.timeout(10000).interval(50).until(new SeleniumCondition() {
+            @Override
+            public boolean isTrue() {
+                return selenium.isAlertPresent();
+            }
+        });
+        return selenium.getAlert();
     }
 }
