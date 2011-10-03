@@ -1,37 +1,65 @@
 package org.jboss.seam.remoting.examples.validation.ftest;
 
-import java.net.MalformedURLException;
+import static org.jboss.arquillian.ajocado.Ajocado.waitForXhr;
+import static org.jboss.arquillian.ajocado.locator.LocatorFactory.id;
+import static org.jboss.arquillian.ajocado.locator.LocatorFactory.xp;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
 import java.net.URL;
 
-import org.jboss.test.selenium.AbstractTestCase;
-import org.jboss.test.selenium.locator.IdLocator;
-import org.jboss.test.selenium.locator.XpathLocator;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import static org.jboss.test.selenium.guard.request.RequestTypeGuardFactory.*;
-import static org.jboss.test.selenium.locator.LocatorFactory.*;
-import static org.jboss.test.selenium.locator.LocatorFactory.id;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import org.jboss.arquillian.ajocado.framework.AjaxSelenium;
+import org.jboss.arquillian.ajocado.locator.IdLocator;
+import org.jboss.arquillian.ajocado.locator.XPathLocator;
+import org.jboss.arquillian.ajocado.utils.URLUtils;
+import org.jboss.arquillian.ajocado.waiting.Wait;
+import org.jboss.arquillian.ajocado.waiting.selenium.SeleniumCondition;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.drone.api.annotation.Drone;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.importer.ZipImporter;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * A functional test for a Validation example
  *
  * @author Martin Gencur
+ * @author Jozef Hartinger
  */
-public class ValidationTest extends AbstractTestCase {
-    protected String MAIN_PAGE = "/validation.html";
-    protected XpathLocator SAVE_BUTTON = xp("//input[contains(@value,'Save')]");
+@RunWith(Arquillian.class)
+public class ValidationTest {
+    protected String MAIN_PAGE = "/remoting-validation/validation.html";
+    protected XPathLocator SAVE_BUTTON = xp("//input[contains(@value,'Save')]");
     protected IdLocator FIRST_NAME_FIELD = id("firstName");
     protected IdLocator LAST_NAME_FIELD = id("lastName");
     protected IdLocator BIRTHDAY_FIELD = id("dateOfBirth");
 
-    @BeforeMethod
-    public void openStartUrl() throws MalformedURLException {
+    public static final String ARCHIVE_NAME = "remoting-validation.war";
+    public static final String BUILD_DIRECTORY = "target";
+
+    @Deployment(testable = false)
+    public static WebArchive createDeployment() {
+        return ShrinkWrap.create(ZipImporter.class, ARCHIVE_NAME).importFrom(new File(BUILD_DIRECTORY + '/' + ARCHIVE_NAME))
+                .as(WebArchive.class);
+    }
+    
+    @Drone
+    AjaxSelenium selenium;
+
+    @ArquillianResource
+    URL contextPath;
+    
+    @Before
+    public void openStartUrl(){
         selenium.setSpeed(300);
-        selenium.open(new URL(contextPath.toString() + MAIN_PAGE));
+        selenium.open(URLUtils.buildUrl(contextPath, MAIN_PAGE));
     }
 
     @Test
@@ -40,12 +68,18 @@ public class ValidationTest extends AbstractTestCase {
         selenium.type(LAST_NAME_FIELD, "Gencur");
         selenium.type(BIRTHDAY_FIELD, "1985/04/05");
 
-        waitXhr(selenium).click(SAVE_BUTTON);
 
-        assertFalse(selenium.isTextPresent("size must be between 3 and 40"), "First Name and Last Name validation should pass");
-        assertFalse(selenium.isTextPresent("must be in the past"), "Date of Birth validation should pass");
-        assertFalse(selenium.isTextPresent("may not be null"), "All the fields should be filled in");
-        assertEquals(selenium.getAlert(), "All validations passed!");
+        selenium.click(SAVE_BUTTON);
+        Wait.waitSelenium.timeout(10000).interval(50).until(new SeleniumCondition() {
+            @Override
+            public boolean isTrue() {
+                return selenium.isAlertPresent();
+            }
+        });
+        assertEquals("All validations passed!", selenium.getAlert());
+        assertFalse("First Name and Last Name validation should pass", selenium.isTextPresent("size must be between 3 and 40"));
+        assertFalse("Date of Birth validation should pass", selenium.isTextPresent("must be in the past"));
+        assertFalse("All the fields should be filled in", selenium.isTextPresent("may not be null"));
     }
 
     @Test
@@ -54,10 +88,10 @@ public class ValidationTest extends AbstractTestCase {
         selenium.type(LAST_NAME_FIELD, ""); // empty surname
         selenium.type(BIRTHDAY_FIELD, "2015/01/01"); // the date in the future
 
-        waitXhr(selenium).click(SAVE_BUTTON);
+        waitForXhr(selenium).click(SAVE_BUTTON);
 
-        assertTrue(selenium.isTextPresent("size must be between 3 and 40"), "First Name validation should fail");
-        assertTrue(selenium.isTextPresent("may not be null"), "Last Name validation should fail");
-        assertTrue(selenium.isTextPresent("must be in the past"), "Date of Birth validation should fail");
+        assertTrue("First Name validation should fail", selenium.isTextPresent("size must be between 3 and 40"));
+        assertTrue("Last Name validation should fail", selenium.isTextPresent("may not be null"));
+        assertTrue("Date of Birth validation should fail", selenium.isTextPresent("must be in the past"));
     }
 }

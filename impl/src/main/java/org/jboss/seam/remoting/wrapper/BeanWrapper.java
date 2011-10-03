@@ -282,6 +282,11 @@ public class BeanWrapper extends BaseWrapper implements Wrapper {
         if (cls.getName().contains("_$$_javassist_")) {
             cls = cls.getSuperclass();
         }
+        
+        // FIXME work out a better way to do this - perhaps walk up the class hierarchy and test against beanManager.getBeans() ?
+        if (cls.getName().contains("_$$_WeldClientProxy")) {
+            cls = cls.getSuperclass();
+        }
 
         String componentName = cls.getName();
 

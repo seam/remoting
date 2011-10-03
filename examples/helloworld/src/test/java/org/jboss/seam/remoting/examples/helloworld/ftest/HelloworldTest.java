@@ -1,34 +1,61 @@
 package org.jboss.seam.remoting.examples.helloworld.ftest;
 
-import java.net.MalformedURLException;
+import static org.jboss.arquillian.ajocado.locator.LocatorFactory.xp;
+import static org.junit.Assert.assertEquals;
+
+import java.io.File;
 import java.net.URL;
 
-import org.jboss.test.selenium.AbstractTestCase;
-import org.jboss.test.selenium.locator.XpathLocator;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import static org.jboss.test.selenium.guard.request.RequestTypeGuardFactory.*;
-import static org.jboss.test.selenium.locator.LocatorFactory.*;
-import static org.testng.Assert.assertEquals;
+import org.jboss.arquillian.ajocado.framework.AjaxSelenium;
+import org.jboss.arquillian.ajocado.locator.XPathLocator;
+import org.jboss.arquillian.ajocado.utils.URLUtils;
+import org.jboss.arquillian.ajocado.waiting.Wait;
+import org.jboss.arquillian.ajocado.waiting.selenium.SeleniumCondition;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.drone.api.annotation.Drone;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.importer.ZipImporter;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * A functional test for a Helloworld example
  *
  * @author Martin Gencur
+ * @author Jozef Hartinger
  */
-public class HelloworldTest extends AbstractTestCase {
-    protected String MAIN_PAGE = "/helloworld.html";
-    protected XpathLocator FORMALITY_CASUAL = xp("//input[contains(@value,'Casual')]");
-    protected XpathLocator FORMALITY_FORMAL = xp("//input[contains(@value,'Formal')]");
-    protected XpathLocator LOCAL_ENGLISH = xp("//input[contains(@value,'ENGLISH')]");
-    protected XpathLocator LOCAL_RUSSIAN = xp("//input[contains(@value,'RUSSIAN')]");
-    protected XpathLocator INVOKE_BUTTON = xp("//button[contains(text(),'Invoke')]");
+@RunWith(Arquillian.class)
+public class HelloworldTest {
+    protected String MAIN_PAGE = "/remoting-helloworld/helloworld.html";
+    protected XPathLocator FORMALITY_CASUAL = xp("//input[contains(@value,'Casual')]");
+    protected XPathLocator FORMALITY_FORMAL = xp("//input[contains(@value,'Formal')]");
+    protected XPathLocator LOCAL_ENGLISH = xp("//input[contains(@value,'ENGLISH')]");
+    protected XPathLocator LOCAL_RUSSIAN = xp("//input[contains(@value,'RUSSIAN')]");
+    protected XPathLocator INVOKE_BUTTON = xp("//button[contains(text(),'Invoke')]");
 
-    @BeforeMethod
-    public void openStartUrl() throws MalformedURLException {
+    public static final String ARCHIVE_NAME = "remoting-helloworld.war";
+    public static final String BUILD_DIRECTORY = "target";
+
+    @Deployment(testable = false)
+    public static WebArchive createDeployment() {
+        return ShrinkWrap.create(ZipImporter.class, ARCHIVE_NAME).importFrom(new File(BUILD_DIRECTORY + '/' + ARCHIVE_NAME))
+                .as(WebArchive.class);
+    }
+    
+    @Drone
+    AjaxSelenium selenium;
+
+    @ArquillianResource
+    URL contextPath;
+    
+    @Before
+    public void openStartUrl() {
         selenium.setSpeed(300);
-        selenium.open(new URL(contextPath.toString() + MAIN_PAGE));
+        selenium.open(URLUtils.buildUrl(contextPath, MAIN_PAGE));
     }
 
     @Test
@@ -36,8 +63,8 @@ public class HelloworldTest extends AbstractTestCase {
         selenium.check(FORMALITY_CASUAL);
         selenium.check(LOCAL_ENGLISH);
         selenium.answerOnNextPrompt("Martin");
-        waitXhr(selenium).click(INVOKE_BUTTON);
-        assertEquals(selenium.getAlert(), "Hi, Martin");
+        selenium.click(INVOKE_BUTTON);
+        assertEquals(waitForAlert(), "Hi, Martin");
     }
 
     @Test
@@ -45,8 +72,8 @@ public class HelloworldTest extends AbstractTestCase {
         selenium.check(FORMALITY_CASUAL);
         selenium.check(LOCAL_RUSSIAN);
         selenium.answerOnNextPrompt("Martin");
-        waitXhr(selenium).click(INVOKE_BUTTON);
-        assertEquals(selenium.getAlert(), "Privyet, Martin");
+        selenium.click(INVOKE_BUTTON);
+        assertEquals(waitForAlert(), "Privyet, Martin");
     }
 
     @Test
@@ -54,8 +81,8 @@ public class HelloworldTest extends AbstractTestCase {
         selenium.check(FORMALITY_FORMAL);
         selenium.check(LOCAL_ENGLISH);
         selenium.answerOnNextPrompt("Martin");
-        waitXhr(selenium).click(INVOKE_BUTTON);
-        assertEquals(selenium.getAlert(), "Hello, Martin");
+        selenium.click(INVOKE_BUTTON);
+        assertEquals(waitForAlert(), "Hello, Martin");
     }
 
     @Test
@@ -63,7 +90,21 @@ public class HelloworldTest extends AbstractTestCase {
         selenium.check(FORMALITY_FORMAL);
         selenium.check(LOCAL_RUSSIAN);
         selenium.answerOnNextPrompt("Martin");
-        waitXhr(selenium).click(INVOKE_BUTTON);
-        assertEquals(selenium.getAlert(), "Zdravstvuite, Martin");
+        selenium.click(INVOKE_BUTTON);
+        assertEquals(waitForAlert(), "Zdravstvuite, Martin");
+    }
+    
+    /**
+     * The method waits for confirmation to appear, consumes the confirmation and then waits until the condition passed as a
+     * method parameter to become satisfied.
+     */
+    private String waitForAlert() {
+        Wait.waitSelenium.timeout(10000).interval(50).until(new SeleniumCondition() {
+            @Override
+            public boolean isTrue() {
+                return selenium.isAlertPresent();
+            }
+        });
+        return selenium.getAlert();
     }
 }
