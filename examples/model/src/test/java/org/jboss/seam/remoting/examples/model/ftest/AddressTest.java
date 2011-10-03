@@ -1,17 +1,32 @@
 package org.jboss.seam.remoting.examples.model.ftest;
 
-import org.jboss.test.selenium.AbstractTestCase;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
+import java.net.URL;
 
-public class AddressTest extends AbstractTestCase {
+import org.jboss.arquillian.ajocado.framework.AjaxSelenium;
+import org.jboss.arquillian.ajocado.utils.URLUtils;
+import org.jboss.arquillian.drone.api.annotation.Drone;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.junit.Assert.assertEquals;
+
+@RunWith(Arquillian.class)
+public class AddressTest extends AbstractTest {
     private ModelPage page;
 
-    @BeforeMethod
+    @Drone
+    AjaxSelenium selenium;
+
+    @ArquillianResource
+    URL contextPath;
+    
+    @Before
     public void init() {
-        page = new ModelPage(selenium, contextPath);
+        page = new ModelPage(selenium, URLUtils.buildUrl(contextPath, MAIN_PAGE));
     }
 
     @Test
@@ -31,12 +46,10 @@ public class AddressTest extends AbstractTestCase {
         assertEquals(address2.getPostcode(), "32411");
         assertEquals(address2.getSuburb(), "Pittsville");
         assertEquals(address2.getCountry(), "Australia");
-    }
-
-    @Test(dependsOnMethods = "testAddressDetails")
-    public void testUpdatingExistingAddress() {
+        
+        // update address
+        
         page.selectPerson("Shane Bryzak").loadAddresses();
-
         ModelPage.Address newAddress = page.getAddress(0);
         newAddress.setStreetNumber("1000");
         newAddress.setStreetName("Amber");
@@ -49,7 +62,7 @@ public class AddressTest extends AbstractTestCase {
         page.selectPerson("Shane Bryzak").loadAddresses();
 
         ModelPage.Address savedAddress = page.getAddress(0);
-        assertEquals(savedAddress.getStreetNumber(), "1000", "Address not updated.");
+        assertEquals("Address not updated.", savedAddress.getStreetNumber(), "1000");
         assertEquals(savedAddress.getStreetName(), "Amber");
         assertEquals(savedAddress.getPostcode(), "54321");
         assertEquals(savedAddress.getSuburb(), "FooBar Drive");
@@ -88,6 +101,6 @@ public class AddressTest extends AbstractTestCase {
         page.applyChanges();
         // reload the page
         page.selectPerson("Jozef Hartinger").loadAddresses();
-        assertEquals(page.getAddressCount(), 0, "Address not removed.");
+        assertEquals("Address not removed.", page.getAddressCount(), 0);
     }
 }
