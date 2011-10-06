@@ -189,10 +189,10 @@ Seam.Exception = function(exceptionClass, msg) {
   this.message = msg;
   Seam.Exception.prototype.getMessage = function() {
     return this.message;    
-  }
+  };
   Seam.Exception.prototype.getExceptionClass = function() {
     return this.exceptionClass;
-  }
+  };
 };
 
 Seam.equals = function(v1, v2) {

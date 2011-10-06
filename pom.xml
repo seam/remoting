@@ -16,7 +16,6 @@
 
    <modules>
       <module>impl</module>
-      <module>docs</module>
    </modules>
    
    <properties>
