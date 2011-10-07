@@ -6,6 +6,7 @@ import org.jboss.arquillian.ajocado.framework.AjaxSelenium;
 import org.jboss.arquillian.ajocado.locator.JQueryLocator;
 import org.jboss.arquillian.ajocado.waiting.Wait;
 import org.jboss.arquillian.ajocado.waiting.conditions.ElementPresent;
+import org.jboss.arquillian.ajocado.waiting.selenium.SeleniumCondition;
 import org.jboss.arquillian.ajocado.waiting.selenium.SeleniumWaiting;
 
 import static org.jboss.arquillian.ajocado.Ajocado.waitForXhr;
@@ -13,7 +14,7 @@ import static org.jboss.arquillian.ajocado.locator.LocatorFactory.jq;
 import static org.junit.Assert.assertEquals;
 
 public class ModelPage {
-    private static final JQueryLocator PERSON_LIST = jq("#personList");
+    private static final JQueryLocator PERSON_LIST = jq("#personList div");
     private static final JQueryLocator PERSON_LOAD_ADDRESSES = jq(".loadAddresses");
     private static final JQueryLocator PERSON_CREATE_ADDRESS = jq(".createAddress");
     private static final JQueryLocator PERSON_APPLY_CHANGES = jq(".applyChanges");
@@ -95,9 +96,13 @@ public class ModelPage {
 
     public ModelPage applyChanges() {
         waitForXhr(selenium).click(PERSON_APPLY_CHANGES);
-        if (selenium.isAlertPresent()) {
-            assertEquals(selenium.getAlert(), "Changes applied");
-        }
+        Wait.waitSelenium.timeout(10000).interval(500).until(new SeleniumCondition() {
+            @Override
+            public boolean isTrue() {
+                return selenium.isAlertPresent();
+            }
+        });
+        assertEquals(selenium.getAlert(), "Changes applied");
         return this;
     }
 
