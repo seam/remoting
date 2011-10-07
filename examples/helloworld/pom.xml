@@ -94,24 +94,18 @@
 
     <profiles>
         <profile>
-            <id>jbossas6</id>
+            <id>glassfish</id>
             <activation>
                 <property>
                     <name>arquillian</name>
-                    <value>jbossas-managed-6</value>
+                    <value>glassfish-remote-3.1</value>
                 </property>
             </activation>
             <dependencies>
                 <dependency>
-                    <groupId>org.jboss.seam.remoting</groupId>
-                    <artifactId>seam-remoting</artifactId>
-                    <version>${project.version}</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>dom4j</groupId>
-                            <artifactId>dom4j</artifactId>
-                        </exclusion>
-                    </exclusions>
+                    <groupId>dom4j</groupId>
+                    <artifactId>dom4j</artifactId>
+                    <scope>compile</scope>
                 </dependency>
             </dependencies>
         </profile>
