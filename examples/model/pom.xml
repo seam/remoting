@@ -115,6 +115,12 @@
             <artifactId>arquillian-ajocado-junit</artifactId>
             <type>pom</type>
             <scope>test</scope>
+            <exclusions>
+               <exclusion>
+                  <groupId>org.slf4j</groupId>
+                  <artifactId>slf4j-simple</artifactId>
+               </exclusion>
+            </exclusions>
         </dependency>
       
    </dependencies>
@@ -164,12 +170,32 @@
                     <value>jbossas-managed-7</value>
                 </property>
             </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.jboss.seam.remoting</groupId>
+                    <artifactId>seam-remoting</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>            
             <build>
                 <resources>
                     <resource>
                         <directory>src/jboss7/resources</directory>
                     </resource>
                 </resources>
+                <plugins>
+                   <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-war-plugin</artifactId>
+                      <configuration>
+                         <archive>
+                            <manifestEntries>
+                               <Dependencies>org.dom4j</Dependencies>
+                            </manifestEntries>
+                         </archive>
+                      </configuration>
+                   </plugin>
+                </plugins>
             </build>
         </profile>
         <profile>
