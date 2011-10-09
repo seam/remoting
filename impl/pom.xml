@@ -8,7 +8,6 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<groupId>org.jboss.seam.remoting</groupId>
 	<artifactId>seam-remoting</artifactId>
 	<packaging>jar</packaging>
 	<name>Seam Remoting Implementation</name>
@@ -58,7 +57,7 @@
 			<artifactId>seam-conversation-spi</artifactId>
 		</dependency>
 	</dependencies>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -79,6 +78,17 @@
 					</execution>
 				</executions>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Dependencies>org.dom4j</Dependencies>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
 </project>
