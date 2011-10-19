@@ -24,7 +24,11 @@
       <dependency>
          <groupId>org.jboss.seam.remoting</groupId>
          <artifactId>seam-remoting</artifactId>
-         <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.seam.international</groupId>
+	 <artifactId>seam-international</artifactId>
       </dependency>
 
         <!-- Test dependencies -->

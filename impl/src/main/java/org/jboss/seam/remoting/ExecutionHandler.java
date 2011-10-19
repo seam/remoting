@@ -8,6 +8,7 @@ import java.util.Iterator;
 
 import javax.enterprise.context.ContextNotActiveException;
 import javax.enterprise.context.Conversation;
+import javax.enterprise.event.Event;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -28,10 +29,9 @@ import org.jboss.seam.remoting.wrapper.Wrapper;
 public class ExecutionHandler extends AbstractRequestHandler implements RequestHandler {
     private static final Logger log = Logger.getLogger(ExecutionHandler.class);
 
-    @Inject
-    BeanManager beanManager;
-    @Inject
-    Conversation conversation;
+    @Inject BeanManager beanManager;
+    @Inject Conversation conversation;
+    @Inject Event<WriteHeaderEvent> writeHeaderEvent;
 
     /**
      * The entry point for handling a request.
@@ -153,6 +153,9 @@ public class ExecutionHandler extends AbstractRequestHandler implements RequestH
             throws IOException {
         out.write(ENVELOPE_TAG_OPEN);
         out.write(HEADER_OPEN);
+
+        writeHeaderEvent.fire(new WriteHeaderEvent(out));
+        
         out.write(CONTEXT_TAG_OPEN);
         if (ctx.getConversationId() != null) {
             out.write(CONVERSATION_ID_TAG_OPEN);
