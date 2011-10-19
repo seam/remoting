@@ -96,7 +96,7 @@ public class ModelPage {
 
     public ModelPage applyChanges() {
         waitForXhr(selenium).click(PERSON_APPLY_CHANGES);
-        Wait.waitSelenium.timeout(10000).interval(500).until(new SeleniumCondition() {
+        Wait.waitSelenium.timeout(30000).interval(500).until(new SeleniumCondition() {
             @Override
             public boolean isTrue() {
                 return selenium.isAlertPresent();
