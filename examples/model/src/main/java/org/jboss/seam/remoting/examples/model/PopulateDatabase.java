@@ -27,6 +27,11 @@ public class PopulateDatabase {
 
     @Transactional
     public void loadData(@Observes @Initialized WebApplication webapp) throws ParseException { 
+        
+        // we need to delete table content for openshift-express
+        entityManager.createQuery("delete from Address").executeUpdate();
+        entityManager.createQuery("delete from Person").executeUpdate();
+        
         p = new Person();
         p.setFirstName("Shane");
         p.setLastName("Bryzak");

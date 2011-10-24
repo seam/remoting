@@ -326,6 +326,75 @@ public class paintAction {
   </section>
   
   <section>
+    <title>Messages</title>
+    
+    <para>
+      The Seam International module provides a Messages API that allows generation of view-independent messages.
+      This is useful if you want to convey additional information to a user that is not returned directly from
+      the result of a method invocation.
+    </para>
+    
+    <para>
+      Using the Messages API is extremely easy.  Simply add the Seam International libraries to your application 
+      (see the Seam International configuration chapter to learn how to do this), then inject the <code>Messages</code>
+      object into your bean.  The <code>Messages</code> object provides several methods for adding messages, see
+      the Seam International documentation for more information.  Here's a simple example showing how to create
+      an <code>info</code> message (messages generally follow the same DEBUG, INFO, WARN, ERROR levels that a typical
+      logging framework would provide):
+    </para>
+    
+    <programlisting role="JAVA"><![CDATA[import javax.inject.Inject;
+import org.jboss.seam.international.status.Messages;
+import org.jboss.seam.remoting.annotations.WebRemote;
+
+public class HelloAction {    
+    @Inject Messages messages;
+    
+    @WebRemote
+    public String sayHello(String name) {
+        messages.info("Invoked HelloAction.sayHello()");        
+        return "Hello, " + name;
+    }
+}]]></programlisting>
+
+    <para>
+      After creating the message in your server-side code, you still need to write some client-side code
+      to handle any messages that are returned by your remote invocations.  Thankfully this is also simple,
+      you just need to write a JavaScript handler function and assign it to <code>Seam.messageHandler</code>.
+    </para>
+    
+    <para>
+      If any messages are returned from a remote method invocation, the message handler function will be invoked
+      and passed a list of Message objects.  These objects declare three methods for retrieving various properties
+      of the message - <code>getLevel()</code> returns the message level (such as DEBUG, INFO, etc).  The
+      <code>getTargets()</code> method returns the targets of the message - these may be the ID's for specific
+      user interface controls, which is helpful for conveying validation failures for certain field values.  
+      The <code>getTargets()</code> method may return null, if the message is not specific to any field value.
+      Lastly, the <code>getText()</code> method returns the actual text of the message.
+    </para>
+    
+    <para>
+      Here's a really simple example showing how you would display an alert box for any messages returned:
+    </para>
+    
+    <programlisting role="JAVASCRIPT"><![CDATA[    function handleMessages(msgs) {      
+      for (var i = 0; i < msgs.length; i++) {
+        alert("Received message - Level: " + msgs[i].getLevel() + " Text: " + msgs[i].getText();
+      }
+    }
+    
+    Seam.messageHandler = handleMessages;]]></programlisting>
+    
+    <para>
+      You can see the Messages API in action in the HelloWorld example.  Simply choose the "Formal" option
+      for the Formality, and "Localized (English)" for the Localization.  Invoking this combination will
+      cause a server-side message to be created, which you will then see in the Messages list at the top 
+      of the screen.
+    </para>    
+    
+  </section>
+  
+  <section>
     <title>Handling Exceptions</title>
     
     <para>

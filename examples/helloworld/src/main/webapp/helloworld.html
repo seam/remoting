@@ -9,6 +9,14 @@
 <h1>Seam Remoting - Hello World Example</h1>
 
 <div style="border:1px solid black;margin:8px;padding:8px;width:360px">
+  <span style="font-weight:bold">Messages</span><br/>
+  
+  <div id="messages">
+  
+  </div>
+</div>
+
+<div style="border:1px solid black;margin:8px;padding:8px;width:360px">
     <span style="font-weight:bold">Select bean qualifiers</span><br/>
 
     <form name="qualifiers">
@@ -39,6 +47,25 @@
     //<![CDATA[
 
     Seam.debug = true;
+    
+    function handleMessages(msgs) {
+      var m = document.getElementById("messages");
+      
+      for (var i = 0; i < msgs.length; i++) {
+        var div = document.createElement("div");
+        
+        var span = document.createElement("span");
+        span.style.fontWeight = "bold";
+        span.appendChild(document.createTextNode(msgs[i].getLevel()));
+        
+        div.appendChild(span);
+        div.appendChild(document.createTextNode(" " + msgs[i].getText()));
+                
+        m.appendChild(div);
+      }
+    }
+    
+    Seam.messageHandler = handleMessages;
 
     function getRadioValue(options) {
         for (var i = 0; i < options.length; i++) {
@@ -54,6 +81,12 @@
     }
 
     function sayHello() {
+        // Clear the messages node
+        var m = document.getElementById("messages");
+        while (m.hasChildNodes()) {
+          m.removeChild(m.firstChild);
+        }
+    
         var qualifiers = getQualifiers();
 
         // Prompt the user for their name, if they don't enter one then return.

@@ -15,6 +15,8 @@ Seam.defaultExceptionHandler = function(exception) {
 
 Seam.exceptionHandler = Seam.defaultExceptionHandler;
 
+Seam.messageHandler = null;
+
 Seam.createBean = function(name) {
   if (!Seam.beans[name]) return null;
   var b = new Seam.beans[name];
@@ -189,10 +191,25 @@ Seam.Exception = function(exceptionClass, msg) {
   this.message = msg;
   Seam.Exception.prototype.getMessage = function() {
     return this.message;    
-  }
+  };
   Seam.Exception.prototype.getExceptionClass = function() {
     return this.exceptionClass;
-  }
+  };
+};
+
+Seam.Message = function(level, targets, text) {
+  this.level = level;
+  this.targets = targets;
+  this.text = text;
+  Seam.Message.prototype.getLevel = function() {
+    return this.level;
+  };
+  Seam.Message.prototype.getTargets = function() {
+    return this.targets;
+  };
+  Seam.Message.prototype.getText = function() {
+    return this.text;
+  };
 };
 
 Seam.equals = function(v1, v2) {
@@ -557,11 +574,31 @@ Seam.processCallResponse = function(call) {
     var msgNode = cn(exceptionNode, "message");
     var msg = Seam.unmarshalValue(msgNode.firstChild);
     call.exceptionHandler(new Seam.Exception(exCls, msg));
-  } else if (call.callback != null) {
-    var refsNode = cn(n, "refs");
-    var refs = Seam.unmarshalRefs(refsNode);
-    var v = Seam.unmarshalValue(valueNode.firstChild, refs);
-    call.callback(v, call.context);
+  } else {
+    var m = cn(cn(call.response.documentElement, "header"), "msgs");
+    if (m) {
+      var me = Seam.Xml.childNodes(m, "m");
+      var msgs = [];
+      for (var i = 0; i < me.length; i++) {
+        var enc = "";
+        for (var j=0; j<me[i].childNodes.length; j++) {
+        if (me[i].childNodes[j].nodeType == 3)
+          enc += me[i].childNodes[j].nodeValue;
+        }
+        var text = decodeURIComponent(enc);      
+        msgs.push(new Seam.Message(me[i].getAttribute("lvl"), me[i].getAttribute("tgt"), text));      
+      };
+      if (typeof(Seam.messageHandler) == "function") {
+        Seam.messageHandler(msgs);
+      }
+    }  
+  
+    if (call.callback != null) {
+      var refsNode = cn(n, "refs");
+      var refs = Seam.unmarshalRefs(refsNode);
+      var v = Seam.unmarshalValue(valueNode.firstChild, refs);
+      call.callback(v, call.context);
+    }
   }
 };
 
