@@ -146,6 +146,13 @@
                     <value>jbossas-managed-6</value>
                 </property>
             </activation>
+            <build>
+				<resources>
+					<resource>
+						<directory>src/jboss6/resources</directory>
+					</resource>
+				</resources>
+			</build>
             <dependencies>
                 <dependency>
                     <groupId>org.jboss.seam.remoting</groupId>
