@@ -13,4 +13,6 @@
         <servlet-name>Remoting Servlet</servlet-name>
         <url-pattern>/seam/resource/remoting/*</url-pattern>
     </servlet-mapping>
+
+    <distributable/>
 </web-fragment>
