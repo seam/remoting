@@ -4,7 +4,7 @@
    <parent>
       <artifactId>seam-parent</artifactId>
       <groupId>org.jboss.seam</groupId>
-      <version>17</version>
+      <version>18</version>
    </parent>
 
    <groupId>org.jboss.seam.remoting</groupId>
@@ -19,7 +19,7 @@
    </modules>
    
    <properties>
-      <seam.version>3.1.0.Beta5</seam.version>
+      <seam.version>3.1.0.CR1</seam.version>
    </properties>
 
    <dependencyManagement>
