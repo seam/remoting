@@ -45,14 +45,14 @@ public class BagWrapper extends BaseWrapper implements Wrapper {
 
     @SuppressWarnings("unchecked")
     public void marshal(OutputStream out) throws IOException {
-        try {
-            Class<?> cls = Class.forName("org.hibernate.collection.PersistentCollection");
-
-            // Fix to prevent uninitialized lazy loading in Hibernate
-            if (cls.isInstance(value) && !loadLazy) {
+        
+        // Fix to prevent uninitialized lazy loading in Hibernate
+        if (value.getClass().getName().startsWith("org.hibernate.") && !loadLazy) {
+            try {
+                Class<?> cls = Class.forName("org.hibernate.Hibernate");                
                 try {
-                    Method m = cls.getMethod("wasInitialized");
-                    if (((Boolean) m.invoke(value)).booleanValue() == false) {
+                    Method m = cls.getMethod("isInitialized", Object.class);
+                    if (((Boolean) m.invoke(null, value)).booleanValue() == false) {
                         out.write(UNDEFINED_TAG);
                         return;
                     }
@@ -60,8 +60,9 @@ public class BagWrapper extends BaseWrapper implements Wrapper {
                 } catch (InvocationTargetException ex) {
                 } catch (IllegalAccessException ex) {
                 }
+            } catch (ClassNotFoundException ex) {
+                
             }
-        } catch (ClassNotFoundException ex) {
         }
 
         out.write(BAG_TAG_OPEN);
