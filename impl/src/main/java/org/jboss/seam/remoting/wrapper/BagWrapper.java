@@ -45,14 +45,14 @@ public class BagWrapper extends BaseWrapper implements Wrapper {
 
     @SuppressWarnings("unchecked")
     public void marshal(OutputStream out) throws IOException {
-        try {
-            Class<?> cls = Class.forName("org.hibernate.collection.PersistentCollection");
 
-            // Fix to prevent uninitialized lazy loading in Hibernate
-            if (cls.isInstance(value) && !loadLazy) {
+        // Fix to prevent uninitialized lazy loading in Hibernate
+        if (value.getClass().getName().startsWith("org.hibernate.") && !loadLazy) {
+            try {
+                Class<?> cls = Class.forName("org.hibernate.Hibernate");
                 try {
-                    Method m = cls.getMethod("wasInitialized");
-                    if (((Boolean) m.invoke(value)).booleanValue() == false) {
+                    Method m = cls.getMethod("isInitialized", Object.class);
+                    if (((Boolean) m.invoke(null, value)).booleanValue() == false) {
                         out.write(UNDEFINED_TAG);
                         return;
                     }
@@ -60,8 +60,27 @@ public class BagWrapper extends BaseWrapper implements Wrapper {
                 } catch (InvocationTargetException ex) {
                 } catch (IllegalAccessException ex) {
                 }
+            } catch (ClassNotFoundException ex) {
             }
-        } catch (ClassNotFoundException ex) {
+        }
+
+        // Fix to prevent uninitialized lazy loading in EclipseLink
+        if (value.getClass().getName().startsWith("org.eclipse") && !loadLazy) {
+            try {
+                Class<?> klass = BagWrapper.class.getClassLoader().loadClass("org.eclipse.persistence.indirection.IndirectContainer");
+                if (klass.isInstance(value)) {
+                    Method m = klass.getDeclaredMethod("isInstantiated");
+                    if(((Boolean) m.invoke(value))) {
+                        out.write(UNDEFINED_TAG);
+                        return;
+                    }
+                }
+            // Following the lead of eating the exceptions, as it doesn't really affect us either way
+            } catch (ClassNotFoundException e) {
+            } catch (NoSuchMethodException e) {
+            } catch (InvocationTargetException e) {
+            } catch (IllegalAccessException e) {
+            }
         }
 
         out.write(BAG_TAG_OPEN);
